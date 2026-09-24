@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ================================
+   Base
+================================ */
+
+html {
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ================================
+   Interactive Elements
+================================ */
+
+button:not(:disabled),
+a,
+select,
+input[type="checkbox"]:not(:disabled),
+input[type="radio"]:not(:disabled),
+input[type="date"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="time"],
+input[type="file"] {
+  cursor: pointer;
+}
+
+/* ================================
+   Text Inputs
+================================ */
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+textarea {
+  cursor: text;
+}
+
+/* ================================
+   Disabled Elements
+================================ */
+
+button:disabled,
+select:disabled,
+input:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+}
+
+/* ================================
+   Better Form Controls
+================================ */
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
+
+/* ================================
+   Remove Default Button Appearance
+================================ */
+
+button {
+  border: 0;
+}
+
+/* ================================
+   Focus Accessibility
+================================ */
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}

@@ -2,6 +2,7 @@
 
 import {
   FormEvent,
+  Suspense,
   useEffect,
   useMemo,
   useState,
@@ -34,7 +35,7 @@ import type { Custody } from "@/types/custody";
 import { getCustodyFinancialAccounts, updateCustodyFinancialAccountBalance } from "@/lib/data/custody-financial-accounts";
 import type { CustodyFinancialAccount } from "@/types/custody-financial-account";
 
-export default function NewTransferPage() {
+function NewTransferPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -1701,5 +1702,24 @@ export default function NewTransferPage() {
 
       </div>
     </AppShell>
+  );
+}
+
+export default function NewTransferPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
+          <div className="text-center">
+            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
+            <p className="mt-4 text-sm font-semibold text-slate-500">
+              جاري تحميل الصفحة...
+            </p>
+          </div>
+        </div>
+      }
+    >
+      <NewTransferPageContent />
+    </Suspense>
   );
 }

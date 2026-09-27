@@ -5,16 +5,23 @@ export type CustodyTransactionType =
 
 export interface CustodyTransaction {
   id: string;
+
   custodyId: string;
+
   type: CustodyTransactionType;
+
   amount: number;
+
   date: string;
+
   description: string;
 
   source?: string;
+
   fundingSource?: string;
 
   relatedCustodyId?: string;
+
   relatedTransactionId?: string;
 
   /** وسيلة الدفع / الحساب الذي نفذ الحركة. */
@@ -23,8 +30,12 @@ export interface CustodyTransaction {
   /** وسيلة الدفع المقابلة في التحويل. */
   relatedFinancialAccountId?: string;
 
+  /** حركة العامل المالية المرتبطة بهذه الحركة النقدية. */
+  workerFinancialMovementId?: string;
+
   projectId?: string;
 
   createdAt: string;
+
   updatedAt: string;
 }

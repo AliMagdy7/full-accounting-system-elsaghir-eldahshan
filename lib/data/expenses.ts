@@ -107,3 +107,19 @@ export function updateExpense(
 
   return updatedExpense;
 }
+
+export function deleteExpense(
+  id: string,
+): boolean {
+  const expenses = readExpenses();
+  const nextExpenses = expenses.filter(
+    (expense) => expense.id !== id,
+  );
+
+  if (nextExpenses.length === expenses.length) {
+    return false;
+  }
+
+  saveExpenses(nextExpenses);
+  return true;
+}

@@ -21,6 +21,16 @@ import {
 } from "@/lib/data/custodies";
 
 import {
+  getWorkers,
+  getWorkerSiteAssignments,
+} from "@/lib/data/workers";
+
+import {
+  getWorkerFinancialMovementsByWorkerId,
+  getWorkerFinancialMovementsByType,
+} from "@/lib/data/worker-financial-movements";
+
+import {
   getCustodyTransactionsByCustodyId,
 } from "@/lib/data/custody-transactions";
 
@@ -32,6 +42,8 @@ import type { CustodyFinancialAccount } from "@/types/custody-financial-account"
 
 import type { Custody } from "@/types/custody";
 import type { CustodyTransaction } from "@/types/custody-transaction";
+import type { Worker, WorkerSiteAssignment } from "@/types/worker";
+import type { WorkerFinancialMovement } from "@/types/worker-financial-movement";
 import type { Expense } from "@/types/expense";
 import type { Project } from "@/types/project";
 
@@ -101,6 +113,82 @@ const projectName = (
  *
  * ولا ننقل المصدر الأصلي للحركة إلى العهدة التالية.
  */
+interface WorkerMonthlyProjectPayrollSummary {
+  workerId: string;
+  month: string;
+  projectId: string;
+  present: number;
+  absent: number;
+  overtime: number;
+  deduction: number;
+  transport: number;
+  notes: string;
+  updatedAt: string;
+}
+
+const WORKER_MONTHLY_PROJECT_PAYROLL_STORAGE_KEY =
+  "elsaghir-eldahshan-worker-monthly-project-payroll";
+
+function readWorkerMonthlyProjectPayrollSummaries(): WorkerMonthlyProjectPayrollSummary[] {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const raw = window.localStorage.getItem(
+      WORKER_MONTHLY_PROJECT_PAYROLL_STORAGE_KEY,
+    );
+
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function getProjectPayrollSummary(
+  worker: Worker,
+  assignment: WorkerSiteAssignment | undefined,
+  payroll: WorkerMonthlyProjectPayrollSummary | undefined,
+) {
+  const payType = assignment?.payType ?? worker.payType ?? "daily";
+  const monthlySalary = Number(
+    assignment?.monthlySalary ?? worker.monthlySalary ?? 0,
+  );
+  const division = Number(
+    assignment?.monthlyDivision ?? worker.monthlyDivision ?? 30,
+  );
+  const dailyRate =
+    payType === "monthly"
+      ? division > 0
+        ? monthlySalary / division
+        : 0
+      : Number(assignment?.dailyRate ?? worker.dailyRate ?? 0);
+
+  const present = Math.max(0, Number(payroll?.present || 0));
+  const absent = Math.max(0, Number(payroll?.absent || 0));
+  const overtime = Math.max(0, Number(payroll?.overtime || 0));
+  const deduction = Math.max(0, Number(payroll?.deduction || 0));
+  const transport = Math.max(0, Number(payroll?.transport || 0));
+  const baseSalary = present * dailyRate;
+  const salaryDeduction = absent * dailyRate;
+  const netSalary = Math.max(
+    0,
+    baseSalary - salaryDeduction + overtime + transport - deduction,
+  );
+
+  return {
+    present,
+    absent,
+    overtime,
+    deduction,
+    transport,
+    baseSalary,
+    salaryDeduction,
+    netSalary,
+  };
+}
+
 const incomingSource = (
   tx: CustodyTransaction,
   custodies: Custody[],
@@ -389,6 +477,18 @@ export default function ReportsPage() {
   const [personReportFrom, setPersonReportFrom] = useState("");
 
   const [personReportTo, setPersonReportTo] = useState("");
+
+  const [workerReportTab, setWorkerReportTab] = useState<
+    "statement" | "sites" | "salary" | "advances" | "balances"
+  >("statement");
+
+  const [workerReportWorker, setWorkerReportWorker] = useState("");
+  const [workerReportProject, setWorkerReportProject] = useState("");
+  const [workerReportFrom, setWorkerReportFrom] = useState("");
+  const [workerReportTo, setWorkerReportTo] = useState("");
+  const [workerReportMonth, setWorkerReportMonth] = useState(
+    new Date().toISOString().slice(0, 7),
+  );
 
   const [loaded, setLoaded] =
     useState(false);
@@ -836,6 +936,8 @@ export default function ReportsPage() {
         actualExpensesTotal: 0,
         incomingTotal: 0,
         outgoingTransfersTotal: 0,
+        workerPayments: [] as WorkerFinancialMovement[],
+        workerPaymentsTotal: 0,
         totalOutgoing: 0,
         balance: 0,
       };
@@ -886,16 +988,33 @@ export default function ReportsPage() {
       0,
     );
 
+    const workerPayments = getWorkers()
+      .flatMap((worker) => getWorkerFinancialMovementsByWorkerId(worker.id))
+      .filter(
+        (movement) =>
+          movement.projectId === projectReportProject &&
+          (movement.type === "salary" || movement.type === "advance" || movement.type === "payment") &&
+          (!projectReportFrom || movement.date >= projectReportFrom) &&
+          (!projectReportTo || movement.date <= projectReportTo),
+      );
+
+    const workerPaymentsTotal = workerPayments.reduce(
+      (sum, movement) => sum + Math.abs(movement.amount),
+      0,
+    );
+
     return {
       custody,
       projectExpenses,
       projectTransactions,
       incomingTransactions,
       outgoingTransfers,
+      workerPayments,
       actualExpensesTotal,
       incomingTotal,
       outgoingTransfersTotal,
-      totalOutgoing: actualExpensesTotal + outgoingTransfersTotal,
+      workerPaymentsTotal,
+      totalOutgoing: actualExpensesTotal + outgoingTransfersTotal + workerPaymentsTotal,
       balance: custody?.balance ?? 0,
     };
   }, [
@@ -1032,6 +1151,7 @@ export default function ReportsPage() {
         incomingTotal: 0,
         incomingTransfersTotal: 0,
         outgoingTransfersTotal: 0,
+        workerPaymentsTotal: 0,
         totalOutgoing: 0,
         balance: 0,
         movements: [] as Array<{ id: string; date: string; createdAt: string; custodyName: string; projectName: string; type: "in" | "expense" | "transfer-in" | "transfer-out"; description: string; source: string; amount: number }>,
@@ -1069,6 +1189,30 @@ export default function ReportsPage() {
         amount: -Math.abs(expense.amount),
       });
     });
+
+    getWorkerFinancialMovementsByType("salary")
+      .concat(getWorkerFinancialMovementsByType("advance"))
+      .concat(getWorkerFinancialMovementsByType("payment"))
+      .forEach((movement) => {
+        if (!movement.custodyId || !selectedCustodyIds.has(movement.custodyId)) return;
+        if (personReportFrom && movement.date < personReportFrom) return;
+        if (personReportTo && movement.date > personReportTo) return;
+
+        const custody = selectedCustodies.find((item) => item.id === movement.custodyId);
+        const worker = getWorkers().find((item) => item.id === movement.workerId);
+
+        movementList.push({
+          id: `person-worker-${movement.id}`,
+          date: movement.date,
+          createdAt: movement.createdAt,
+          custodyName: custody?.name ?? "عهدة غير معروفة",
+          projectName: movement.projectId ? projectName(movement.projectId, projects) : "مصروف عام",
+          type: "expense",
+          description: `${worker?.name ?? "عامل غير موجود"} - ${movement.type === "salary" ? "راتب" : movement.type === "advance" ? "سلفة" : "دفعة"}: ${movement.description}`,
+          source: custody?.name ?? "عهدة غير معروفة",
+          amount: -Math.abs(movement.amount),
+        });
+      });
 
     transactions.forEach((tx) => {
       if (personReportFrom && tx.date < personReportFrom) return;
@@ -1145,6 +1289,10 @@ export default function ReportsPage() {
       .filter((movement) => movement.type === "transfer-out")
       .reduce((sum, movement) => sum + Math.abs(movement.amount), 0);
 
+    const workerPaymentsTotal = movementList
+      .filter((movement) => movement.id.startsWith("person-worker-"))
+      .reduce((sum, movement) => sum + Math.abs(movement.amount), 0);
+
     const balance = selectedCustodies.reduce((sum, custody) => sum + custody.balance, 0);
 
     return {
@@ -1153,6 +1301,7 @@ export default function ReportsPage() {
       incomingTotal,
       incomingTransfersTotal,
       outgoingTransfersTotal,
+      workerPaymentsTotal,
       totalOutgoing: actualExpensesTotal + outgoingTransfersTotal,
       balance,
       movements: sortNewest(movementList),
@@ -2024,6 +2173,13 @@ export default function ReportsPage() {
                   </p>
                 </div>
 
+                <div className="rounded-2xl border border-violet-100 bg-violet-50/50 p-4">
+                  <p className="text-xs font-bold text-violet-600">مدفوعات العمال</p>
+                  <p className="mt-2 text-2xl font-extrabold text-violet-600">
+                    {money(projectReportData.workerPaymentsTotal)} <span className="text-xs">جنيه</span>
+                  </p>
+                </div>
+
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                   <p className="text-xs font-bold text-slate-500">إجمالي الخارج</p>
                   <p className="mt-2 text-2xl font-extrabold text-slate-900">
@@ -2090,6 +2246,15 @@ export default function ReportsPage() {
                           )?.name ?? "عهدة غير موجودة",
                         amount: -Math.abs(expense.amount),
                       })),
+                      ...projectReportData.workerPayments.map((movement) => ({
+                        id: `worker-payment-${movement.id}`,
+                        date: movement.date,
+                        createdAt: movement.createdAt,
+                        type: "worker-payment" as const,
+                        description: `${movement.type === "salary" ? "راتب" : movement.type === "advance" ? "سلفة" : "دفعة"} - ${movement.description}`,
+                        source: getWorkers().find((worker) => worker.id === movement.workerId)?.name ?? "عامل غير موجود",
+                        amount: -Math.abs(movement.amount),
+                      })),
                       ...projectReportData.projectTransactions
                         .filter(
                           (tx) =>
@@ -2145,7 +2310,9 @@ export default function ReportsPage() {
                                 ? "وارد"
                                 : movement.type === "transfer"
                                   ? "تحويل خارج"
-                                  : "مصروف فعلي"}
+                                  : movement.type === "worker-payment"
+                                    ? "مدفوعات عمال"
+                                    : "مصروف فعلي"}
                             </span>
                           </td>
 
@@ -2178,7 +2345,7 @@ export default function ReportsPage() {
                         colSpan={4}
                         className="px-5 py-4 text-right text-sm font-extrabold text-slate-700"
                       >
-                        إجمالي الخارج من المشروع
+                        إجمالي الخارج من المشروع (مصروفات + تحويلات + مدفوعات عمال)
                       </td>
                       <td className="px-5 py-4 text-left text-sm font-extrabold text-red-600">
                         {money(projectReportData.totalOutgoing)} جنيه
@@ -2376,6 +2543,386 @@ export default function ReportsPage() {
               </div>
             </>
           )}
+        </section>
+
+        {/* Worker Reports */}
+
+        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-100 bg-slate-50/70 p-5 sm:p-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                  <WalletCards className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-extrabold text-slate-900">
+                    تقارير العمال
+                  </h2>
+                  <p className="mt-1 text-xs leading-6 text-slate-500">
+                    كشف حساب العامل، العمال حسب الموقع، المرتبات الشهرية، السلف، وأرصدة جميع العمال.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setWorkerReportWorker("");
+                  setWorkerReportProject("");
+                  setWorkerReportFrom("");
+                  setWorkerReportTo("");
+                  setWorkerReportMonth(new Date().toISOString().slice(0, 7));
+                }}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-600 hover:bg-slate-100"
+              >
+                <RotateCcw className="h-4 w-4" />
+                مسح تقارير العمال
+              </button>
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              {[
+                ["statement", "كشف حساب العامل"],
+                ["sites", "العمال حسب الموقع"],
+                ["salary", "المرتب الشهري"],
+                ["advances", "السلف"],
+                ["balances", "أرصدة العمال"],
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setWorkerReportTab(value as typeof workerReportTab)}
+                  className={`h-10 rounded-xl border px-4 text-xs font-bold transition-colors ${
+                    workerReportTab === value
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <SelectBox
+                id="worker-report-worker"
+                label="العامل"
+                value={workerReportWorker}
+                onChange={setWorkerReportWorker}
+                placeholder="كل العمال"
+                options={getWorkers().map((worker) => ({
+                  value: worker.id,
+                  label: `${worker.name} - ${worker.id}`,
+                }))}
+              />
+
+              <SelectBox
+                id="worker-report-project"
+                label="الموقع / المشروع"
+                value={workerReportProject}
+                onChange={setWorkerReportProject}
+                placeholder="كل المواقع"
+                options={projects
+                  .slice()
+                  .sort((a, b) => a.name.localeCompare(b.name, "ar"))
+                  .map((project) => ({
+                    value: project.id,
+                    label: project.name,
+                  }))}
+              />
+
+              {workerReportTab === "salary" ? (
+                <div>
+                  <label htmlFor="worker-report-month" className="mb-2 block text-sm font-bold text-slate-700">
+                    شهر المرتب
+                  </label>
+                  <input
+                    id="worker-report-month"
+                    type="month"
+                    value={workerReportMonth}
+                    onChange={(event) => setWorkerReportMonth(event.target.value)}
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5"
+                  />
+                </div>
+              ) : (
+                <DateBox
+                  id="worker-report-from"
+                  label="من تاريخ"
+                  value={workerReportFrom}
+                  onChange={setWorkerReportFrom}
+                />
+              )}
+
+              {workerReportTab !== "salary" && (
+                <DateBox
+                  id="worker-report-to"
+                  label="إلى تاريخ"
+                  value={workerReportTo}
+                  onChange={setWorkerReportTo}
+                />
+              )}
+            </div>
+          </div>
+
+          {workerReportTab === "statement" && (() => {
+            const workers = getWorkers();
+            const selected = workers.find((item) => item.id === workerReportWorker);
+            const movementRows = selected
+              ? getWorkerFinancialMovementsByWorkerId(selected.id).filter(
+                  (movement) =>
+                    (!workerReportProject || movement.projectId === workerReportProject) &&
+                    (!workerReportFrom || movement.date >= workerReportFrom) &&
+                    (!workerReportTo || movement.date <= workerReportTo),
+                )
+              : [];
+            const allMovements = selected ? getWorkerFinancialMovementsByWorkerId(selected.id) : [];
+            const increase = allMovements.filter((item) => item.effect === "increase").reduce((sum, item) => sum + item.amount, 0);
+            const decrease = allMovements.filter((item) => item.effect === "decrease").reduce((sum, item) => sum + item.amount, 0);
+            const currentBalance = (selected?.carriedSalary ?? 0) + increase - decrease;
+            const payable = Math.max(currentBalance, 0);
+            const debt = Math.max(-currentBalance, 0);
+
+            return !selected ? (
+              <EmptyState text="اختر العامل لعرض كشف حسابه المالي وحركاته." />
+            ) : (
+              <>
+                <div className="grid grid-cols-1 gap-3 border-b border-slate-100 p-5 sm:grid-cols-2 xl:grid-cols-5">
+                  {[
+                    ["الرصيد المرحل", selected.carriedSalary, "text-slate-700"],
+                    ["إجمالي الزيادات", increase, "text-emerald-600"],
+                    ["إجمالي التخفيضات", decrease, "text-red-600"],
+                    ["مستحق للعامل", payable, "text-blue-600"],
+                    ["على العامل", debt, "text-red-600"],
+                  ].map(([label, value, color]) => (
+                    <div key={String(label)} className="rounded-2xl border border-slate-200 bg-white p-4">
+                      <p className="text-xs font-bold text-slate-400">{label}</p>
+                      <p className={`mt-2 text-xl font-extrabold ${color}`}>{money(Number(value))} جنيه</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border-b border-slate-100 px-5 py-4 sm:px-6">
+                  <h3 className="font-extrabold text-slate-900">كشف حساب: {selected.name}</h3>
+                  <p className="mt-1 text-xs text-slate-400">الرصيد الحالي محسوب من الرصيد المرحل + جميع الحركات المالية للعامل.</p>
+                </div>
+
+                {!movementRows.length ? (
+                  <EmptyState text="لا توجد حركات مالية في الفترة المختارة." />
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-[1000px] w-full">
+                      <thead className="bg-slate-50">
+                        <tr className="border-b border-slate-100">
+                          {["التاريخ", "نوع الحركة", "البيان", "المشروع", "العهدة", "المبلغ", "الأثر"].map((title) => (
+                            <th key={title} className="px-5 py-4 text-right text-xs font-extrabold text-slate-500">{title}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {movementRows.map((movement) => (
+                          <tr key={movement.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/70">
+                            <td className="whitespace-nowrap px-5 py-4 text-xs font-semibold text-slate-500">{dateLabel(movement.date)}</td>
+                            <td className="px-5 py-4 text-sm font-bold text-slate-700">{({ salary: "راتب", advance: "سلفة", bonus: "مكافأة / إكرامية", transport: "بدل انتقال", deduction: "خصم", payment: "دفعة" } as Record<string, string>)[movement.type]}</td>
+                            <td className="max-w-[320px] px-5 py-4 text-sm font-semibold text-slate-700">{movement.description}</td>
+                            <td className="px-5 py-4 text-sm font-semibold text-slate-600">{projectName(movement.projectId, projects)}</td>
+                            <td className="px-5 py-4 text-sm font-semibold text-slate-600">{custodies.find((item) => item.id === movement.custodyId)?.name ?? "غير محددة"}</td>
+                            <td className={`px-5 py-4 text-left text-sm font-extrabold ${movement.effect === "increase" ? "text-emerald-600" : "text-red-600"}`}>{movement.effect === "increase" ? "+" : "-"}{money(movement.amount)} جنيه</td>
+                            <td className="px-5 py-4"><span className={`rounded-lg px-2.5 py-1.5 text-xs font-bold ${movement.effect === "increase" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{movement.effect === "increase" ? "يزيد المستحق" : "يقلل المستحق"}</span></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            );
+          })()}
+
+          {workerReportTab === "sites" && (() => {
+            const workers = getWorkers().filter((worker) => {
+              if (!workerReportProject) return true;
+              return getWorkerSiteAssignments(worker.id).some((assignment) => assignment.projectId === workerReportProject);
+            });
+            const grouped = projects.map((project) => ({
+              project,
+              workers: workers.filter((worker) => getWorkerSiteAssignments(worker.id).some((assignment) => assignment.projectId === project.id)),
+            })).filter((group) => group.workers.length > 0);
+
+            return !grouped.length ? (
+              <EmptyState text="لا يوجد عمال مطابقون للموقع المختار." />
+            ) : (
+              <div className="space-y-5 p-5 sm:p-6">
+                {grouped.map(({ project, workers: siteWorkers }) => (
+                  <div key={project.id} className="overflow-hidden rounded-2xl border border-slate-200">
+                    <div className="flex items-center justify-between gap-3 bg-slate-50 px-5 py-4">
+                      <div>
+                        <h3 className="font-extrabold text-slate-900">{project.name}</h3>
+                        <p className="mt-1 text-xs text-slate-400">{siteWorkers.length} عامل حاليًا</p>
+                      </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-[850px] w-full">
+                        <thead><tr className="border-b border-slate-100">{["العامل", "نظام الأجر", "الأجر الحالي", "بداية العمل", "الحساب"].map((title) => <th key={title} className="px-5 py-3 text-right text-xs font-extrabold text-slate-500">{title}</th>)}</tr></thead>
+                        <tbody>
+                          {siteWorkers.map((worker) => (
+                            <tr key={worker.id} className="border-b border-slate-100 last:border-b-0">
+                              <td className="px-5 py-4"><p className="font-extrabold text-slate-800">{worker.name}</p><p className="mt-1 text-[11px] text-slate-400">{worker.id}</p></td>
+                              <td className="px-5 py-4 text-sm font-bold text-slate-600">{worker.payType === "daily" ? "يومي" : "شهري"}</td>
+                              <td className="px-5 py-4 text-sm font-extrabold text-slate-700">{worker.payType === "daily" ? `${money(worker.dailyRate ?? 0)} جنيه / يوم` : `${money(worker.monthlySalary ?? 0)} جنيه / ${worker.monthlyDivision ?? 30}`}</td>
+                              <td className="px-5 py-4 text-xs font-bold text-slate-500">{dateLabel(worker.startDate)}</td>
+                              <td className="px-5 py-4"><Link href={`/workers/${worker.id}`} className="inline-flex h-9 items-center justify-center rounded-lg bg-slate-900 px-3 text-xs font-bold text-white hover:bg-slate-800">فتح الحساب</Link></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
+          {workerReportTab === "salary" && (() => {
+            const allProjectPayroll = readWorkerMonthlyProjectPayrollSummaries();
+            const workers = getWorkers()
+              .filter((worker) => !workerReportWorker || worker.id === workerReportWorker)
+              .filter((worker) => !workerReportProject || getWorkerSiteAssignments(worker.id).some((assignment) => assignment.projectId === workerReportProject));
+
+            const rows = workers.flatMap((worker) => {
+              const assignments = getWorkerSiteAssignments(worker.id);
+              const projectIds = Array.from(new Set(assignments.map((assignment) => assignment.projectId)));
+              const selectedProjectIds = workerReportProject
+                ? projectIds.filter((projectId) => projectId === workerReportProject)
+                : projectIds;
+
+              return selectedProjectIds.map((projectId) => {
+                const assignment = assignments
+                  .filter((item) => item.projectId === projectId)
+                  .sort((a, b) => b.startDate.localeCompare(a.startDate))[0];
+                const payroll = allProjectPayroll.find(
+                  (item) =>
+                    item.workerId === worker.id &&
+                    item.projectId === projectId &&
+                    item.month === workerReportMonth,
+                );
+                const summary = getProjectPayrollSummary(worker, assignment, payroll);
+                return { worker, projectId, summary };
+              });
+            });
+
+            const totals = rows.reduce(
+              (acc, row) => ({
+                present: acc.present + row.summary.present,
+                absent: acc.absent + row.summary.absent,
+                overtime: acc.overtime + row.summary.overtime,
+                deduction: acc.deduction + row.summary.deduction,
+                transport: acc.transport + row.summary.transport,
+                baseSalary: acc.baseSalary + row.summary.baseSalary,
+                salaryDeduction: acc.salaryDeduction + row.summary.salaryDeduction,
+                netSalary: acc.netSalary + row.summary.netSalary,
+              }),
+              {
+                present: 0,
+                absent: 0,
+                overtime: 0,
+                deduction: 0,
+                transport: 0,
+                baseSalary: 0,
+                salaryDeduction: 0,
+                netSalary: 0,
+              },
+            );
+
+            return !rows.length ? (
+              <EmptyState text="لا يوجد عمال مطابقون للفلاتر الحالية." />
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-3 border-b border-slate-100 p-5 sm:grid-cols-3 xl:grid-cols-6">
+                  {[
+                    ["الحضور", totals.present],
+                    ["الغياب", totals.absent],
+                    ["الإضافي", totals.overtime],
+                    ["الخصومات", totals.deduction],
+                    ["بدل الانتقال", totals.transport],
+                    ["صافي المرتبات", totals.netSalary],
+                  ].map(([label, value]) => (
+                    <div key={String(label)} className="rounded-2xl border border-slate-200 bg-white p-4">
+                      <p className="text-xs font-bold text-slate-400">{label}</p>
+                      <p className="mt-2 text-xl font-extrabold text-slate-800">{money(Number(value))}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="min-w-[1150px] w-full">
+                    <thead className="bg-slate-50">
+                      <tr className="border-b border-slate-100">
+                        {["العامل", "الموقع", "حضور", "غياب", "الأساسي", "خصم الغياب", "إضافي", "خصم", "انتقال", "صافي المرتب"].map((title) => (
+                          <th key={title} className="px-4 py-4 text-right text-xs font-extrabold text-slate-500">{title}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map(({ worker, projectId, summary }) => (
+                        <tr key={`${worker.id}-${projectId}`} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/70">
+                          <td className="px-4 py-4 text-sm font-extrabold text-slate-800">{worker.name}</td>
+                          <td className="px-4 py-4 text-xs font-bold text-slate-500">{projectName(projectId, projects)}</td>
+                          <td className="px-4 py-4 text-sm font-bold text-emerald-600">{summary.present}</td>
+                          <td className="px-4 py-4 text-sm font-bold text-red-600">{summary.absent}</td>
+                          <td className="px-4 py-4 text-sm font-bold text-blue-600">{money(summary.baseSalary)}</td>
+                          <td className="px-4 py-4 text-sm font-bold text-red-600">{money(summary.salaryDeduction)}</td>
+                          <td className="px-4 py-4 text-sm font-bold text-blue-600">{money(summary.overtime)}</td>
+                          <td className="px-4 py-4 text-sm font-bold text-red-600">{money(summary.deduction)}</td>
+                          <td className="px-4 py-4 text-sm font-bold text-emerald-600">{money(summary.transport)}</td>
+                          <td className="px-4 py-4 text-sm font-extrabold text-emerald-600">{money(summary.netSalary)} جنيه</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="bg-slate-50/70">
+                        <td colSpan={9} className="px-4 py-4 text-right text-sm font-extrabold text-slate-700">إجمالي صافي المرتبات الظاهرة</td>
+                        <td className="px-4 py-4 text-left text-sm font-extrabold text-emerald-600">{money(totals.netSalary)} جنيه</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </>
+            );
+          })()}
+
+          {workerReportTab === "advances" && (() => {
+            const workers = getWorkers();
+            const selectedWorkerIds = new Set(workers.filter((worker) => !workerReportWorker || worker.id === workerReportWorker).map((worker) => worker.id));
+            const rows = getWorkerFinancialMovementsByType("advance").filter((movement) => selectedWorkerIds.has(movement.workerId)).filter((movement) => !workerReportProject || movement.projectId === workerReportProject).filter((movement) => (!workerReportFrom || movement.date >= workerReportFrom) && (!workerReportTo || movement.date <= workerReportTo));
+            const total = rows.reduce((sum, movement) => sum + movement.amount, 0);
+
+            return (
+              <>
+                <div className="border-b border-slate-100 p-5 sm:p-6"><div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4"><p className="text-xs font-bold text-amber-600">إجمالي السلف الظاهرة</p><p className="mt-2 text-2xl font-extrabold text-amber-700">{money(total)} جنيه</p></div></div>
+                {!rows.length ? <EmptyState text="لا توجد سلف مطابقة للفلاتر الحالية." /> : <div className="overflow-x-auto"><table className="min-w-[1000px] w-full"><thead className="bg-slate-50"><tr>{["التاريخ", "العامل", "المشروع", "العهدة", "البيان", "المبلغ", "ملاحظات"].map((title) => <th key={title} className="px-5 py-4 text-right text-xs font-extrabold text-slate-500">{title}</th>)}</tr></thead><tbody>{rows.map((movement) => <tr key={movement.id} className="border-b border-slate-100 last:border-b-0"><td className="px-5 py-4 text-xs font-semibold text-slate-500">{dateLabel(movement.date)}</td><td className="px-5 py-4 text-sm font-extrabold text-slate-800">{workers.find((worker) => worker.id === movement.workerId)?.name ?? "عامل غير موجود"}</td><td className="px-5 py-4 text-sm font-semibold text-slate-600">{projectName(movement.projectId, projects)}</td><td className="px-5 py-4 text-sm font-semibold text-slate-600">{custodies.find((custody) => custody.id === movement.custodyId)?.name ?? "غير محددة"}</td><td className="max-w-[320px] px-5 py-4 text-sm font-semibold text-slate-700">{movement.description}</td><td className="px-5 py-4 text-left text-sm font-extrabold text-red-600">{money(movement.amount)} جنيه</td><td className="px-5 py-4 text-xs text-slate-500">{movement.notes ?? "-"}</td></tr>)}</tbody></table></div>}
+              </>
+            );
+          })()}
+
+          {workerReportTab === "balances" && (() => {
+            const workers = getWorkers().filter((worker) => !workerReportWorker || worker.id === workerReportWorker).filter((worker) => !workerReportProject || getWorkerSiteAssignments(worker.id).some((assignment) => assignment.projectId === workerReportProject));
+            const rows = workers.map((worker) => {
+              const movements = getWorkerFinancialMovementsByWorkerId(worker.id).filter((movement) => !workerReportProject || movement.projectId === workerReportProject);
+              const increase = movements.filter((movement) => movement.effect === "increase").reduce((sum, movement) => sum + movement.amount, 0);
+              const decrease = movements.filter((movement) => movement.effect === "decrease").reduce((sum, movement) => sum + movement.amount, 0);
+              const balance = Number(workerReportProject ? 0 : worker.carriedSalary || 0) + increase - decrease;
+              return { worker, increase, decrease, balance };
+            });
+            const payable = rows.reduce((sum, row) => sum + Math.max(row.balance, 0), 0);
+            const debt = rows.reduce((sum, row) => sum + Math.max(-row.balance, 0), 0);
+
+            return (
+              <>
+                <div className="grid grid-cols-1 gap-3 border-b border-slate-100 p-5 sm:grid-cols-3"><div className="rounded-2xl border border-slate-200 p-4"><p className="text-xs font-bold text-slate-400">عدد العمال</p><p className="mt-2 text-2xl font-extrabold text-slate-900">{rows.length}</p></div><div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4"><p className="text-xs font-bold text-blue-600">إجمالي المستحق للعمال</p><p className="mt-2 text-2xl font-extrabold text-blue-600">{money(payable)} جنيه</p></div><div className="rounded-2xl border border-red-100 bg-red-50/50 p-4"><p className="text-xs font-bold text-red-600">إجمالي المديونية على العمال</p><p className="mt-2 text-2xl font-extrabold text-red-600">{money(debt)} جنيه</p></div></div>
+                {!rows.length ? <EmptyState text="لا يوجد عمال مطابقون للفلاتر الحالية." /> : <div className="overflow-x-auto"><table className="min-w-[900px] w-full"><thead className="bg-slate-50"><tr>{["العامل", "الموقع الحالي", "الرصيد المرحل", "الزيادات", "التخفيضات", "الرصيد الحالي", "الحالة"].map((title) => <th key={title} className="px-5 py-4 text-right text-xs font-extrabold text-slate-500">{title}</th>)}</tr></thead><tbody>{rows.map(({ worker, increase, decrease, balance }) => <tr key={worker.id} className="border-b border-slate-100 last:border-b-0"><td className="px-5 py-4"><p className="font-extrabold text-slate-800">{worker.name}</p><p className="mt-1 text-[11px] text-slate-400">{worker.id}</p></td><td className="px-5 py-4 text-sm font-semibold text-slate-600">{projectName(worker.currentProjectId, projects)}</td><td className="px-5 py-4 text-sm font-bold text-slate-600">{money(worker.carriedSalary)}</td><td className="px-5 py-4 text-sm font-bold text-emerald-600">{money(increase)}</td><td className="px-5 py-4 text-sm font-bold text-red-600">{money(decrease)}</td><td className={`px-5 py-4 text-sm font-extrabold ${balance >= 0 ? "text-blue-600" : "text-red-600"}`}>{money(Math.abs(balance))} جنيه</td><td className="px-5 py-4"><span className={`rounded-lg px-2.5 py-1.5 text-xs font-bold ${balance > 0 ? "bg-blue-50 text-blue-700" : balance < 0 ? "bg-red-50 text-red-700" : "bg-slate-100 text-slate-600"}`}>{balance > 0 ? "مستحق للعامل" : balance < 0 ? "على العامل" : "متزن"}</span></td></tr>)}</tbody></table></div>}
+              </>
+            );
+          })()}
         </section>
 
         {/* Current Filters Summary */}

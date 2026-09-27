@@ -28,11 +28,17 @@ import {
   getCustodyTransactionsByCustodyId,
 } from "@/lib/data/custody-transactions";
 
-import {
-  getExpensesByProjectId,
-} from "@/lib/data/expenses";
-
 import { getProjectById } from "@/lib/data/projects";
+
+import { getExpensesByProjectId } from "@/lib/data/expenses";
+
+import { getWorkers } from "@/lib/data/workers";
+
+import ProjectExpensesTable from "@/components/projects/ProjectExpensesTable";
+
+import {
+  getWorkerFinancialMovementsByWorkerId,
+} from "@/lib/data/worker-financial-movements";
 
 import type {
   Project,
@@ -40,8 +46,6 @@ import type {
 } from "@/types/project";
 
 import type { CustodyTransaction } from "@/types/custody-transaction";
-
-import type { Expense } from "@/types/expense";
 
 interface ProjectCustodySummary {
   balance: number;
@@ -196,6 +200,70 @@ function formatTransactionAmount(
   )}`;
 }
 
+function getWorkerMovementTypeLabel(
+  type: string,
+): string {
+  switch (type) {
+    case "salary":
+      return "راتب";
+
+    case "advance":
+      return "سلفة";
+
+    case "bonus":
+      return "إكرامية / إضافي";
+
+    case "transport":
+      return "بدل انتقال";
+
+    case "deduction":
+      return "خصم";
+
+    case "payment":
+      return "دفعة";
+
+    default:
+      return "حركة";
+  }
+}
+
+function getWorkerMovementAmount(
+  movement: {
+    amount: number;
+    effect: string;
+  },
+): number {
+  if (movement.effect === "decrease") {
+    return -Math.abs(movement.amount);
+  }
+
+  return Math.abs(movement.amount);
+}
+
+function formatWorkerMovementAmount(
+  movement: {
+    amount: number;
+    effect: string;
+  },
+): string {
+  const amount =
+    getWorkerMovementAmount(movement);
+
+  const absoluteAmount =
+    Math.abs(amount);
+
+  const prefix =
+    amount > 0
+      ? "+"
+      : amount < 0
+        ? "-"
+        : "";
+
+  return `${prefix}${formatAmount(
+    absoluteAmount,
+  )}`;
+}
+
 export default function ProjectDetailsPage() {
   const params = useParams();
 
@@ -215,11 +283,21 @@ export default function ProjectDetailsPage() {
   const [transactions, setTransactions] =
     useState<CustodyTransaction[]>([]);
 
-  const [expenses, setExpenses] =
-    useState<Expense[]>([]);
+  const [workerMovements, setWorkerMovements] =
+    useState<
+      ReturnType<
+        typeof getWorkerFinancialMovementsByWorkerId
+      >
+    >([]);
+
+  const [workerFilter, setWorkerFilter] =
+    useState("");
 
   const [loading, setLoading] =
     useState(true);
+
+  const [expenseRevision, setExpenseRevision] =
+    useState(0);
 
   useEffect(() => {
     const loadProject = () => {
@@ -229,7 +307,7 @@ export default function ProjectDetailsPage() {
       if (!currentProject) {
         setProject(null);
         setTransactions([]);
-        setExpenses([]);
+        setWorkerMovements([]);
         setLoading(false);
         return;
       }
@@ -289,10 +367,22 @@ export default function ProjectDetailsPage() {
         setTransactions([]);
       }
 
-      const projectExpenses =
-        getExpensesByProjectId(
-          projectId,
-        )
+
+      const allWorkers =
+        getWorkers();
+
+      const projectWorkerMovements =
+        allWorkers
+          .flatMap((worker) =>
+            getWorkerFinancialMovementsByWorkerId(
+              worker.id,
+            ),
+          )
+          .filter(
+            (movement) =>
+              movement.projectId ===
+              projectId,
+          )
           .slice()
           .sort((a, b) => {
             const dateComparison =
@@ -311,8 +401,8 @@ export default function ProjectDetailsPage() {
             );
           });
 
-      setExpenses(
-        projectExpenses,
+      setWorkerMovements(
+        projectWorkerMovements,
       );
 
       setLoading(false);
@@ -321,14 +411,99 @@ export default function ProjectDetailsPage() {
     loadProject();
   }, [projectId]);
 
-  const totalProjectExpenses =
-    useMemo(() => {
-      return expenses.reduce(
-        (total, expense) =>
-          total + expense.amount,
-        0,
+  const refreshProjectAfterExpenseChange = () => {
+    const currentProject = getProjectById(projectId);
+    if (!currentProject) return;
+
+    const projectCustody = getProjectCustody(projectId);
+    if (projectCustody) {
+      setCustodySummary({
+        balance: projectCustody.balance,
+        totalIn: projectCustody.totalIn,
+        totalOut: projectCustody.totalOut,
+      });
+
+      setTransactions(
+        getCustodyTransactionsByCustodyId(projectCustody.id)
+          .slice()
+          .sort((a, b) =>
+            b.date.localeCompare(a.date) ||
+            b.createdAt.localeCompare(a.createdAt),
+          ),
       );
-    }, [expenses]);
+    }
+
+    const allWorkers = getWorkers();
+    setWorkerMovements(
+      allWorkers
+        .flatMap((worker) =>
+          getWorkerFinancialMovementsByWorkerId(worker.id),
+        )
+        .filter((movement) => movement.projectId === projectId)
+        .slice()
+        .sort((a, b) =>
+          b.date.localeCompare(a.date) ||
+          b.createdAt.localeCompare(a.createdAt),
+        ),
+    );
+
+    setExpenseRevision((value) => value + 1);
+  };
+
+  const totalProjectExpenses = useMemo(() => {
+    return getExpensesByProjectId(projectId).reduce(
+      (total, expense) => total + expense.amount,
+      0,
+    );
+  }, [projectId, expenseRevision]);
+
+  const workerRows = useMemo(() => {
+    const workers =
+      getWorkers();
+
+    const workersMap =
+      new Map(
+        workers.map((worker) => [
+          worker.id,
+          worker.name,
+        ]),
+      );
+
+    return workerMovements.map(
+      (movement) => ({
+        movement,
+        workerName:
+          workersMap.get(
+            movement.workerId,
+          ) ??
+          "عامل غير معروف",
+      }),
+    );
+  }, [workerMovements]);
+
+  const filteredWorkerRows =
+    useMemo(() => {
+      const normalizedFilter =
+        workerFilter
+          .trim()
+          .toLocaleLowerCase("ar");
+
+      if (!normalizedFilter) {
+        return workerRows;
+      }
+
+      return workerRows.filter(
+        ({ workerName }) =>
+          workerName
+            .toLocaleLowerCase("ar")
+            .includes(
+              normalizedFilter,
+            ),
+      );
+    }, [
+      workerRows,
+      workerFilter,
+    ]);
 
   if (loading) {
     return (
@@ -648,56 +823,81 @@ export default function ProjectDetailsPage() {
           </div>
         </section>
 
-        {/* Actual Project Expenses */}
+        {/* Project Expenses / Financial Movements */}
+
+        <ProjectExpensesTable
+          projectId={projectId}
+          onChange={refreshProjectAfterExpenseChange}
+        />
+
+        {/* Workers */}
 
         <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <div>
-              <h2 className="text-base font-extrabold text-slate-900">
-                مصروفات المشروع
-              </h2>
+          <div className="flex flex-col gap-4 border-b border-slate-100 px-5 py-4 sm:px-6">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="text-base font-extrabold text-slate-900">
+                  العمال
+                </h2>
 
-              <p className="mt-1 text-xs text-slate-400">
-                المصروفات الفعلية المسجلة على هذا المشروع.
-              </p>
+                <p className="mt-1 text-xs leading-5 text-slate-400">
+                  كل الحركات المالية للعامل المرتبطة بهذا الموقع،
+                  حتى لو تم الدفع من عهدة أخرى.
+                </p>
+              </div>
+
+              <div className="w-full lg:w-72">
+                <input
+                  type="text"
+                  value={workerFilter}
+                  onChange={(event) =>
+                    setWorkerFilter(
+                      event.target.value,
+                    )
+                  }
+                  placeholder="فلترة باسم العامل..."
+                  className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                />
+              </div>
             </div>
-
-            <Link
-              href={`/expenses/new?project=${projectId}`}
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 text-xs font-bold text-white transition-colors hover:bg-slate-800"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              إضافة مصروف
-            </Link>
           </div>
 
-          {expenses.length === 0 ? (
+          {workerMovements.length === 0 ? (
             <div className="flex min-h-52 items-center justify-center px-5 py-10">
               <div className="text-center">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
-                  <ReceiptText className="h-6 w-6" />
+                  <UserRound className="h-6 w-6" />
                 </div>
 
                 <h3 className="mt-4 text-sm font-bold text-slate-700">
-                  لا توجد مصروفات حتى الآن
+                  لا توجد حركات مالية للعمال
+                </h3>
+
+                <p className="mt-1 max-w-md text-xs leading-5 text-slate-400">
+                  عند تسجيل سلفة أو راتب أو أي حركة مالية
+                  مرتبطة بعامل على هذا الموقع، ستظهر هنا.
+                </p>
+              </div>
+            </div>
+          ) : filteredWorkerRows.length === 0 ? (
+            <div className="flex min-h-52 items-center justify-center px-5 py-10">
+              <div className="text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                  <UserRound className="h-6 w-6" />
+                </div>
+
+                <h3 className="mt-4 text-sm font-bold text-slate-700">
+                  لا توجد نتائج
                 </h3>
 
                 <p className="mt-1 text-xs leading-5 text-slate-400">
-                  أضف أول مصروف للمشروع وسيظهر هنا.
+                  لم يتم العثور على عامل بهذا الاسم.
                 </p>
-
-                <Link
-                  href={`/expenses/new?project=${projectId}`}
-                  className="mt-4 inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 text-xs font-bold text-white hover:bg-slate-800"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  إضافة مصروف للمشروع
-                </Link>
               </div>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[850px] text-right">
+              <table className="w-full min-w-[900px] text-right">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50/70">
                     <th className="px-5 py-4 text-xs font-bold text-slate-500">
@@ -705,11 +905,15 @@ export default function ProjectDetailsPage() {
                     </th>
 
                     <th className="px-5 py-4 text-xs font-bold text-slate-500">
+                      اسم العامل
+                    </th>
+
+                    <th className="px-5 py-4 text-xs font-bold text-slate-500">
                       البيان
                     </th>
 
                     <th className="px-5 py-4 text-xs font-bold text-slate-500">
-                      التصنيف
+                      نوع الحركة
                     </th>
 
                     <th className="px-5 py-4 text-xs font-bold text-slate-500">
@@ -723,211 +927,87 @@ export default function ProjectDetailsPage() {
                 </thead>
 
                 <tbody className="divide-y divide-slate-100">
-                  {expenses.map(
-                    (expense) => {
+                  {filteredWorkerRows.map(
+                    ({
+                      movement,
+                      workerName,
+                    }) => {
                       const custody =
-                        getCustodyById(
-                          expense.custodyId,
+                        movement.custodyId
+                          ? getCustodyById(
+                              movement.custodyId,
+                            )
+                          : undefined;
+
+                      const amount =
+                        getWorkerMovementAmount(
+                          movement,
                         );
 
                       return (
                         <tr
-                          key={expense.id}
+                          key={movement.id}
                           className="transition-colors hover:bg-slate-50/70"
                         >
                           <td className="whitespace-nowrap px-5 py-4 text-xs font-semibold text-slate-500">
                             {formatDate(
-                              expense.date,
+                              movement.date,
                             )}
                           </td>
 
                           <td className="px-5 py-4">
-                            <p className="max-w-[360px] text-sm font-bold leading-6 text-slate-800">
-                              {
-                                expense.description
-                              }
+                            <div className="flex items-center gap-2">
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                                <UserRound className="h-4 w-4" />
+                              </div>
+
+                              <span className="text-sm font-extrabold text-slate-800">
+                                {workerName}
+                              </span>
+                            </div>
+                          </td>
+
+                          <td className="px-5 py-4">
+                            <p className="max-w-[320px] text-sm font-bold leading-6 text-slate-800">
+                              {movement.description ||
+                                "—"}
                             </p>
                           </td>
 
                           <td className="px-5 py-4">
-                            <span className="inline-flex rounded-lg bg-slate-100 px-2.5 py-1.5 text-[11px] font-bold text-slate-700">
-                              {expense.category}
-                            </span>
-                          </td>
-
-                          <td className="px-5 py-4 text-sm font-semibold text-slate-600">
-                            {custody?.name ??
-                              "عهدة غير معروفة"}
-                          </td>
-
-                          <td className="whitespace-nowrap px-5 py-4 text-left">
-                            <span className="text-sm font-extrabold text-red-600">
-                              -
-                              {formatAmount(
-                                expense.amount,
-                              )}{" "}
-                              جنيه
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    },
-                  )}
-                </tbody>
-
-                <tfoot>
-                  <tr className="bg-slate-50/70">
-                    <td
-                      colSpan={4}
-                      className="px-5 py-4 text-sm font-extrabold text-slate-700"
-                    >
-                      إجمالي المصروفات
-                    </td>
-
-                    <td className="px-5 py-4 text-left text-sm font-extrabold text-red-600">
-                      -
-                      {formatAmount(
-                        totalProjectExpenses,
-                      )}{" "}
-                      جنيه
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          )}
-        </section>
-
-        {/* Project Movement */}
-
-        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <div>
-              <h2 className="text-base font-extrabold text-slate-900">
-                حركة المشروع
-              </h2>
-
-              <p className="mt-1 text-xs text-slate-400">
-                جميع العمليات المالية المسجلة على عهدة المشروع.
-              </p>
-            </div>
-
-            <Link
-              href={`/reports?project=${projectId}`}
-              className="inline-flex h-9 items-center justify-center gap-1 rounded-lg bg-slate-50 px-3 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
-            >
-              التقرير الكامل
-
-              <ChevronLeft className="h-4 w-4" />
-            </Link>
-          </div>
-
-          {transactions.length === 0 ? (
-            <div className="flex min-h-60 items-center justify-center px-5 py-10">
-              <div className="text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
-                  <ReceiptText className="h-6 w-6" />
-                </div>
-
-                <h3 className="mt-4 text-sm font-bold text-slate-700">
-                  لا توجد حركات حتى الآن
-                </h3>
-
-                <p className="mt-1 max-w-sm text-xs leading-5 text-slate-400">
-                  عند تسجيل أول حركة مالية مرتبطة
-                  بهذا المشروع، ستظهر تفاصيلها هنا.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[760px] text-right">
-                <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/70">
-                    <th className="px-5 py-4 text-xs font-bold text-slate-500">
-                      التاريخ
-                    </th>
-
-                    <th className="px-5 py-4 text-xs font-bold text-slate-500">
-                      النوع
-                    </th>
-
-                    <th className="px-5 py-4 text-xs font-bold text-slate-500">
-                      البيان
-                    </th>
-
-                    <th className="px-5 py-4 text-xs font-bold text-slate-500">
-                      المصدر
-                    </th>
-
-                    <th className="px-5 py-4 text-left text-xs font-bold text-slate-500">
-                      المبلغ
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-slate-100">
-                  {transactions.map(
-                    (transaction) => {
-                      const transactionAmount =
-                        getTransactionAmount(
-                          transaction,
-                        );
-
-                      return (
-                        <tr
-                          key={
-                            transaction.id
-                          }
-                          className="transition-colors hover:bg-slate-50/70"
-                        >
-                          <td className="whitespace-nowrap px-5 py-4 text-xs font-semibold text-slate-500">
-                            {formatDate(
-                              transaction.date,
-                            )}
-                          </td>
-
-                          <td className="px-5 py-4">
                             <span
-                              className={`inline-flex rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${getTransactionTypeClasses(
-                                transaction,
-                              )}`}
+                              className={`inline-flex rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${
+                                movement.effect ===
+                                "increase"
+                                  ? "bg-emerald-50 text-emerald-600"
+                                  : "bg-red-50 text-red-600"
+                              }`}
                             >
-                              {getTransactionTypeLabel(
-                                transaction,
+                              {getWorkerMovementTypeLabel(
+                                movement.type,
                               )}
                             </span>
                           </td>
 
                           <td className="px-5 py-4">
-                            <p className="max-w-[360px] text-sm font-bold leading-6 text-slate-800">
-                              {
-                                transaction.description
-                              }
-                            </p>
-                          </td>
-
-                          <td className="px-5 py-4">
-                            <p className="max-w-[240px] text-xs leading-5 text-slate-500">
-                              {transaction.source ||
-                                "—"}
-                            </p>
+                            <span className="text-sm font-semibold text-slate-600">
+                              {custody?.name ??
+                                "عهدة غير محددة"}
+                            </span>
                           </td>
 
                           <td className="whitespace-nowrap px-5 py-4 text-left">
                             <span
                               className={`text-sm font-extrabold ${
-                                transactionAmount >
-                                0
+                                amount > 0
                                   ? "text-emerald-600"
-                                  : transactionAmount <
-                                      0
+                                  : amount < 0
                                     ? "text-red-600"
                                     : "text-slate-700"
                               }`}
                             >
-                              {formatTransactionAmount(
-                                transaction,
+                              {formatWorkerMovementAmount(
+                                movement,
                               )}
                             </span>
 

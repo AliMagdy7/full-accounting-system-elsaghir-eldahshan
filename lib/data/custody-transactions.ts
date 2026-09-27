@@ -67,6 +67,16 @@ export function getCustodyTransactionById(
   );
 }
 
+export function getCustodyTransactionByWorkerFinancialMovementId(
+  workerFinancialMovementId: string,
+): CustodyTransaction | undefined {
+  return readTransactions().find(
+    (transaction) =>
+      transaction.workerFinancialMovementId ===
+      workerFinancialMovementId,
+  );
+}
+
 export function addCustodyTransaction(
   transaction: CustodyTransaction,
 ): CustodyTransaction {
@@ -111,4 +121,27 @@ export function updateCustodyTransaction(
   saveTransactions(transactions);
 
   return updatedTransaction;
+}
+
+export function deleteCustodyTransaction(
+  id: string,
+): void {
+  const transactions =
+    readTransactions();
+
+  const exists = transactions.some(
+    (transaction) =>
+      transaction.id === id,
+  );
+
+  if (!exists) {
+    throw new Error("حركة العهدة غير موجودة.");
+  }
+
+  saveTransactions(
+    transactions.filter(
+      (transaction) =>
+        transaction.id !== id,
+    ),
+  );
 }

@@ -116,6 +116,10 @@ export function updateCustodyBalance(
   amount: number,
   type: "in" | "out",
 ): Custody | undefined {
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new Error("مبلغ حركة العهدة غير صحيح.");
+  }
+
   const custody = getCustodyById(id);
 
   if (!custody) {
@@ -127,6 +131,19 @@ export function updateCustodyBalance(
       ? custody.balance + amount
       : custody.balance - amount;
 
+  /*
+   * عهدة "عهدتي أنا" لها رصيد فعلي لا يجوز تجاوزه.
+   * عهدة الموقع وأي عهدة أخرى تمثل حسابًا مستمرًا،
+   * لذلك يمكن أن يصبح رصيدها سالبًا عند تسجيل مصروف/سلفة.
+   */
+  if (
+    type === "out" &&
+    custody.type === "central" &&
+    newBalance < 0
+  ) {
+    throw new Error("رصيد عهدتي أنا غير كافٍ.");
+  }
+
   const newTotalIn =
     type === "in"
       ? custody.totalIn + amount
@@ -136,6 +153,54 @@ export function updateCustodyBalance(
     type === "out"
       ? custody.totalOut + amount
       : custody.totalOut;
+
+  return updateCustody(id, {
+    balance: newBalance,
+    totalIn: newTotalIn,
+    totalOut: newTotalOut,
+  });
+}
+
+/*
+ * عكس أثر حركة عهدة مسجلة بالفعل.
+ *
+ * إذا كانت الحركة الأصلية "out" يتم إعادة المبلغ للعهدة
+ * وتقليل totalOut بنفس القيمة.
+ * وإذا كانت "in" يتم سحب المبلغ وتقليل totalIn.
+ */
+export function reverseCustodyBalance(
+  id: string,
+  amount: number,
+  originalType: "in" | "out",
+): Custody | undefined {
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new Error("مبلغ عكس حركة العهدة غير صحيح.");
+  }
+
+  const custody = getCustodyById(id);
+
+  if (!custody) {
+    throw new Error("العهدة المرتبطة بالحركة غير موجودة.");
+  }
+
+  const newBalance =
+    originalType === "out"
+      ? custody.balance + amount
+      : custody.balance - amount;
+
+  const newTotalIn =
+    originalType === "in"
+      ? Math.max(0, custody.totalIn - amount)
+      : custody.totalIn;
+
+  const newTotalOut =
+    originalType === "out"
+      ? Math.max(0, custody.totalOut - amount)
+      : custody.totalOut;
+
+  if (custody.type === "central" && newBalance < 0) {
+    throw new Error("لا يمكن عكس الحركة لأن رصيد عهدتي أنا سيصبح سالبًا.");
+  }
 
   return updateCustody(id, {
     balance: newBalance,

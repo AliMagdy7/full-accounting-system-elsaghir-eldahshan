@@ -82,12 +82,18 @@ export function updateCustodyFinancialAccountBalance(
   if (index === -1) throw new Error("وسيلة الدفع غير موجودة.");
 
   const account = accounts[index];
+  const nextBalance =
+    type === "in"
+      ? account.balance + amount
+      : account.balance - amount;
+
+  if (type === "out" && nextBalance < 0) {
+    throw new Error("رصيد وسيلة الدفع غير كافٍ.");
+  }
+
   accounts[index] = {
     ...account,
-    balance:
-      type === "in"
-        ? account.balance + amount
-        : account.balance - amount,
+    balance: nextBalance,
     totalIn:
       type === "in"
         ? account.totalIn + amount
@@ -95,6 +101,47 @@ export function updateCustodyFinancialAccountBalance(
     totalOut:
       type === "out"
         ? account.totalOut + amount
+        : account.totalOut,
+    updatedAt: new Date().toISOString(),
+  };
+
+  saveAccounts(accounts);
+  return accounts[index];
+}
+
+export function reverseCustodyFinancialAccountBalance(
+  id: string,
+  amount: number,
+  originalType: "in" | "out",
+) {
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new Error("مبلغ عكس حركة وسيلة الدفع غير صحيح.");
+  }
+
+  const accounts = readAccounts();
+  const index = accounts.findIndex((account) => account.id === id);
+  if (index === -1) throw new Error("وسيلة الدفع غير موجودة.");
+
+  const account = accounts[index];
+  const nextBalance =
+    originalType === "out"
+      ? account.balance + amount
+      : account.balance - amount;
+
+  if (nextBalance < 0) {
+    throw new Error("لا يمكن عكس الحركة لأن رصيد وسيلة الدفع سيصبح سالبًا.");
+  }
+
+  accounts[index] = {
+    ...account,
+    balance: nextBalance,
+    totalIn:
+      originalType === "in"
+        ? Math.max(0, account.totalIn - amount)
+        : account.totalIn,
+    totalOut:
+      originalType === "out"
+        ? Math.max(0, account.totalOut - amount)
         : account.totalOut,
     updatedAt: new Date().toISOString(),
   };
@@ -124,8 +171,12 @@ export function transferCustodyFinancialAccount(
     throw new Error("وسيلة الدفع غير موجودة.");
   }
 
-  const now = new Date().toISOString();
   const from = accounts[fromIndex];
+  if (from.balance < amount) {
+    throw new Error("رصيد وسيلة الدفع المصدر غير كافٍ.");
+  }
+
+  const now = new Date().toISOString();
   const to = accounts[toIndex];
 
   accounts[fromIndex] = {

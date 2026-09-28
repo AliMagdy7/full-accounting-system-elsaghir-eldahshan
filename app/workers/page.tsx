@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  FormEvent,
+  SubmitEvent,
   useEffect,
   useMemo,
   useState,
@@ -216,7 +216,7 @@ export default function WorkersPage() {
   };
 
   const handleSubmit = (
-    event: FormEvent<HTMLFormElement>,
+    event: SubmitEvent<HTMLFormElement>,
   ) => {
     event.preventDefault();
 

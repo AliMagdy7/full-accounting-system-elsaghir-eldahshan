@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { SubmitEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -68,7 +68,7 @@ export default function NewProjectPage() {
   }, []);
 
   const handleSubmit = (
-    event: FormEvent<HTMLFormElement>,
+    event: SubmitEvent<HTMLFormElement>,
   ) => {
     event.preventDefault();
 

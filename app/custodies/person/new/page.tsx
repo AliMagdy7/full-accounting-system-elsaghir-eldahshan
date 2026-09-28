@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { SubmitEvent, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -26,7 +26,7 @@ export default function NewPersonCustodyPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSubmit = (
-    event: FormEvent<HTMLFormElement>,
+    event: SubmitEvent<HTMLFormElement>,
   ) => {
     event.preventDefault();
 

@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  FormEvent,
+  SubmitEvent,
   Suspense,
   useEffect,
   useMemo,
@@ -315,7 +315,7 @@ function NewTransferPageContent() {
    */
 
   const handleSubmit = (
-    event: FormEvent<HTMLFormElement>,
+    event: SubmitEvent<HTMLFormElement>,
   ) => {
     event.preventDefault();
 

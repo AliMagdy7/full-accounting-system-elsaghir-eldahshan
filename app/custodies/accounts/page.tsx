@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { SubmitEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Plus, WalletCards } from "lucide-react";
 
@@ -37,7 +37,7 @@ export default function CustodyAccountsPage() {
   }, []);
 
   const handleSubmit = (
-    event: FormEvent<HTMLFormElement>,
+    event: SubmitEvent<HTMLFormElement>,
   ) => {
     event.preventDefault();
     setError("");

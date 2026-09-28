@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  FormEvent,
+  SubmitEvent,
   useEffect,
   useState,
 } from "react";
@@ -271,7 +271,7 @@ export default function NewExpensePage() {
   };
 
   const handleSubmit = (
-    event: FormEvent<HTMLFormElement>,
+    event: SubmitEvent<HTMLFormElement>,
   ) => {
     event.preventDefault();
 

@@ -1,5 +1,7 @@
 "use client";
 
+import DateInput from "@/lib/date-input";
+
 import { SubmitEvent, useState } from "react";
 import Link from "next/link";
 import {
@@ -180,12 +182,11 @@ export default function NewPersonCustodyPage() {
               <div className="relative">
                 <CalendarDays className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
 
-                <input
+                <DateInput
                   id="custody-start-date"
-                  type="date"
                   value={startDate}
-                  onChange={(event) => {
-                    setStartDate(event.target.value);
+                  onChange={(value) => {
+                    setStartDate(value);
                     setError("");
                   }}
                   className="h-12 w-full rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm text-slate-800 outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"

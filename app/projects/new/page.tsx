@@ -1,5 +1,7 @@
 "use client";
 
+import DateInput from "@/lib/date-input";
+
 import { SubmitEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -280,13 +282,12 @@ export default function NewProjectPage() {
                 تاريخ استلام العهدة
               </label>
 
-              <input
+              <DateInput
                 id="assignment-date"
-                type="date"
                 value={assignmentDate}
-                onChange={(event) =>
+                onChange={(value) =>
                   setAssignmentDate(
-                    event.target.value,
+                    value,
                   )
                 }
                 className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-right text-sm text-slate-900 outline-none transition-all duration-200 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"

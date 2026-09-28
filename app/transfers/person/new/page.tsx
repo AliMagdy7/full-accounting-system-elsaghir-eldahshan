@@ -1,5 +1,7 @@
 "use client";
 
+import DateInput from "@/lib/date-input";
+
 import {
   SubmitEvent,
   Suspense,
@@ -1447,13 +1449,12 @@ function NewTransferPageContent() {
 
                     <CalendarDays className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
 
-                    <input
+                    <DateInput
                       id="transfer-date"
-                      type="date"
                       value={date}
-                      onChange={(event) => {
+                      onChange={(value) => {
                         setDate(
-                          event.target.value,
+                          value,
                         );
 
                         setError("");

@@ -1,6 +1,10 @@
 "use client";
 
+import DateInput from "@/lib/date-input";
+
+import { formatDisplayDate } from "@/lib/formatters";
 import { useEffect, useMemo, useState } from "react";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   Check,
   Pencil,
@@ -61,10 +65,7 @@ function money(value: number) {
 }
 
 function dateLabel(value: string) {
-  const [year, month, day] = value.split("-");
-  return year && month && day
-    ? `${day}/${month}/${year}`
-    : value;
+  return formatDisplayDate(value);
 }
 
 function movementLabel(type: ProjectMovementType) {
@@ -117,6 +118,7 @@ export default function ProjectExpensesTable({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<ProjectMovementDraft | null>(null);
   const [saving, setSaving] = useState(false);
+  const { confirm, dialog } = useConfirmDialog();
   const [error, setError] = useState("");
 
   const [movementFilter, setMovementFilter] = useState<"all" | ProjectMovementType>("all");
@@ -415,13 +417,16 @@ export default function ProjectExpensesTable({
   };
 
   const removeRow = (row: ProjectMovementRecord) => {
-    const confirmed = window.confirm(
-      "هل أنت متأكد من حذف الحركة؟ سيتم عكس أثرها على العهدة والحساب المالي المرتبط بها.",
-    );
-
-    if (!confirmed) return;
-
-    setSaving(true);
+    confirm(
+      {
+        title: "تأكيد حذف الحركة",
+        description: "هل أنت متأكد من حذف هذه الحركة؟ سيتم عكس أثرها على العهدة والحساب المالي المرتبط بها، ولا يمكن التراجع عن الإجراء.",
+        confirmText: "حذف الحركة",
+        cancelText: "إلغاء",
+        variant: "danger",
+      },
+      () => {
+        setSaving(true);
     setError("");
 
     try {
@@ -437,6 +442,8 @@ export default function ProjectExpensesTable({
     } finally {
       setSaving(false);
     }
+       },
+    );
   };
 
   const resetFilters = () => {
@@ -463,10 +470,9 @@ export default function ProjectExpensesTable({
     return (
       <tr key={editingId ?? "editor"} className="border-b border-blue-100 bg-blue-50/40">
         <td className="px-3 py-3 align-top">
-          <input
-            type="date"
+          <DateInput
             value={draft.date}
-            onChange={(event) => updateDraft("date", event.target.value)}
+            onChange={(value) => updateDraft("date", value)}
             className="h-9 w-full min-w-[135px] rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold outline-none focus:border-blue-500"
           />
         </td>
@@ -604,7 +610,8 @@ export default function ProjectExpensesTable({
   };
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       <datalist id={`project-expense-categories-${projectId}`}>
         {allCategories
           .filter(
@@ -738,17 +745,15 @@ export default function ProjectExpensesTable({
               <tr className="border-b border-slate-200 bg-white">
                 <th className="px-2 py-2">
                   <div className="flex gap-1">
-                    <input
-                      type="date"
+                    <DateInput
                       value={fromDate}
-                      onChange={(event) => setFromDate(event.target.value)}
+                      onChange={(value) => setFromDate(value)}
                       className="h-8 w-full rounded-md border border-slate-200 px-1 text-[10px]"
                       title="من تاريخ"
                     />
-                    <input
-                      type="date"
+                    <DateInput
                       value={toDate}
-                      onChange={(event) => setToDate(event.target.value)}
+                      onChange={(value) => setToDate(value)}
                       className="h-8 w-full rounded-md border border-slate-200 px-1 text-[10px]"
                       title="إلى تاريخ"
                     />
@@ -940,6 +945,8 @@ export default function ProjectExpensesTable({
           </table>
         </div>
       </section>
-    </div>
+      </div>
+      {dialog}
+    </>
   );
 }

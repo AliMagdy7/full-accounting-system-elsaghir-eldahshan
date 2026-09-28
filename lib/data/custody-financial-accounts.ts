@@ -1,5 +1,7 @@
+import { assertCurrentUserPermission } from "@/lib/permission-check";
 import { updateCustodyBalance } from "@/lib/data/custodies";
 import type { CustodyFinancialAccount } from "@/types/custody-financial-account";
+import { addAuditLog } from "@/lib/data/audit-logs";
 
 const STORAGE_KEY = "elsaghir-eldahshan-custody-financial-accounts";
 
@@ -38,6 +40,7 @@ export function addCustodyFinancialAccount(input: {
   name: string;
   openingBalance?: number;
 }) {
+  assertCurrentUserPermission("create");
   const name = input.name.trim();
   if (!name) throw new Error("اسم وسيلة الدفع مطلوب.");
 
@@ -65,6 +68,16 @@ export function addCustodyFinancialAccount(input: {
     updateCustodyBalance(input.custodyId, openingBalance, "in");
   }
 
+  addAuditLog({
+    action: "create",
+    entity: "custody_financial_account",
+    entityId: account.id,
+    description: `تمت إضافة حساب مالي: ${account.name}.`,
+    notificationTitle: "إضافة حساب مالي",
+    notificationType: "success",
+    notificationHref: "/custodies/accounts",
+  });
+
   return account;
 }
 
@@ -73,6 +86,7 @@ export function updateCustodyFinancialAccountBalance(
   amount: number,
   type: "in" | "out",
 ) {
+  assertCurrentUserPermission("update");
   if (!Number.isFinite(amount) || amount <= 0) {
     throw new Error("مبلغ الحركة غير صحيح.");
   }
@@ -106,6 +120,18 @@ export function updateCustodyFinancialAccountBalance(
   };
 
   saveAccounts(accounts);
+
+  addAuditLog({
+    action: "create",
+    entity: "custody_financial_account",
+    entityId: account.id,
+    description: `تم تحديث رصيد الحساب المالي ${account.name}: ${type === "in" ? "إضافة" : "خصم"} ${amount.toLocaleString("en-US")} ج.م.`,
+    notificationTitle: "حركة على حساب مالي",
+    notificationType: "info",
+    notificationHref: "/custodies/accounts",
+    notify: false,
+  });
+
   return accounts[index];
 }
 
@@ -147,6 +173,18 @@ export function reverseCustodyFinancialAccountBalance(
   };
 
   saveAccounts(accounts);
+
+  addAuditLog({
+    action: "reverse",
+    entity: "custody_financial_account",
+    entityId: account.id,
+    description: `تم عكس حركة الحساب المالي ${account.name} بقيمة ${amount.toLocaleString("en-US")} ج.م.`,
+    notificationTitle: "عكس حركة حساب مالي",
+    notificationType: "warning",
+    notificationHref: "/custodies/accounts",
+    notify: false,
+  });
+
   return accounts[index];
 }
 
@@ -155,6 +193,7 @@ export function transferCustodyFinancialAccount(
   toAccountId: string,
   amount: number,
 ) {
+  assertCurrentUserPermission("update");
   if (fromAccountId === toAccountId) {
     throw new Error("لا يمكن التحويل إلى نفس وسيلة الدفع.");
   }
@@ -194,6 +233,21 @@ export function transferCustodyFinancialAccount(
   };
 
   saveAccounts(accounts);
+
+  addAuditLog({
+    action: "transfer",
+    entity: "transfer",
+    description: `تم تحويل ${amount.toLocaleString("en-US")} ج.م. من ${from.name} إلى ${to.name}.`,
+    notificationTitle: "تحويل مالي",
+    notificationType: "success",
+    notificationHref: "/transfers",
+    metadata: {
+      fromAccountId,
+      toAccountId,
+      amount,
+    },
+  });
+
   return {
     from: accounts[fromIndex],
     to: accounts[toIndex],

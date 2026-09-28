@@ -1,5 +1,7 @@
 "use client";
 
+import DateInput from "@/lib/date-input";
+
 import {
   SubmitEvent,
   useEffect,
@@ -614,13 +616,12 @@ export default function NewCentralCustodyTransactionPage() {
                   </span>
                 </label>
 
-                <input
+                <DateInput
                   id="movement-date"
-                  type="date"
                   value={date}
-                  onChange={(event) =>
+                  onChange={(value) =>
                     setDate(
-                      event.target.value,
+                      value,
                     )
                   }
                   className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-right text-sm text-slate-800 outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"

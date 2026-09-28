@@ -1,4 +1,6 @@
+import { assertCurrentUserPermission } from "@/lib/permission-check";
 import type { Custody } from "@/types/custody";
+import { addAuditLog } from "@/lib/data/audit-logs";
 
 const STORAGE_KEY = "accounting-system-custodies";
 
@@ -69,11 +71,22 @@ export function getCustodyById(
 export function addCustody(
   custody: Custody,
 ): Custody {
+  assertCurrentUserPermission("create");
   const custodies = getCustodies();
 
   custodies.push(custody);
 
   saveCustodies(custodies);
+
+  addAuditLog({
+    action: "create",
+    entity: "custody",
+    entityId: custody.id,
+    description: `تمت إضافة العهدة: ${custody.name}.`,
+    notificationTitle: "إضافة عهدة",
+    notificationType: "success",
+    notificationHref: "/custodies",
+  });
 
   return custody;
 }
@@ -81,7 +94,10 @@ export function addCustody(
 export function updateCustody(
   id: string,
   updates: Partial<Custody>,
+  options?: {
+  audit?: boolean },
 ): Custody | undefined {
+  assertCurrentUserPermission("update");
   const custodies = getCustodies();
 
   const index = custodies.findIndex(
@@ -92,8 +108,10 @@ export function updateCustody(
     return undefined;
   }
 
+  const previousCustody = custodies[index];
+
   const updatedCustody: Custody = {
-    ...custodies[index],
+    ...previousCustody,
     ...updates,
     updatedAt: new Date().toISOString(),
   };
@@ -101,6 +119,19 @@ export function updateCustody(
   custodies[index] = updatedCustody;
 
   saveCustodies(custodies);
+
+  if (options?.audit !== false) {
+    addAuditLog({
+      action: "update",
+      entity: "custody",
+      entityId: updatedCustody.id,
+      description: `تم تعديل العهدة: ${updatedCustody.name}.`,
+      notificationTitle: "تعديل عهدة",
+      notificationType: "info",
+      notificationHref: "/custodies",
+      metadata: { previous: previousCustody, updates },
+    });
+  }
 
   return updatedCustody;
 }
@@ -116,6 +147,7 @@ export function updateCustodyBalance(
   amount: number,
   type: "in" | "out",
 ): Custody | undefined {
+  assertCurrentUserPermission("update");
   if (!Number.isFinite(amount) || amount <= 0) {
     throw new Error("مبلغ حركة العهدة غير صحيح.");
   }
@@ -154,11 +186,30 @@ export function updateCustodyBalance(
       ? custody.totalOut + amount
       : custody.totalOut;
 
-  return updateCustody(id, {
-    balance: newBalance,
-    totalIn: newTotalIn,
-    totalOut: newTotalOut,
-  });
+  const updated = updateCustody(
+    id,
+    {
+      balance: newBalance,
+      totalIn: newTotalIn,
+      totalOut: newTotalOut,
+    },
+    { audit: false },
+  );
+
+  if (updated) {
+    addAuditLog({
+      action: type === "in" ? "create" : "create",
+      entity: "custody",
+      entityId: updated.id,
+      description: `تم تحديث رصيد ${updated.name}: ${type === "in" ? "إضافة" : "خصم"} ${amount.toLocaleString("en-US")} ج.م.`,
+      notificationTitle: "تحديث رصيد عهدة",
+      notificationType: "info",
+      notificationHref: "/custodies",
+      notify: false,
+    });
+  }
+
+  return updated;
 }
 
 /*
@@ -202,11 +253,30 @@ export function reverseCustodyBalance(
     throw new Error("لا يمكن عكس الحركة لأن رصيد عهدتي أنا سيصبح سالبًا.");
   }
 
-  return updateCustody(id, {
-    balance: newBalance,
-    totalIn: newTotalIn,
-    totalOut: newTotalOut,
-  });
+  const updated = updateCustody(
+    id,
+    {
+      balance: newBalance,
+      totalIn: newTotalIn,
+      totalOut: newTotalOut,
+    },
+    { audit: false },
+  );
+
+  if (updated) {
+    addAuditLog({
+      action: "reverse",
+      entity: "custody",
+      entityId: updated.id,
+      description: `تم عكس حركة على ${updated.name} بقيمة ${amount.toLocaleString("en-US")} ج.م.`,
+      notificationTitle: "عكس حركة عهدة",
+      notificationType: "warning",
+      notificationHref: "/custodies",
+      notify: false,
+    });
+  }
+
+  return updated;
 }
 
 export function getProjectCustody(
@@ -224,6 +294,7 @@ export function ensureProjectCustody(
   projectName: string,
   responsiblePerson?: string,
 ): Custody {
+  assertCurrentUserPermission("create");
   const existingCustody =
     getProjectCustody(projectId);
 
@@ -261,6 +332,7 @@ export function updateProjectCustody(
     "name" | "responsiblePerson"
   >,
 ): Custody | undefined {
+  assertCurrentUserPermission("update");
   const custody = getProjectCustody(projectId);
 
   if (!custody) {

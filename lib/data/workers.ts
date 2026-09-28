@@ -1,3 +1,6 @@
+import { assertCurrentUserPermission } from "@/lib/permission-check";
+import { addAuditLog } from "@/lib/data/audit-logs";
+
 import type {
   Worker,
   WorkerMonthlyDivision,
@@ -191,6 +194,7 @@ export function addWorker(input: {
 
   carriedSalary?: number;
 }) {
+  assertCurrentUserPermission("create");
   const workers =
     readWorkers();
 
@@ -373,6 +377,16 @@ export function addWorker(input: {
     assignment,
   ]);
 
+  addAuditLog({
+    action: "create",
+    entity: "worker",
+    entityId: worker.id,
+    description: `تمت إضافة العامل: ${worker.name}.`,
+    notificationTitle: "إضافة عامل",
+    notificationType: "success",
+    notificationHref: `/workers/${worker.id}`,
+  });
+
   return worker;
 }
 
@@ -384,7 +398,10 @@ export function updateWorker(
       "id" | "createdAt"
     >
   >,
+  options?: {
+  audit?: boolean },
 ) {
+  assertCurrentUserPermission("update");
   const workers =
     readWorkers();
 
@@ -439,6 +456,19 @@ export function updateWorker(
   saveWorkers(
     workers,
   );
+
+  if (options?.audit !== false) {
+    addAuditLog({
+      action: "update",
+      entity: "worker",
+      entityId: next.id,
+      description: `تم تعديل بيانات العامل: ${next.name}.`,
+      notificationTitle: "تعديل عامل",
+      notificationType: "info",
+      notificationHref: `/workers/${next.id}`,
+      metadata: { previous: current, updates },
+    });
+  }
 
   return next;
 }
@@ -759,12 +789,26 @@ export function moveWorkerToProject(
         monthlyDivision:
           nextMonthlyDivision,
       },
+      { audit: false },
     );
 
-  return {
-    worker:
-      updatedWorker,
+  addAuditLog({
+    action: "transfer",
+    entity: "worker",
+    entityId: worker.id,
+    description: `تم نقل العامل ${worker.name} إلى موقع جديد.`,
+    notificationTitle: "نقل عامل",
+    notificationType: "info",
+    notificationHref: `/workers/${worker.id}`,
+    metadata: {
+      fromProjectId: worker.currentProjectId,
+      toProjectId: input.projectId,
+      assignmentId: assignment.id,
+    },
+  });
 
+  return {
+    worker: updatedWorker,
     assignment,
   };
 }
@@ -772,6 +816,7 @@ export function moveWorkerToProject(
 export function deleteWorker(
   id: string,
 ) {
+  assertCurrentUserPermission("delete");
   const workers =
     readWorkers();
 
@@ -801,4 +846,14 @@ export function deleteWorker(
         id,
     ),
   );
+
+  addAuditLog({
+    action: "delete",
+    entity: "worker",
+    entityId: id,
+    description: "تم حذف العامل من النظام.",
+    notificationTitle: "حذف عامل",
+    notificationType: "warning",
+    notificationHref: "/workers",
+  });
 }

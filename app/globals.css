@@ -1,8 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
+  --background: #f4f7fb;
   --foreground: #0f172a;
+  --surface: #ffffff;
+  --surface-soft: #f8fafc;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --primary: #1d4ed8;
+  --primary-dark: #1e3a8a;
+  --success: #15803d;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --info: #0369a1;
+  --radius-card: 1rem;
+  --shadow-card: 0 8px 30px rgba(15, 23, 42, 0.06);
 }
 
 @theme inline {
@@ -12,93 +24,183 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* ================================
-   Base
-================================ */
-
-html {
-  min-height: 100%;
-}
-
+* { box-sizing: border-box; }
+html { min-height: 100%; scroll-behavior: smooth; }
 body {
   min-height: 100vh;
   margin: 0;
-  background: var(--background);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(59, 130, 246, 0.055), transparent 28rem),
+    var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Tahoma, "Segoe UI", Arial, sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ================================
-   Interactive Elements
-================================ */
+::selection { background: rgba(37, 99, 235, 0.18); color: #0f172a; }
+
+* { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+*::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+button:not(:disabled), a, select,
+input[type="checkbox"]:not(:disabled), input[type="radio"]:not(:disabled),
+input[type="date"], input[type="datetime-local"], input[type="month"],
+input[type="time"], input[type="file"] { cursor: pointer; }
+
+input[type="text"], input[type="email"], input[type="password"],
+input[type="number"], input[type="search"], input[type="tel"], input[type="url"], textarea { cursor: text; }
+
+button:disabled, select:disabled, input:disabled, textarea:disabled { cursor: not-allowed; }
+input, select, textarea, button { font: inherit; }
+button { border: 0; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* ---------- Shared visual language ---------- */
+.accounting-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+.accounting-section-title { color: #0f172a; font-weight: 800; letter-spacing: -0.02em; }
+.accounting-muted { color: #64748b; }
+.accounting-number { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
+/* Form controls used across the application */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+select, textarea {
+  border-color: var(--border-strong);
+  border-radius: 0.75rem;
+  background: #fff;
+  color: #0f172a;
+  transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+}
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):hover,
+select:hover, textarea:hover { border-color: #94a3b8; }
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+select:focus, textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .10);
+  outline: none;
+}
+input::placeholder, textarea::placeholder { color: #94a3b8; }
+
+/* Tables: keep financial data dense but readable */
+table { width: 100%; border-collapse: separate; border-spacing: 0; }
+thead th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .01em;
+  white-space: nowrap;
+}
+tbody tr { transition: background-color .15s ease; }
+tbody tr:hover { background: rgba(248, 250, 252, .86); }
+tbody td { font-variant-numeric: tabular-nums; }
+
+/* Dialogs / overlays */
+[role="dialog"] {
+  border-radius: 1rem;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, .18);
+}
+
+/* Mobile-friendly defaults */
+@media (max-width: 767px) {
+  body { font-size: 14px; }
+  table { min-width: 680px; }
+  .accounting-card { border-radius: .875rem; }
+}
+
+/* ---------- Subtle application motion ---------- */
+.ui-fade-up {
+  animation: ui-fade-up 360ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.ui-modal-backdrop {
+  animation: ui-fade-in 180ms ease-out both;
+}
+
+.ui-modal {
+  animation: ui-modal-in 240ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.ui-shake {
+  animation: ui-shake 280ms ease-out both;
+}
 
 button:not(:disabled),
 a,
+input,
 select,
-input[type="checkbox"]:not(:disabled),
-input[type="radio"]:not(:disabled),
+textarea {
+  transition-duration: 180ms;
+}
+
 input[type="date"],
 input[type="datetime-local"],
 input[type="month"],
-input[type="time"],
-input[type="file"] {
-  cursor: pointer;
+input[type="time"] {
+  direction: ltr;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
-/* ================================
-   Text Inputs
-================================ */
-
-input[type="text"],
-input[type="email"],
-input[type="password"],
 input[type="number"],
-input[type="search"],
-input[type="tel"],
-input[type="url"],
-textarea {
-  cursor: text;
+.accounting-number,
+[data-financial-number="true"] {
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+  text-align: right;
 }
 
-/* ================================
-   Disabled Elements
-================================ */
-
-button:disabled,
-select:disabled,
-input:disabled,
-textarea:disabled {
-  cursor: not-allowed;
+@keyframes ui-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-/* ================================
-   Better Form Controls
-================================ */
-
-input,
-select,
-textarea,
-button {
-  font: inherit;
+@keyframes ui-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* ================================
-   Remove Default Button Appearance
-================================ */
-
-button {
-  border: 0;
+@keyframes ui-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-/* ================================
-   Focus Accessibility
-================================ */
+@keyframes ui-shake {
+  0%, 100% { transform: translateX(0); }
+  35% { transform: translateX(-3px); }
+  70% { transform: translateX(3px); }
+}
 
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
 }

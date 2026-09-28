@@ -1,3 +1,4 @@
+import { assertCurrentUserPermission } from "@/lib/permission-check";
 import {
   addExpense,
   deleteExpense,
@@ -348,6 +349,7 @@ export function createProjectMovement(
   projectId: string,
   draft: ProjectMovementDraft,
 ) {
+  assertCurrentUserPermission("create");
   const normalizedDraft: ProjectMovementDraft = {
     ...draft,
     description: draft.description.trim(),
@@ -455,6 +457,7 @@ export function updateProjectMovement(
   record: ProjectMovementRecord,
   draft: ProjectMovementDraft,
 ) {
+  assertCurrentUserPermission("update");
   const normalizedDraft: ProjectMovementDraft = {
     ...draft,
     description: draft.description.trim(),
@@ -647,6 +650,7 @@ export function deleteProjectMovement(
   projectId: string,
   record: ProjectMovementRecord,
 ) {
+  assertCurrentUserPermission("delete");
   if (record.movementType === "worker_advance") {
     const movement = getWorkerFinancialMovementById(
       record.sourceId,

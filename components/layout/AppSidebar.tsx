@@ -1,7 +1,12 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { getCurrentSession } from "@/lib/data/users";
+import { hasPermission } from "@/lib/auth-permissions";
+import type { UserSession } from "@/types/user";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   BarChart3,
   BriefcaseBusiness,
@@ -13,6 +18,8 @@ import {
   Users,
   Wallet,
   X,
+  ShieldCheck,
+  History,
 } from "lucide-react";
 
 interface AppSidebarProps {
@@ -72,6 +79,22 @@ export default function AppSidebar({
   isOpen,
   onClose,
 }: AppSidebarProps) {
+  const [session, setSession] = useState<UserSession | null>(null);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const load = () => setSession(getCurrentSession());
+    load();
+    window.addEventListener("elsaghir-auth-updated", load);
+    return () => window.removeEventListener("elsaghir-auth-updated", load);
+  }, []);
+
+  const role = session?.role ?? "admin";
+  const showAdmin = hasPermission(role, "manage_users");
+  const roleLabel = role === "admin" ? "Admin" : role === "accountant" ? "Accountant" : "Viewer";
+
+  const isActive = (href: string) => href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+
   return (
     <>
       {/* Mobile Overlay */}
@@ -162,10 +185,18 @@ export default function AppSidebar({
                   key={item.title}
                   href={item.href}
                   onClick={onClose}
-                  className="group relative flex w-full items-center gap-3 overflow-hidden rounded-xl px-4 py-3 text-right text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-slate-900"
+                  aria-current={isActive(item.href) ? "page" : undefined}
+                  className={`group relative flex w-full items-center gap-3 overflow-hidden rounded-xl px-4 py-3 text-right text-sm transition-all duration-200 ${
+                    isActive(item.href)
+                      ? "bg-slate-900 font-bold text-white shadow-sm"
+                      : "font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  }`}
                 >
+                  {isActive(item.href) && (
+                    <span className="absolute right-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-l-full bg-blue-400" />
+                  )}
                   <Icon
-                    className="h-5 w-5 shrink-0 text-slate-400 transition-all duration-200 group-hover:scale-105 group-hover:text-slate-700"
+                    className={`h-5 w-5 shrink-0 transition-all duration-200 group-hover:scale-105 ${isActive(item.href) ? "text-blue-300" : "text-slate-400 group-hover:text-slate-700"}`}
                     strokeWidth={2}
                   />
 
@@ -174,27 +205,115 @@ export default function AppSidebar({
               );
             })}
           </div>
+
+          {showAdmin && (
+            <div className="mt-6">
+              <div className="mb-3 flex items-center gap-2 px-3">
+                <ShieldCheck className="h-3.5 w-3.5 text-blue-500" />
+                <p className="text-[11px] font-bold tracking-wider text-slate-400">الإدارة</p>
+              </div>
+              <div className="space-y-1.5">
+                <Link
+                  href="/users"
+                  onClick={onClose}
+                  aria-current={pathname === "/users" ? "page" : undefined}
+                  className={`group relative flex w-full items-center gap-3 overflow-hidden rounded-xl px-4 py-3 text-right text-sm transition-all duration-200 ${
+                    pathname === "/users"
+                      ? "bg-slate-900 font-bold text-white shadow-sm"
+                      : "font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  }`}
+                >
+                  {pathname === "/users" && (
+                    <span className="absolute right-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-l-full bg-blue-400" />
+                  )}
+                  <Users
+                    className={`h-5 w-5 shrink-0 transition-all duration-200 group-hover:scale-105 ${
+                      pathname === "/users"
+                        ? "text-blue-300"
+                        : "text-slate-400 group-hover:text-slate-700"
+                    }`}
+                    strokeWidth={2}
+                  />
+                  <span className="truncate">المستخدمون والصلاحيات</span>
+                </Link>
+
+                <Link
+                  href="/audit-log"
+                  onClick={onClose}
+                  aria-current={pathname === "/audit-log" ? "page" : undefined}
+                  className={`group relative flex w-full items-center gap-3 overflow-hidden rounded-xl px-4 py-3 text-right text-sm transition-all duration-200 ${
+                    pathname === "/audit-log"
+                      ? "bg-slate-900 font-bold text-white shadow-sm"
+                      : "font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  }`}
+                >
+                  {pathname === "/audit-log" && (
+                    <span className="absolute right-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-l-full bg-blue-400" />
+                  )}
+                  <History
+                    className={`h-5 w-5 shrink-0 transition-all duration-200 group-hover:scale-105 ${
+                      pathname === "/audit-log"
+                        ? "text-blue-300"
+                        : "text-slate-400 group-hover:text-slate-700"
+                    }`}
+                    strokeWidth={2}
+                  />
+                  <span className="truncate">سجل العمليات</span>
+                </Link>
+              </div>
+            </div>
+          )}
         </nav>
 
-        {/* User */}
+        {/* Current User */}
         <div className="border-t border-slate-200/80 p-4">
-          <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white shadow-sm">
-              م
+          <Link
+            href="/profile"
+            onClick={onClose}
+            aria-current={pathname === "/profile" ? "page" : undefined}
+            className={`group relative flex w-full items-center gap-3 overflow-hidden rounded-xl px-4 py-3 text-right text-sm transition-all duration-200 ${
+              pathname === "/profile"
+                ? "bg-slate-900 font-bold text-white shadow-sm"
+                : "font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            }`}
+          >
+            {pathname === "/profile" && (
+              <span className="absolute right-0 top-1/2 h-7 w-1 -translate-y-1/2 rounded-l-full bg-blue-400" />
+            )}
+
+            <div
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold shadow-sm transition-all duration-200 group-hover:scale-105 ${
+                pathname === "/profile"
+                  ? "bg-white text-slate-900"
+                  : "bg-slate-900 text-white"
+              }`}
+            >
+              {(session?.userName ?? "المدير").slice(0, 1)}
             </div>
 
             <div className="min-w-0 flex-1 text-right">
-              <p className="truncate text-sm font-bold text-slate-900">
-                المدير
+              <p
+                className={`truncate text-sm font-bold ${
+                  pathname === "/profile" ? "text-white" : "text-slate-900"
+                }`}
+              >
+                {session?.userName ?? "المدير"}
               </p>
-
-              <p className="mt-0.5 text-xs text-slate-500">
-                Admin
+              <p
+                className={`mt-0.5 text-xs ${
+                  pathname === "/profile" ? "text-slate-300" : "text-slate-500"
+                }`}
+              >
+                {roleLabel} · الملف الشخصي
               </p>
             </div>
 
-            <div className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
-          </div>
+            <div
+              className={`h-2 w-2 shrink-0 rounded-full ${
+                pathname === "/profile" ? "bg-emerald-300" : "bg-emerald-500"
+              }`}
+            />
+          </Link>
         </div>
       </aside>
     </>

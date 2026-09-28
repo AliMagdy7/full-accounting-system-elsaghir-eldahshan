@@ -37,6 +37,10 @@ import {
   getProjects,
 } from "@/lib/data/projects";
 
+import {
+  getWorkers,
+} from "@/lib/data/workers";
+
 import type { Custody } from "@/types/custody";
 import type { CustodyTransaction } from "@/types/custody-transaction";
 import type { Expense } from "@/types/expense";
@@ -137,6 +141,9 @@ export default function DashboardPage() {
   const [projects, setProjects] =
     useState<Project[]>([]);
 
+  const [workersCount, setWorkersCount] =
+    useState(0);
+
   const [isLoaded, setIsLoaded] =
     useState(false);
 
@@ -153,6 +160,9 @@ export default function DashboardPage() {
     const allProjects =
       getProjects();
 
+    const allWorkers =
+      getWorkers();
+
     setCustodies(
       allCustodies,
     );
@@ -167,6 +177,10 @@ export default function DashboardPage() {
 
     setProjects(
       allProjects,
+    );
+
+    setWorkersCount(
+      allWorkers.length,
     );
 
     setIsLoaded(true);
@@ -210,7 +224,6 @@ export default function DashboardPage() {
   const projectsCount =
     projects.length;
 
-  const workersCount = 0;
 
   const totalIncoming =
     useMemo(() => {
@@ -317,6 +330,16 @@ export default function DashboardPage() {
 
   const expensesCount =
     expenses.length;
+
+  const totalExpenses =
+    useMemo(() =>
+      expenses.reduce(
+        (total, expense) =>
+          total + Number(expense.amount ?? 0),
+        0,
+      ),
+    [expenses],
+    );
 
   const latestTransactionDate =
     latestTransactions[0]?.date;
@@ -964,7 +987,7 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <div className="rounded-xl bg-slate-50 p-4">
               <div className="flex items-center gap-2">
                 <WalletCards className="h-4 w-4 text-slate-500" />
@@ -1018,6 +1041,21 @@ export default function DashboardPage() {
 
               <p className="mt-3 text-xl font-extrabold text-slate-900">
                 {workersCount}
+              </p>
+            </div>
+
+            <div className="rounded-xl bg-slate-50 p-4">
+              <div className="flex items-center gap-2">
+                <CircleDollarSign className="h-4 w-4 text-slate-500" />
+
+                <span className="text-xs font-bold text-slate-500">
+                  إجمالي المصروفات
+                </span>
+              </div>
+
+              <p className="mt-3 text-xl font-extrabold text-slate-900">
+                {formatAmount(totalExpenses)}
+                <span className="mr-1 text-[10px] font-medium text-slate-400">جنيه</span>
               </p>
             </div>
           </div>

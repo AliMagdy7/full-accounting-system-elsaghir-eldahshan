@@ -1,5 +1,8 @@
 "use client";
 
+import DateInput from "@/lib/date-input";
+
+import { formatDisplayDate } from "@/lib/formatters";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -39,14 +42,7 @@ function formatAmount(amount: number) {
 }
 
 function formatDate(date: string) {
-  return new Date(`${date}T00:00:00`).toLocaleDateString(
-    "ar-EG",
-    {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    },
-  );
+  return formatDisplayDate(date);
 }
 
 export default function PersonCustodyDetailsPage() {
@@ -648,13 +644,12 @@ export default function PersonCustodyDetailsPage() {
                   من تاريخ
                 </label>
 
-                <input
+                <DateInput
                   id="expense-from-date"
-                  type="date"
                   value={expenseFromDate}
-                  onChange={(event) =>
+                  onChange={(value) =>
                     setExpenseFromDate(
-                      event.target.value,
+                      value,
                     )
                   }
                   className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
@@ -670,13 +665,12 @@ export default function PersonCustodyDetailsPage() {
                   إلى تاريخ
                 </label>
 
-                <input
+                <DateInput
                   id="expense-to-date"
-                  type="date"
                   value={expenseToDate}
-                  onChange={(event) =>
+                  onChange={(value) =>
                     setExpenseToDate(
-                      event.target.value,
+                      value,
                     )
                   }
                   className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"

@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDisplayDate } from "@/lib/formatters";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
@@ -15,6 +16,7 @@ import {
   ReceiptText,
   UserRound,
   WalletCards,
+  MapPin,
 } from "lucide-react";
 
 import AppShell from "@/components/layout/AppShell";
@@ -61,17 +63,7 @@ function formatAmount(value: number): string {
 }
 
 function formatDate(date?: string): string {
-  if (!date) {
-    return "غير محدد";
-  }
-
-  const parts = date.split("-");
-
-  if (parts.length !== 3) {
-    return date;
-  }
-
-  return `${parts[2]} / ${parts[1]} / ${parts[0]}`;
+  return formatDisplayDate(date);
 }
 
 function getStatusLabel(
@@ -1178,6 +1170,7 @@ export default function ProjectDetailsPage() {
           </div>
         </section>
       </div>
-    </AppShell>
+    <Link href={`/projects/${projectId}/sites`} className="fixed bottom-5 left-5 z-20 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white shadow-lg"><MapPin className="h-4 w-4"/>إدارة المواقع</Link>
+</AppShell>
   );
 }

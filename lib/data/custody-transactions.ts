@@ -1,4 +1,6 @@
+import { assertCurrentUserPermission } from "@/lib/permission-check";
 import type { CustodyTransaction } from "@/types/custody-transaction";
+import { addAuditLog } from "@/lib/data/audit-logs";
 
 const STORAGE_KEY =
   "elsaghir-eldahshan-custody-transactions";
@@ -80,12 +82,24 @@ export function getCustodyTransactionByWorkerFinancialMovementId(
 export function addCustodyTransaction(
   transaction: CustodyTransaction,
 ): CustodyTransaction {
+  assertCurrentUserPermission("create");
   const transactions =
     readTransactions();
 
   transactions.push(transaction);
 
   saveTransactions(transactions);
+
+  addAuditLog({
+    action: transaction.type === "transfer" ? "transfer" : "create",
+    entity: "custody_transaction",
+    entityId: transaction.id,
+    description: `تمت إضافة حركة عهدة: ${transaction.description} بقيمة ${transaction.amount.toLocaleString("en-US")} ج.م.`,
+    notificationTitle: transaction.type === "transfer" ? "تحويل بين العهد" : "حركة عهدة جديدة",
+    notificationType: "success",
+    notificationHref: "/custodies",
+    notify: transaction.type === "transfer",
+  });
 
   return transaction;
 }
@@ -94,6 +108,7 @@ export function updateCustodyTransaction(
   id: string,
   updates: Partial<CustodyTransaction>,
 ): CustodyTransaction | undefined {
+  assertCurrentUserPermission("update");
   const transactions =
     readTransactions();
 
@@ -120,12 +135,24 @@ export function updateCustodyTransaction(
 
   saveTransactions(transactions);
 
+  addAuditLog({
+    action: "update",
+    entity: "custody_transaction",
+    entityId: updatedTransaction.id,
+    description: `تم تعديل حركة العهدة: ${updatedTransaction.description}.`,
+    notificationTitle: "تعديل حركة عهدة",
+    notificationType: "info",
+    notificationHref: "/custodies",
+    metadata: { previous: transactions[index], updates },
+  });
+
   return updatedTransaction;
 }
 
 export function deleteCustodyTransaction(
   id: string,
 ): void {
+  assertCurrentUserPermission("delete");
   const transactions =
     readTransactions();
 
@@ -144,4 +171,14 @@ export function deleteCustodyTransaction(
         transaction.id !== id,
     ),
   );
+
+  addAuditLog({
+    action: "delete",
+    entity: "custody_transaction",
+    entityId: id,
+    description: "تم حذف حركة عهدة.",
+    notificationTitle: "حذف حركة عهدة",
+    notificationType: "warning",
+    notificationHref: "/custodies",
+  });
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDisplayDate } from "@/lib/formatters";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -23,14 +24,7 @@ function formatAmount(amount: number) {
 }
 
 function formatDate(date: string) {
-  return new Date(`${date}T00:00:00`).toLocaleDateString(
-    "ar-EG",
-    {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    },
-  );
+  return formatDisplayDate(date);
 }
 
 export default function CustodiesPage() {

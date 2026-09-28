@@ -1,5 +1,8 @@
 "use client";
 
+import DateInput from "@/lib/date-input";
+
+import { formatDisplayDate } from "@/lib/formatters";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
@@ -20,6 +23,7 @@ import {
 } from "lucide-react";
 
 import AppShell from "@/components/layout/AppShell";
+import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 import {
   getWorkerById,
@@ -311,17 +315,7 @@ function formatAmount(value: number): string {
 }
 
 function formatDate(date?: string): string {
-  if (!date) {
-    return "غير محدد";
-  }
-
-  const parts = date.split("-");
-
-  if (parts.length !== 3) {
-    return date;
-  }
-
-  return `${parts[2]} / ${parts[1]} / ${parts[0]}`;
+  return formatDisplayDate(date);
 }
 
 function getToday(): string {
@@ -430,6 +424,7 @@ export default function WorkerDetailsPage() {
 
   const [isSaving, setIsSaving] =
     useState(false);
+  const { confirm, dialog } = useConfirmDialog();
 
   const [error, setError] =
     useState("");
@@ -1342,15 +1337,16 @@ export default function WorkerDetailsPage() {
   const handleMovementDelete = (movement: WorkerFinancialMovement) => {
     if (!worker) return;
 
-    const confirmed = window.confirm(
-      `هل أنت متأكد من حذف حركة ${getMovementLabel(
-        movement.type,
-      )} بقيمة ${formatAmount(movement.amount)} جنيه؟\nسيتم عكس أثرها على العهدة ووسيلة الدفع إن وجد.`,
-    );
-
-    if (!confirmed) return;
-
-    setError("");
+    confirm(
+      {
+        title: "تأكيد حذف الحركة المالية",
+        description: `هل أنت متأكد من حذف حركة ${getMovementLabel(movement.type)} بقيمة ${formatAmount(movement.amount)} جنيه؟ سيتم عكس أثرها على العهدة ووسيلة الدفع إن وجد، ولا يمكن التراجع عن الإجراء.`,
+        confirmText: "حذف الحركة",
+        cancelText: "إلغاء",
+        variant: "danger",
+      },
+      () => {
+        setError("");
     setSuccess("");
     setIsSaving(true);
 
@@ -1389,11 +1385,16 @@ export default function WorkerDetailsPage() {
     } finally {
       setIsSaving(false);
     }
+      },
+    );
   };
 
   /*
    * إجمالي الحركات
-   */
+        },
+    );
+  };
+
   const totalMovements =
     movements.length;
 
@@ -2113,13 +2114,12 @@ export default function WorkerDetailsPage() {
                   التاريخ
                 </label>
 
-                <input
+                <DateInput
                   id="movement-date"
-                  type="date"
                   value={movementDate}
-                  onChange={(event) =>
+                  onChange={(value) =>
                     setMovementDate(
-                      event.target.value,
+                      value,
                     )
                   }
                   className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
@@ -2870,10 +2870,9 @@ export default function WorkerDetailsPage() {
 
                 <div>
                   <label className="mb-1.5 block text-xs font-bold text-slate-600">التاريخ</label>
-                  <input
-                    type="date"
+                  <DateInput
                     value={editMovementDate}
-                    onChange={(event) => setEditMovementDate(event.target.value)}
+                    onChange={(value) => setEditMovementDate(value)}
                     className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold"
                   />
                 </div>
@@ -3072,12 +3071,11 @@ export default function WorkerDetailsPage() {
                     تاريخ النقل
                   </label>
 
-                  <input
-                    type="date"
+                  <DateInput
                     value={transferDate}
-                    onChange={(event) =>
+                    onChange={(value) =>
                       setTransferDate(
-                        event.target.value,
+                        value,
                       )
                     }
                     className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-slate-400"
@@ -3141,6 +3139,7 @@ export default function WorkerDetailsPage() {
           </div>
         )}
       </div>
+      {dialog}
     </AppShell>
   );
 }

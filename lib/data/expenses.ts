@@ -1,4 +1,6 @@
+import { assertCurrentUserPermission } from "@/lib/permission-check";
 import type { Expense } from "@/types/expense";
+import { addAuditLog } from "@/lib/data/audit-logs";
 
 const STORAGE_KEY = "elsaghir-eldahshan-expenses";
 
@@ -72,11 +74,25 @@ export function getExpensesByProjectId(
 export function addExpense(
   expense: Expense,
 ): Expense {
+  assertCurrentUserPermission("create");
+  if (expense.movementType === "worker_advance") {
+    throw new Error("سلفة العامل يجب أن تسجل من حركة العامل المرتبطة بالعهدة، وليس كمصروف وهمي.");
+  }
   const expenses = readExpenses();
 
   expenses.push(expense);
 
   saveExpenses(expenses);
+
+  addAuditLog({
+    action: "create",
+    entity: "expense",
+    entityId: expense.id,
+    description: `تمت إضافة مصروف: ${expense.description} بقيمة ${expense.amount.toLocaleString("en-US")} ج.م.`,
+    notificationTitle: "إضافة مصروف",
+    notificationType: "success",
+    notificationHref: "/expenses",
+  });
 
   return expense;
 }
@@ -85,6 +101,7 @@ export function updateExpense(
   id: string,
   updates: Partial<Expense>,
 ): Expense | undefined {
+  assertCurrentUserPermission("update");
   const expenses = readExpenses();
 
   const index = expenses.findIndex(
@@ -95,8 +112,10 @@ export function updateExpense(
     return undefined;
   }
 
+  const previousExpense = expenses[index];
+
   const updatedExpense: Expense = {
-    ...expenses[index],
+    ...previousExpense,
     ...updates,
     updatedAt: new Date().toISOString(),
   };
@@ -105,12 +124,24 @@ export function updateExpense(
 
   saveExpenses(expenses);
 
+  addAuditLog({
+    action: "update",
+    entity: "expense",
+    entityId: updatedExpense.id,
+    description: `تم تعديل المصروف: ${updatedExpense.description} بقيمة ${updatedExpense.amount.toLocaleString("en-US")} ج.م.`,
+    notificationTitle: "تعديل مصروف",
+    notificationType: "info",
+    notificationHref: "/expenses",
+    metadata: { previous: previousExpense, updates },
+  });
+
   return updatedExpense;
 }
 
 export function deleteExpense(
   id: string,
 ): boolean {
+  assertCurrentUserPermission("delete");
   const expenses = readExpenses();
   const nextExpenses = expenses.filter(
     (expense) => expense.id !== id,
@@ -121,5 +152,16 @@ export function deleteExpense(
   }
 
   saveExpenses(nextExpenses);
+
+  addAuditLog({
+    action: "delete",
+    entity: "expense",
+    entityId: id,
+    description: "تم حذف مصروف من النظام.",
+    notificationTitle: "حذف مصروف",
+    notificationType: "warning",
+    notificationHref: "/expenses",
+  });
+
   return true;
 }

@@ -1,3 +1,6 @@
+import { assertCurrentUserPermission } from "@/lib/permission-check";
+import { addAuditLog } from "@/lib/data/audit-logs";
+
 const STORAGE_KEY = "elsaghir-eldahshan-expense-categories";
 
 function readCategories(): string[] {
@@ -43,6 +46,7 @@ export function getExpenseCategories(): string[] {
 export function addExpenseCategory(
   category: string,
 ): string {
+  assertCurrentUserPermission("create");
   const normalized = category.trim();
 
   if (!normalized) {
@@ -59,6 +63,15 @@ export function addExpenseCategory(
 
   if (!exists) {
     saveCategories([...categories, normalized]);
+
+    addAuditLog({
+      action: "create",
+      entity: "expense_category",
+      description: `تمت إضافة تصنيف مصروف: ${normalized}.`,
+      notificationTitle: "إضافة تصنيف مصروف",
+      notificationType: "success",
+      notificationHref: "/expenses",
+    });
   }
 
   return normalized;

@@ -1,3 +1,21 @@
+import { assertCurrentUserPermission } from "@/lib/permission-check";
+import { addAuditLog } from "@/lib/data/audit-logs";
+import {
+  getCustodyById,
+  updateCustodyBalance,
+  reverseCustodyBalance,
+} from "@/lib/data/custodies";
+import {
+  getCustodyFinancialAccountById,
+  updateCustodyFinancialAccountBalance,
+  reverseCustodyFinancialAccountBalance,
+} from "@/lib/data/custody-financial-accounts";
+import {
+  addCustodyTransaction,
+  deleteCustodyTransaction,
+  getCustodyTransactionByWorkerFinancialMovementId,
+} from "@/lib/data/custody-transactions";
+
 import type {
   WorkerFinancialMovement,
   WorkerFinancialMovementEffect,
@@ -436,6 +454,7 @@ export function addWorkerFinancialMovement(
     effect?: WorkerFinancialMovementEffect;
   },
 ) {
+  assertCurrentUserPermission("create");
   if (!input.workerId) {
     throw new Error(
       "العامل مطلوب.",
@@ -500,6 +519,16 @@ export function addWorkerFinancialMovement(
     movement,
   ]);
 
+  addAuditLog({
+    action: "create",
+    entity: "worker_financial_movement",
+    entityId: movement.id,
+    description: `تمت إضافة حركة مالية للعامل بقيمة ${movement.amount.toLocaleString("en-US")} ج.م: ${movement.description}.`,
+    notificationTitle: "حركة مالية للعامل",
+    notificationType: "success",
+    notificationHref: `/workers/${movement.workerId}`,
+  });
+
   return movement;
 }
 
@@ -518,6 +547,7 @@ export function updateWorkerFinancialMovement(
     >
   >,
 ) {
+  assertCurrentUserPermission("update");
   const movements =
     readMovements();
 
@@ -609,6 +639,17 @@ export function updateWorkerFinancialMovement(
     movements,
   );
 
+  addAuditLog({
+    action: "update",
+    entity: "worker_financial_movement",
+    entityId: movements[index].id,
+    description: `تم تعديل حركة مالية للعامل بقيمة ${movements[index].amount.toLocaleString("en-US")} ج.م.`,
+    notificationTitle: "تعديل حركة مالية للعامل",
+    notificationType: "info",
+    notificationHref: `/workers/${movements[index].workerId}`,
+    metadata: { previous: currentMovement, updates },
+  });
+
   return movements[index];
 }
 
@@ -618,6 +659,7 @@ export function updateWorkerFinancialMovement(
 export function deleteWorkerFinancialMovement(
   id: string,
 ) {
+  assertCurrentUserPermission("delete");
   const movements =
     readMovements();
 
@@ -638,4 +680,257 @@ export function deleteWorkerFinancialMovement(
         movement.id !== id,
     ),
   );
+
+  addAuditLog({
+    action: "delete",
+    entity: "worker_financial_movement",
+    entityId: id,
+    description: "تم حذف حركة مالية للعامل.",
+    notificationTitle: "حذف حركة مالية للعامل",
+    notificationType: "warning",
+    notificationHref: "/workers",
+  });
 }
+/**
+ * تسجيل سلفة عامل مع الحركة النقدية المرتبطة بها.
+ * لا يتم اعتبار السلفة مكتملة إلا إذا تم إنشاء:
+ * 1) حركة العامل
+ * 2) حركة العهدة المرتبطة بها
+ * 3) تحديث رصيد العهدة/وسيلة الدفع عند الحاجة
+ */
+export function createWorkerAdvanceWithPayment(input: {
+  workerId: string;
+  amount: number;
+  date: string;
+  description: string;
+  custodyId: string;
+  financialAccountId?: string;
+  projectId?: string;
+}) {
+  assertCurrentUserPermission("create");
+
+  const custody = getCustodyById(input.custodyId);
+  if (!custody) throw new Error("العهدة الدافعة غير موجودة.");
+
+  if (custody.id === "central") {
+    if (!input.financialAccountId) {
+      throw new Error("اختر وسيلة الدفع من العهدة المركزية.");
+    }
+
+    const account = getCustodyFinancialAccountById(input.financialAccountId);
+    if (!account || account.custodyId !== "central") {
+      throw new Error("وسيلة الدفع غير صحيحة.");
+    }
+
+    if (account.balance < input.amount) {
+      throw new Error("رصيد وسيلة الدفع غير كافٍ.");
+    }
+  } else if (input.financialAccountId) {
+    throw new Error("وسيلة الدفع متاحة مع العهدة المركزية فقط.");
+  }
+
+  const movement = addWorkerFinancialMovement({
+    workerId: input.workerId,
+    type: "advance",
+    amount: input.amount,
+    date: input.date,
+    description: input.description,
+    custodyId: input.custodyId,
+    financialAccountId: input.financialAccountId,
+    projectId: input.projectId,
+    allocation: input.projectId ? "project" : "general",
+  });
+
+  let custodyChanged = false;
+  let accountChanged = false;
+  let transactionId: string | undefined;
+
+  try {
+    updateCustodyBalance(input.custodyId, input.amount, "out");
+    custodyChanged = true;
+
+    if (input.financialAccountId) {
+      updateCustodyFinancialAccountBalance(
+        input.financialAccountId,
+        input.amount,
+        "out",
+      );
+      accountChanged = true;
+    }
+
+    const now = new Date().toISOString();
+    const transaction = addCustodyTransaction({
+      id: crypto.randomUUID(),
+      custodyId: input.custodyId,
+      type: "out",
+      amount: input.amount,
+      date: input.date,
+      description: `سلفة العامل: ${input.description.trim()}`,
+      source: "سلفة عامل",
+      workerFinancialMovementId: movement.id,
+      projectId: input.projectId,
+      financialAccountId: input.financialAccountId,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    transactionId = transaction.id;
+    return { movement, transaction };
+  } catch (error) {
+    if (transactionId) {
+      try { deleteCustodyTransaction(transactionId); } catch { /* keep original error */ }
+    }
+    if (accountChanged && input.financialAccountId) {
+      try {
+        reverseCustodyFinancialAccountBalance(
+          input.financialAccountId,
+          input.amount,
+          "out",
+        );
+      } catch { /* keep original error */ }
+    }
+    if (custodyChanged) {
+      try { reverseCustodyBalance(input.custodyId, input.amount, "out"); } catch { /* keep original error */ }
+    }
+    try { deleteWorkerFinancialMovement(movement.id); } catch { /* keep original error */ }
+    throw error;
+  }
+}
+
+/**
+ * تعديل سلفة عامل مع إعادة بناء الحركة النقدية المرتبطة بها.
+ */
+export function updateWorkerAdvanceWithPayment(
+  movementId: string,
+  updates: {
+    workerId: string;
+    amount: number;
+    date: string;
+    description: string;
+    custodyId: string;
+    financialAccountId?: string;
+    projectId?: string;
+  },
+) {
+  assertCurrentUserPermission("update");
+
+  const current = getWorkerFinancialMovementById(movementId);
+  if (!current || current.type !== "advance") {
+    throw new Error("سلفة العامل غير موجودة.");
+  }
+
+  const oldTransaction = getCustodyTransactionByWorkerFinancialMovementId(movementId);
+  if (!oldTransaction) throw new Error("حركة العهدة المرتبطة بالسلفة غير موجودة.");
+
+  const newCustody = getCustodyById(updates.custodyId);
+  if (!newCustody) throw new Error("العهدة الدافعة غير موجودة.");
+
+  if (newCustody.id === "central") {
+    if (!updates.financialAccountId) throw new Error("اختر وسيلة الدفع من العهدة المركزية.");
+    const account = getCustodyFinancialAccountById(updates.financialAccountId);
+    if (!account || account.custodyId !== "central") throw new Error("وسيلة الدفع غير صحيحة.");
+    const available = account.balance + (oldTransaction.financialAccountId === updates.financialAccountId ? oldTransaction.amount : 0);
+    if (available < updates.amount) throw new Error("رصيد وسيلة الدفع غير كافٍ.");
+  } else if (updates.financialAccountId) {
+    throw new Error("وسيلة الدفع متاحة مع العهدة المركزية فقط.");
+  }
+
+  reverseCustodyBalance(oldTransaction.custodyId, oldTransaction.amount, "out");
+  if (oldTransaction.financialAccountId) {
+    reverseCustodyFinancialAccountBalance(oldTransaction.financialAccountId, oldTransaction.amount, "out");
+  }
+
+  let newTransaction: ReturnType<typeof addCustodyTransaction> | undefined;
+  try {
+    updateWorkerFinancialMovement(movementId, {
+      workerId: updates.workerId,
+      amount: updates.amount,
+      date: updates.date,
+      description: updates.description,
+      custodyId: updates.custodyId,
+      financialAccountId: updates.financialAccountId,
+      projectId: updates.projectId,
+      allocation: updates.projectId ? "project" : "general",
+      type: "advance",
+    });
+
+    deleteCustodyTransaction(oldTransaction.id);
+    updateCustodyBalance(updates.custodyId, updates.amount, "out");
+    if (updates.financialAccountId) {
+      updateCustodyFinancialAccountBalance(updates.financialAccountId, updates.amount, "out");
+    }
+
+    const now = new Date().toISOString();
+    newTransaction = addCustodyTransaction({
+      id: crypto.randomUUID(),
+      custodyId: updates.custodyId,
+      type: "out",
+      amount: updates.amount,
+      date: updates.date,
+      description: `سلفة العامل: ${updates.description.trim()}`,
+      source: "سلفة عامل",
+      workerFinancialMovementId: movementId,
+      projectId: updates.projectId,
+      financialAccountId: updates.financialAccountId,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return {
+      movement: getWorkerFinancialMovementById(movementId),
+      transaction: newTransaction,
+    };
+  } catch (error) {
+    if (newTransaction) {
+      try { deleteCustodyTransaction(newTransaction.id); } catch { /* keep original */ }
+    }
+    try {
+      reverseCustodyBalance(updates.custodyId, updates.amount, "out");
+    } catch { /* keep original */ }
+    if (updates.financialAccountId) {
+      try { reverseCustodyFinancialAccountBalance(updates.financialAccountId, updates.amount, "out"); } catch { /* keep original */ }
+    }
+
+    try {
+      updateWorkerFinancialMovement(movementId, {
+        workerId: current.workerId,
+        amount: current.amount,
+        date: current.date,
+        description: current.description,
+        custodyId: current.custodyId,
+        financialAccountId: current.financialAccountId,
+        projectId: current.projectId,
+        allocation: current.allocation,
+        type: "advance",
+      });
+      updateCustodyBalance(oldTransaction.custodyId, oldTransaction.amount, "out");
+      if (oldTransaction.financialAccountId) {
+        updateCustodyFinancialAccountBalance(oldTransaction.financialAccountId, oldTransaction.amount, "out");
+      }
+      addCustodyTransaction(oldTransaction);
+    } catch { /* keep original */ }
+
+    throw error;
+  }
+}
+
+export function deleteWorkerAdvanceWithPayment(movementId: string) {
+  assertCurrentUserPermission("delete");
+
+  const movement = getWorkerFinancialMovementById(movementId);
+  if (!movement || movement.type !== "advance") {
+    throw new Error("سلفة العامل غير موجودة.");
+  }
+
+  const transaction = getCustodyTransactionByWorkerFinancialMovementId(movementId);
+  if (!transaction) throw new Error("حركة العهدة المرتبطة بالسلفة غير موجودة.");
+
+  reverseCustodyBalance(transaction.custodyId, transaction.amount, "out");
+  if (transaction.financialAccountId) {
+    reverseCustodyFinancialAccountBalance(transaction.financialAccountId, transaction.amount, "out");
+  }
+
+  deleteCustodyTransaction(transaction.id);
+  deleteWorkerFinancialMovement(movementId);
+}
+

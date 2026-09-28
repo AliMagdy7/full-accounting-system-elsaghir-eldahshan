@@ -1,5 +1,8 @@
 "use client";
 
+import DateInput from "@/lib/date-input";
+
+import { formatDisplayDate } from "@/lib/formatters";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -53,17 +56,7 @@ const money = (value: number) =>
     maximumFractionDigits: 2,
   }).format(value);
 
-const dateLabel = (value?: string) => {
-  if (!value) {
-    return "-";
-  }
-
-  const [y, m, d] = value.split("-");
-
-  return y && m && d
-    ? `${d}/${m}/${y}`
-    : value;
-};
+const dateLabel = (value?: string) => formatDisplayDate(value);
 
 const sortNewest = <
   T extends {
@@ -345,12 +338,11 @@ function DateBox({
       <div className="relative">
         <CalendarDays className="pointer-events-none absolute right-4 top-3.5 h-5 w-5 text-slate-400" />
 
-        <input
+        <DateInput
           id={id}
-          type="date"
           value={value}
-          onChange={(event) =>
-            onChange(event.target.value)
+          onChange={(value) =>
+            onChange(value)
           }
           className="h-12 w-full cursor-pointer rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm font-semibold text-slate-800 outline-none transition-all focus:border-slate-400 focus:ring-4 focus:ring-slate-900/5"
         />

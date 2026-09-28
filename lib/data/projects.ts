@@ -1,4 +1,6 @@
+import { assertCurrentUserPermission } from "@/lib/permission-check";
 import type { Project } from "@/types/project";
+import { addAuditLog } from "@/lib/data/audit-logs";
 
 const STORAGE_KEY =
   "elsaghir-eldahshan-projects";
@@ -52,12 +54,23 @@ export function getProjects(): Project[] {
 export function addProject(
   project: Project,
 ): Project {
+  assertCurrentUserPermission("create");
   const projects =
     loadProjects();
 
   projects.push(project);
 
   saveProjects(projects);
+
+  addAuditLog({
+    action: "create",
+    entity: "project",
+    entityId: project.id,
+    description: `تمت إضافة المشروع: ${project.name}.`,
+    notificationTitle: "إضافة مشروع",
+    notificationType: "success",
+    notificationHref: "/projects",
+  });
 
   return project;
 }
@@ -75,6 +88,7 @@ export function updateProject(
   id: string,
   updates: Partial<Project>,
 ): Project | undefined {
+  assertCurrentUserPermission("update");
   const projects =
     loadProjects();
 
@@ -88,8 +102,10 @@ export function updateProject(
     return undefined;
   }
 
+  const previousProject = projects[index];
+
   const updatedProject: Project = {
-    ...projects[index],
+    ...previousProject,
     ...updates,
     updatedAt:
       new Date().toISOString(),
@@ -99,6 +115,17 @@ export function updateProject(
     updatedProject;
 
   saveProjects(projects);
+
+  addAuditLog({
+    action: "update",
+    entity: "project",
+    entityId: updatedProject.id,
+    description: `تم تعديل المشروع: ${updatedProject.name}.`,
+    notificationTitle: "تعديل مشروع",
+    notificationType: "info",
+    notificationHref: `/projects/${updatedProject.id}`,
+    metadata: { previous: previousProject, updates },
+  });
 
   return updatedProject;
 }

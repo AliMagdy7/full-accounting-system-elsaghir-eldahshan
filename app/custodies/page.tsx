@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDisplayDate } from "@/lib/formatters";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -11,6 +12,7 @@ import {
 } from "lucide-react";
 
 import AppShell from "@/components/layout/AppShell";
+import PermissionLink from "@/components/auth/PermissionLink";
 
 import { getCustodies } from "@/lib/data/custodies";
 
@@ -34,13 +36,7 @@ function formatAmount(amount: number) {
 }
 
 function formatDate(date: string) {
-  return new Date(
-    `${date}T00:00:00`,
-  ).toLocaleDateString("ar-EG", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+  return formatDisplayDate(date);
 }
 
 export default function CustodiesPage() {
@@ -538,6 +534,35 @@ export default function CustodiesPage() {
         personCustodies.length,
       href: "/custodies",
     },
+    {
+      title: "عهد العمال",
+      description:
+        "العهد المخصصة للعمال بشكل منفصل عن الأجور والسلف",
+      balance:
+        workerCustodies.reduce(
+          (total, custody) =>
+            total +
+            custody.balance,
+          0,
+        ),
+      incoming:
+        workerCustodies.reduce(
+          (total, custody) =>
+            total +
+            custody.totalIn,
+          0,
+        ),
+      outgoing:
+        workerCustodies.reduce(
+          (total, custody) =>
+            total +
+            custody.totalOut,
+          0,
+        ),
+      count:
+        workerCustodies.length,
+      href: "/custodies",
+    },
   ];
 
   return (
@@ -576,13 +601,14 @@ export default function CustodiesPage() {
                 وسائل الدفع
               </Link>
 
-            <Link
+            <PermissionLink
+              permission="create"
               href="/custodies/central/new"
               className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 active:scale-[0.98]"
             >
               <Plus className="h-4 w-4" />
               إضافة حركة عهدة
-            </Link>
+            </PermissionLink>
             </div>
           </div>
         </section>
@@ -625,6 +651,38 @@ export default function CustodiesPage() {
           </div>
         </section>
 
+        {/* Financial Flow */}
+
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-xs font-bold text-slate-400">إجمالي الداخل</p>
+            <p className="mt-2 text-2xl font-extrabold text-emerald-600">
+              {formatAmount(
+                custodies.reduce((total, custody) => total + custody.totalIn, 0),
+              )}
+              <span className="mr-2 text-xs font-medium text-slate-400">جنيه</span>
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-xs font-bold text-slate-400">إجمالي الخارج</p>
+            <p className="mt-2 text-2xl font-extrabold text-red-600">
+              {formatAmount(
+                custodies.reduce((total, custody) => total + custody.totalOut, 0),
+              )}
+              <span className="mr-2 text-xs font-medium text-slate-400">جنيه</span>
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-xs font-bold text-slate-400">صافي الأرصدة الحالية</p>
+            <p className={`mt-2 text-2xl font-extrabold ${totalBalance < 0 ? "text-red-600" : "text-slate-900"}`}>
+              {formatAmount(totalBalance)}
+              <span className="mr-2 text-xs font-medium text-slate-400">جنيه</span>
+            </p>
+          </div>
+        </section>
+
         {/* Custody Cards */}
 
         <section>
@@ -638,7 +696,7 @@ export default function CustodiesPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             {custodyTypes.map(
               (custody) => (
                 <div
@@ -1428,13 +1486,14 @@ export default function CustodiesPage() {
               </p>
             </div>
 
-            <Link
+            <PermissionLink
+              permission="create"
               href="/custodies/person/new"
               className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-xs font-bold text-white transition-colors hover:bg-slate-800"
             >
               <Plus className="h-4 w-4" />
               إضافة عهدة شخصية
-            </Link>
+            </PermissionLink>
           </div>
 
           {personCustodies.length ===
@@ -1559,7 +1618,7 @@ export default function CustodiesPage() {
               </h2>
 
               <p className="mt-1 text-xs leading-5 text-slate-400">
-                عهد العمال منفصلة عن حسابات الأجور والسلف، وسيتم ربطها عند بناء نظام العمال.
+                عهد العمال منفصلة عن حسابات الأجور والسلف، ويمكن متابعة أرصدتها من هنا.
               </p>
             </div>
 

@@ -1,5 +1,6 @@
 export type ProjectExpenseMovementType =
   | "expense"
+  | "worker_advance"
   | "contractor_advance";
 
 export interface Expense {
@@ -14,6 +15,7 @@ export interface Expense {
   movementType?: ProjectExpenseMovementType;
   custodyTransactionId?: string;
   contractorId?: string;
+  workerId?: string;
   createdBy?: string;
   createdAt: string;
   updatedAt: string;

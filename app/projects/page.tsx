@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDisplayDate } from "@/lib/formatters";
 import {
   useEffect,
   useMemo,
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 
 import AppShell from "@/components/layout/AppShell";
+import PermissionLink from "@/components/auth/PermissionLink";
 
 import { getProjects } from "@/lib/data/projects";
 import { getProjectCustody } from "@/lib/data/custodies";
@@ -26,28 +28,14 @@ import type { Project } from "@/types/project";
 type ProjectFilter = "all" | "active";
 
 function formatAmount(amount: number): string {
-  return new Intl.NumberFormat("ar-EG", {
+  return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(amount);
 }
 
 function formatDate(date?: string): string {
-  if (!date) {
-    return "غير محدد";
-  }
-
-  const parsedDate = new Date(date);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return date;
-  }
-
-  return new Intl.DateTimeFormat("ar-EG", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(parsedDate);
+  return formatDisplayDate(date);
 }
 
 function getStatusLabel(
@@ -191,14 +179,15 @@ export default function ProjectsPage() {
               </p>
             </div>
 
-            <Link
+            <PermissionLink
+              permission="create"
               href="/projects/new"
               className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 active:scale-[0.98]"
             >
               <Plus className="h-4 w-4" />
 
               إضافة مشروع
-            </Link>
+            </PermissionLink>
           </div>
         </section>
 

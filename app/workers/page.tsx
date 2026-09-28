@@ -1,5 +1,8 @@
 "use client";
 
+import DateInput from "@/lib/date-input";
+
+import { formatDisplayDate } from "@/lib/formatters";
 import {
   SubmitEvent,
   useEffect,
@@ -20,6 +23,7 @@ import {
 } from "lucide-react";
 
 import AppShell from "@/components/layout/AppShell";
+import { canCurrentUser } from "@/lib/permission-check";
 
 import {
   addWorker,
@@ -43,22 +47,14 @@ type WorkerFilter =
   | "monthly";
 
 function formatAmount(amount: number) {
-  return new Intl.NumberFormat("ar-EG", {
+  return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(amount);
 }
 
 function formatDate(date?: string) {
-  if (!date) return "-";
-
-  const parts = date.split("-");
-
-  if (parts.length !== 3) {
-    return date;
-  }
-
-  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  return formatDisplayDate(date);
 }
 
 function getWorkerProject(
@@ -395,14 +391,16 @@ export default function WorkersPage() {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={openModal}
+            {canCurrentUser("create") && (
+              <button
+                type="button"
+                onClick={openModal}
               className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 active:scale-[0.98]"
             >
               <Plus className="h-4 w-4" />
-              إضافة عامل
-            </button>
+                إضافة عامل
+              </button>
+            )}
           </div>
         </section>
 
@@ -1060,12 +1058,11 @@ export default function WorkersPage() {
                     تاريخ بداية العمل
                   </label>
 
-                  <input
-                    type="date"
+                  <DateInput
                     value={startDate}
-                    onChange={(event) =>
+                    onChange={(value) =>
                       setStartDate(
-                        event.target.value,
+                        value,
                       )
                     }
                     className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-slate-400"

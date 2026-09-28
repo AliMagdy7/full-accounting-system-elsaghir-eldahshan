@@ -1,5 +1,7 @@
 "use client";
 
+import DateInput from "@/lib/date-input";
+
 import {
   useEffect,
   useMemo,
@@ -23,6 +25,7 @@ import {
 } from "lucide-react";
 
 import AppShell from "@/components/layout/AppShell";
+import { formatDisplayDate } from "@/lib/formatters";
 
 import {
   getCustodies,
@@ -45,7 +48,7 @@ function formatAmount(
   amount: number,
 ): string {
   return new Intl.NumberFormat(
-    "ar-EG",
+    "en-US",
     {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
@@ -56,20 +59,7 @@ function formatAmount(
 function formatDate(
   date: string,
 ): string {
-  if (!date) {
-    return "-";
-  }
-
-  const parts =
-    date.split("-");
-
-  if (
-    parts.length !== 3
-  ) {
-    return date;
-  }
-
-  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  return formatDisplayDate(date);
 }
 
 function getTransactionLabel(
@@ -1132,15 +1122,14 @@ export default function CentralCustodyPage() {
 
                 <CalendarDays className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
-                <input
+                <DateInput
                   id="central-from-date"
-                  type="date"
                   value={
                     fromDate
                   }
-                  onChange={(event) =>
+                  onChange={(value) =>
                     setFromDate(
-                      event.target.value,
+                      value,
                     )
                   }
                   className="h-11 w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 py-2 pl-3 pr-10 text-sm text-slate-700 outline-none transition-all hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10"
@@ -1162,15 +1151,14 @@ export default function CentralCustodyPage() {
 
                 <CalendarDays className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
-                <input
+                <DateInput
                   id="central-to-date"
-                  type="date"
                   value={
                     toDate
                   }
-                  onChange={(event) =>
+                  onChange={(value) =>
                     setToDate(
-                      event.target.value,
+                      value,
                     )
                   }
                   className="h-11 w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 py-2 pl-3 pr-10 text-sm text-slate-700 outline-none transition-all hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10"

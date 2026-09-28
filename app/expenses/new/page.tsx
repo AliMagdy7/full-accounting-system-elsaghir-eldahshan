@@ -1,5 +1,7 @@
 "use client";
 
+import DateInput from "@/lib/date-input";
+
 import {
   SubmitEvent,
   useEffect,
@@ -21,13 +23,16 @@ import AppShell from "@/components/layout/AppShell";
 import {
   getCustodies,
   getProjectCustody,
+  reverseCustodyBalance,
   updateCustodyBalance,
 } from "@/lib/data/custodies";
 import {
   addCustodyTransaction,
+  deleteCustodyTransaction,
 } from "@/lib/data/custody-transactions";
 import {
   addExpense,
+  deleteExpense,
 } from "@/lib/data/expenses";
 import {
   getProjects,
@@ -37,6 +42,7 @@ import type { Custody } from "@/types/custody";
 import type { Project } from "@/types/project";
 import {
   getCustodyFinancialAccounts,
+  reverseCustodyFinancialAccountBalance,
   updateCustodyFinancialAccountBalance,
 } from "@/lib/data/custody-financial-accounts";
 import type { CustodyFinancialAccount } from "@/types/custody-financial-account";
@@ -374,94 +380,90 @@ export default function NewExpensePage() {
     setError("");
     setIsSaving(true);
 
-    const now =
-      new Date().toISOString();
+    const now = new Date().toISOString();
+    const expenseId = crypto.randomUUID();
+    const transactionId = crypto.randomUUID();
+    let custodyUpdated = false;
+    let accountUpdated = false;
+    let transactionCreated = false;
+    let expenseCreated = false;
 
-    const expenseId =
-      crypto.randomUUID();
+    try {
+      /*
+       * الرصيد والحركة والمصروف مرتبطون ببعضهم.
+       * لا نحفظ المصروف إلا بعد نجاح الأثر المالي،
+       * ومع أي خطأ نرجع كل ما تم تسجيله.
+       */
+      updateCustodyBalance(custodyId, numericAmount, "out");
+      custodyUpdated = true;
 
-    /*
-     * تسجيل المصروف.
-     *
-     * financialAccountId يتم حفظه فقط
-     * إذا كان المصروف خارج عهدتي أنا.
-     */
-    addExpense({
-      id: expenseId,
-      date,
-      amount: numericAmount,
-      category:
-        trimmedCategory,
-      description:
-        trimmedDescription,
-      custodyId,
-      ...(isCentralCustody &&
-      financialAccountId
-        ? {
+      if (isCentralCustody && financialAccountId) {
+        updateCustodyFinancialAccountBalance(
+          financialAccountId,
+          numericAmount,
+          "out",
+        );
+        accountUpdated = true;
+      }
+
+      addCustodyTransaction({
+        id: transactionId,
+        custodyId,
+        type: "out",
+        amount: numericAmount,
+        date,
+        description: trimmedDescription,
+        source: "مصروف",
+        ...(isCentralCustody && financialAccountId ? { financialAccountId } : {}),
+        ...(projectId ? { projectId } : {}),
+        createdAt: now,
+        updatedAt: now,
+      });
+      transactionCreated = true;
+
+      addExpense({
+        id: expenseId,
+        date,
+        amount: numericAmount,
+        category: trimmedCategory,
+        description: trimmedDescription,
+        custodyId,
+        ...(isCentralCustody && financialAccountId ? { financialAccountId } : {}),
+        ...(projectId ? { projectId } : {}),
+        movementType: "expense",
+        custodyTransactionId: transactionId,
+        createdAt: now,
+        updatedAt: now,
+      });
+      expenseCreated = true;
+    } catch (caughtError) {
+      if (expenseCreated) {
+        try { deleteExpense(expenseId); } catch { /* keep original error */ }
+      }
+      if (transactionCreated) {
+        try { deleteCustodyTransaction(transactionId); } catch { /* keep original error */ }
+      }
+      if (accountUpdated && financialAccountId) {
+        try {
+          reverseCustodyFinancialAccountBalance(
             financialAccountId,
-          }
-        : {}),
-      ...(projectId
-        ? {
-            projectId,
-          }
-        : {}),
-      createdAt: now,
-      updatedAt: now,
-    });
+            numericAmount,
+            "out",
+          );
+        } catch { /* keep original error */ }
+      }
+      if (custodyUpdated) {
+        try { reverseCustodyBalance(custodyId, numericAmount, "out"); } catch { /* keep original error */ }
+      }
 
-    /*
-     * تحديث رصيد العهدة.
-     */
-    updateCustodyBalance(
-      custodyId,
-      numericAmount,
-      "out",
-    );
-
-    /*
-     * تحديث رصيد وسيلة الدفع
-     * فقط لو المصروف خرج من عهدتي أنا.
-     */
-    if (
-      isCentralCustody &&
-      financialAccountId
-    ) {
-      updateCustodyFinancialAccountBalance(
-        financialAccountId,
-        numericAmount,
-        "out",
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "حدث خطأ أثناء تسجيل المصروف.",
       );
+      setIsSaving(false);
+      return;
     }
-
-    /*
-     * تسجيل حركة العهدة.
-     *
-     * financialAccountId يضاف فقط
-     * لعهدتي أنا.
-     */
-    addCustodyTransaction({
-      id: crypto.randomUUID(),
-      custodyId,
-      type: "out",
-      amount: numericAmount,
-      date,
-      description:
-        trimmedDescription,
-      ...(isCentralCustody &&
-      financialAccountId
-        ? {
-            financialAccountId,
-          }
-        : {}),
-      ...(projectId
-        ? {
-            projectId,
-          }
-        : {}),
-      createdAt: now,
-      updatedAt: now,
-    });
 
     /*
      * لو المصروف أُضيف من داخل مشروع،
@@ -583,13 +585,12 @@ export default function NewExpensePage() {
                 <div className="relative">
                   <CalendarDays className="pointer-events-none absolute right-4 top-3.5 h-5 w-5 text-slate-400" />
 
-                  <input
+                  <DateInput
                     id="expense-date"
-                    type="date"
                     value={date}
-                    onChange={(event) => {
+                    onChange={(value) => {
                       setDate(
-                        event.target.value,
+                        value,
                       );
                       setError("");
                     }}

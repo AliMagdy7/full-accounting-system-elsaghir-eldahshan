@@ -8,10 +8,17 @@ import {
   Settings,
   ShieldCheck,
   Users,
+  UserRound,
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
+import Link from "next/link";
 
 const settingsSections = [
+  {
+    title: "الملف الشخصي",
+    description: "تعديل الاسم وبيانات الحساب وكلمة المرور الحالية.",
+    icon: UserRound,
+  },
   {
     title: "بيانات الشركة",
     description: "إدارة اسم الشركة، الشعارات، وبيانات التقارير والطباعة.",
@@ -107,6 +114,74 @@ export default function SettingsPage() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {settingsSections.map((section) => {
               const Icon = section.icon;
+
+              if (section.title === "الملف الشخصي") {
+                return (
+                  <Link
+                    key={section.title}
+                    href="/profile"
+                    className="group block cursor-pointer rounded-2xl border border-slate-200 bg-white p-5 text-right shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-700 transition-colors group-hover:bg-slate-900 group-hover:text-white">
+                        <UserRound className="h-5 w-5" />
+                      </div>
+                      <ChevronLeft className="h-5 w-5 text-slate-300 transition-all duration-200 group-hover:-translate-x-1 group-hover:text-slate-600" />
+                    </div>
+                    <h3 className="mt-5 text-base font-extrabold text-slate-900">{section.title}</h3>
+                    <p className="mt-2 text-xs leading-6 text-slate-400">{section.description}</p>
+                  </Link>
+                );
+              }
+
+              if (section.title === "المستخدمون والصلاحيات") {
+                return (
+                  <Link
+                    key={section.title}
+                    href="/users"
+                    className="group block cursor-pointer rounded-2xl border border-slate-200 bg-white p-5 text-right shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-700 transition-colors group-hover:bg-slate-900 group-hover:text-white">
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <ChevronLeft className="h-5 w-5 text-slate-300 transition-all duration-200 group-hover:-translate-x-1 group-hover:text-slate-600" />
+                    </div>
+                    <h3 className="mt-5 text-base font-extrabold text-slate-900">
+                      {section.title}
+                    </h3>
+                    <p className="mt-2 text-xs leading-6 text-slate-400">
+                      {section.description}
+                    </p>
+                  </Link>
+                );
+              }
+
+              if (section.title === "سجل العمليات") {
+                return (
+                  <Link
+                    key={section.title}
+                    href="/audit-log"
+                    className="group block cursor-pointer rounded-2xl border border-slate-200 bg-white p-5 text-right shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-700 transition-colors group-hover:bg-slate-900 group-hover:text-white">
+                        <Icon className="h-5 w-5" />
+                      </div>
+
+                      <ChevronLeft className="h-5 w-5 text-slate-300 transition-all duration-200 group-hover:-translate-x-1 group-hover:text-slate-600" />
+                    </div>
+
+                    <h3 className="mt-5 text-base font-extrabold text-slate-900">
+                      {section.title}
+                    </h3>
+
+                    <p className="mt-2 text-xs leading-6 text-slate-400">
+                      {section.description}
+                    </p>
+                  </Link>
+                );
+              }
 
               return (
                 <button

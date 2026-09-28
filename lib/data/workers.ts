@@ -143,37 +143,6 @@ export function getWorkerById(
   );
 }
 
-export function getWorkerByName(
-  name: string,
-) {
-  const normalized =
-    normalizeName(name);
-
-  return readWorkers().find(
-    (worker) =>
-      normalizeName(
-        worker.name,
-      ) === normalized,
-  );
-}
-
-export function workerNameExists(
-  name: string,
-  excludeWorkerId?: string,
-) {
-  const normalized =
-    normalizeName(name);
-
-  return readWorkers().some(
-    (worker) =>
-      worker.id !==
-        excludeWorkerId &&
-      normalizeName(
-        worker.name,
-      ) === normalized,
-  );
-}
-
 export function addWorker(input: {
   name: string;
 
@@ -203,16 +172,17 @@ export function addWorker(input: {
     );
   }
 
-  if (
-    workerNameExists(name)
-  ) {
-    const existing =
-      getWorkerByName(name);
-
-    throw new Error(
-      `العامل "${existing?.name ?? name}" موجود بالفعل في النظام.`,
+    const existing = workers.find(
+      (worker) =>
+        normalizeName(worker.name) ===
+        normalizeName(name),
     );
-  }
+
+    if (existing) {
+      throw new Error(
+        `العامل "${existing.name}" موجود بالفعل في النظام.`,
+      );
+    }
 
   if (
     !input.currentProjectId
@@ -400,26 +370,28 @@ export function updateWorker(
     );
   }
 
+
+
+  if (updates.name !== undefined) {
+    const normalizedName =
+      normalizeName(updates.name);
+
+  const existing = workers.find(
+    (worker) =>
+      worker.id !== id &&
+      normalizeName(worker.name) ===
+        normalizedName,
+  );
+
+    if (existing) {
+      throw new Error(
+        `العامل "${existing.name}" موجود بالفعل في النظام.`,
+      );
+    }
+  }
+
   const current =
     workers[index];
-
-  if (
-    updates.name !==
-      undefined &&
-    workerNameExists(
-      updates.name,
-      id,
-    )
-  ) {
-    const existing =
-      getWorkerByName(
-        updates.name,
-      );
-
-    throw new Error(
-      `العامل "${existing?.name ?? updates.name}" موجود بالفعل في النظام.`,
-    );
-  }
 
   const next: Worker = {
     ...current,

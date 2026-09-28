@@ -23,7 +23,6 @@ import AppShell from "@/components/layout/AppShell";
 
 import {
   addWorker,
-  getWorkerByName,
   getWorkers,
 } from "@/lib/data/workers";
 
@@ -229,22 +228,6 @@ export default function WorkersPage() {
     if (!trimmedName) {
       setError(
         "من فضلك أدخل اسم العامل.",
-      );
-      return;
-    }
-
-    /*
-     * منع تكرار اسم العامل.
-     *
-     * المقارنة تتم داخل data helper
-     * بعد تنظيف الاسم وتوحيد حالة الحروف.
-     */
-    const existingWorker =
-      getWorkerByName(trimmedName);
-
-    if (existingWorker) {
-      setError(
-        `العامل "${existingWorker.name}" موجود بالفعل في النظام.`,
       );
       return;
     }

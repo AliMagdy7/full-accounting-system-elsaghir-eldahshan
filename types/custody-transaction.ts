@@ -35,6 +35,12 @@ export interface CustodyTransaction {
 
   projectId?: string;
 
+  /** المقاول المرتبط بالحركة المالية. */
+  contractorId?: string;
+
+  /** الموقع المرتبط بالحركة المالية. */
+  siteId?: string;
+
   createdAt: string;
 
   updatedAt: string;

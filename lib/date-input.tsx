@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { InputHTMLAttributes } from "react";
+import { CalendarDays } from "lucide-react";
 
 function toDisplayValue(value?: string): string {
   if (!value) return "";
@@ -61,40 +62,85 @@ export default function DateInput({
   ...props
 }: DateInputProps) {
   const [displayValue, setDisplayValue] = useState(() => toDisplayValue(value));
+  const nativeDateRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setDisplayValue(toDisplayValue(value));
   }, [value]);
 
+  const commitIsoValue = (isoValue: string) => {
+    setDisplayValue(toDisplayValue(isoValue));
+    onChange(isoValue);
+  };
+
+  const openCalendar = () => {
+    const input = nativeDateRef.current;
+    if (!input) return;
+
+    try {
+      const pickerInput = input as HTMLInputElement & { showPicker?: () => void };
+      pickerInput.showPicker?.();
+    } catch {
+      input.focus();
+      input.click();
+    }
+  };
+
   return (
-    <input
-      {...props}
-      type="text"
-      inputMode="numeric"
-      autoComplete="off"
-      placeholder={placeholder}
-      value={displayValue}
-      onChange={(event) => {
-        const nextDisplayValue = maskDateInput(event.target.value);
-        setDisplayValue(nextDisplayValue);
+    <div className="relative w-full">
+      <input
+        {...props}
+        type="text"
+        inputMode="numeric"
+        autoComplete="off"
+        placeholder={placeholder}
+        value={displayValue}
+        onChange={(event) => {
+          const nextDisplayValue = maskDateInput(event.target.value);
+          setDisplayValue(nextDisplayValue);
 
-        if (!nextDisplayValue) {
-          onChange("");
-          return;
-        }
+          if (!nextDisplayValue) {
+            onChange("");
+            return;
+          }
 
-        const isoValue = toIsoDate(nextDisplayValue);
-        if (isoValue) onChange(isoValue);
-      }}
-      onBlur={(event) => {
-        if (displayValue && !toIsoDate(displayValue)) {
-          setDisplayValue(toDisplayValue(value));
-        }
-        onBlur?.(event);
-      }}
-      className={className}
-      dir="ltr"
-      style={{ textAlign: "right", ...props.style }}
-    />
+          const isoValue = toIsoDate(nextDisplayValue);
+          if (isoValue) onChange(isoValue);
+        }}
+        onBlur={(event) => {
+          if (displayValue && !toIsoDate(displayValue)) {
+            setDisplayValue(toDisplayValue(value));
+          }
+          onBlur?.(event);
+        }}
+        className={className}
+        dir="ltr"
+        style={{ textAlign: "right", paddingRight: "3rem", ...props.style }}
+      />
+
+      <button
+        type="button"
+        onClick={openCalendar}
+        className="absolute right-1 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition-all hover:bg-slate-100 hover:text-blue-600 focus-visible:bg-slate-100"
+        aria-label="اختيار التاريخ من التقويم"
+        title="اختيار التاريخ من التقويم"
+      >
+        <CalendarDays className="h-5 w-5" />
+      </button>
+
+      <input
+        ref={nativeDateRef}
+        type="date"
+        tabIndex={-1}
+        aria-hidden="true"
+        value={value?.match(/^\d{4}-\d{2}-\d{2}$/) ? value : ""}
+        min={typeof props.min === "string" ? props.min : undefined}
+        max={typeof props.max === "string" ? props.max : undefined}
+        onChange={(event) => {
+          if (event.target.value) commitIsoValue(event.target.value);
+        }}
+        className="pointer-events-none absolute h-px w-px opacity-0"
+      />
+    </div>
   );
 }

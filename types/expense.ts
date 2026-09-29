@@ -15,6 +15,8 @@ export interface Expense {
   movementType?: ProjectExpenseMovementType;
   custodyTransactionId?: string;
   contractorId?: string;
+  /** الموقع المرتبط بالحركة، خصوصًا سلفة المقاول. */
+  siteId?: string;
   workerId?: string;
   createdBy?: string;
   createdAt: string;

@@ -32,9 +32,12 @@ import {
 
 import { getProjectById } from "@/lib/data/projects";
 
-import { getExpensesByProjectId } from "@/lib/data/expenses";
+import { getExpenses, getExpensesByProjectId } from "@/lib/data/expenses";
 
 import { getWorkers } from "@/lib/data/workers";
+import { getContractors } from "@/lib/data/contractors";
+import { getProjectSites } from "@/lib/data/project-sites";
+import { getContractorSiteAssignmentsBySiteId } from "@/lib/data/contractor-site-assignments";
 
 import ProjectExpensesTable from "@/components/projects/ProjectExpensesTable";
 
@@ -48,6 +51,7 @@ import type {
 } from "@/types/project";
 
 import type { CustodyTransaction } from "@/types/custody-transaction";
+import type { Expense } from "@/types/expense";
 
 interface ProjectCustodySummary {
   balance: number;
@@ -285,6 +289,12 @@ export default function ProjectDetailsPage() {
   const [workerFilter, setWorkerFilter] =
     useState("");
 
+  const [contractorMovements, setContractorMovements] =
+    useState<Expense[]>([]);
+
+  const [contractorFilter, setContractorFilter] =
+    useState("");
+
   const [loading, setLoading] =
     useState(true);
 
@@ -300,6 +310,7 @@ export default function ProjectDetailsPage() {
         setProject(null);
         setTransactions([]);
         setWorkerMovements([]);
+        setContractorMovements([]);
         setLoading(false);
         return;
       }
@@ -397,6 +408,25 @@ export default function ProjectDetailsPage() {
         projectWorkerMovements,
       );
 
+      const projectSites = getProjectSites(projectId);
+      const projectSiteIds = new Set(projectSites.map((site) => site.id));
+      const projectContractorMovements = getExpenses()
+        .filter(
+          (expense) =>
+            expense.movementType === "contractor_advance" &&
+            !!expense.contractorId &&
+            !!expense.siteId &&
+            projectSiteIds.has(expense.siteId) &&
+            (expense.projectId === projectId || !expense.projectId),
+        )
+        .slice()
+        .sort((a, b) =>
+          b.date.localeCompare(a.date) ||
+          b.createdAt.localeCompare(a.createdAt),
+        );
+
+      setContractorMovements(projectContractorMovements);
+
       setLoading(false);
     };
 
@@ -432,6 +462,26 @@ export default function ProjectDetailsPage() {
           getWorkerFinancialMovementsByWorkerId(worker.id),
         )
         .filter((movement) => movement.projectId === projectId)
+        .slice()
+        .sort((a, b) =>
+          b.date.localeCompare(a.date) ||
+          b.createdAt.localeCompare(a.createdAt),
+        ),
+    );
+
+    const projectSiteIds = new Set(
+      getProjectSites(projectId).map((site) => site.id),
+    );
+    setContractorMovements(
+      getExpenses()
+        .filter(
+          (expense) =>
+            expense.movementType === "contractor_advance" &&
+            !!expense.contractorId &&
+            !!expense.siteId &&
+            projectSiteIds.has(expense.siteId) &&
+            (expense.projectId === projectId || !expense.projectId),
+        )
         .slice()
         .sort((a, b) =>
           b.date.localeCompare(a.date) ||
@@ -496,6 +546,75 @@ export default function ProjectDetailsPage() {
       workerRows,
       workerFilter,
     ]);
+
+  const projectSites = useMemo(
+    () => getProjectSites(projectId),
+    [projectId, contractorMovements],
+  );
+
+  const projectSiteMap = useMemo(
+    () => new Map(projectSites.map((site) => [site.id, site])),
+    [projectSites],
+  );
+
+  const contractorsMap = useMemo(
+    () => new Map(getContractors().map((contractor) => [contractor.id, contractor])),
+    [contractorMovements],
+  );
+
+  const linkedContractors = useMemo(() => {
+    const rows = new Map<
+      string,
+      {
+        contractorId: string;
+        contractorName: string;
+        sites: string[];
+      }
+    >();
+
+    for (const site of projectSites) {
+      const assignments = getContractorSiteAssignmentsBySiteId(site.id);
+      for (const assignment of assignments) {
+        const contractor = contractorsMap.get(assignment.contractorId);
+        if (!contractor) continue;
+
+        const current = rows.get(contractor.id) ?? {
+          contractorId: contractor.id,
+          contractorName: contractor.name,
+          sites: [],
+        };
+
+        if (!current.sites.includes(site.name)) {
+          current.sites.push(site.name);
+        }
+
+        rows.set(contractor.id, current);
+      }
+    }
+
+    return Array.from(rows.values()).sort((a, b) =>
+      a.contractorName.localeCompare(b.contractorName, "ar"),
+    );
+  }, [projectSites, contractorsMap]);
+
+  const filteredContractorMovements = useMemo(() => {
+    const normalizedFilter = contractorFilter.trim().toLocaleLowerCase("ar");
+    if (!normalizedFilter) return contractorMovements;
+
+    return contractorMovements.filter((expense) => {
+      const contractorName = expense.contractorId
+        ? contractorsMap.get(expense.contractorId)?.name ?? ""
+        : "";
+      const siteName = expense.siteId
+        ? projectSiteMap.get(expense.siteId)?.name ?? ""
+        : "";
+
+      return (
+        contractorName.toLocaleLowerCase("ar").includes(normalizedFilter) ||
+        siteName.toLocaleLowerCase("ar").includes(normalizedFilter)
+      );
+    });
+  }, [contractorMovements, contractorFilter, contractorsMap, projectSiteMap]);
 
   if (loading) {
     return (
@@ -1011,6 +1130,189 @@ export default function ProjectDetailsPage() {
                       );
                     },
                   )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        {/* Contractors */}
+
+        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex flex-col gap-4 border-b border-slate-100 px-5 py-4 sm:px-6">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="text-base font-extrabold text-slate-900">
+                  المقاولون
+                </h2>
+
+                <p className="mt-1 text-xs leading-5 text-slate-400">
+                  المقاولون المرتبطون بمواقع هذا المشروع، وكل السلف الخاصة بهم حتى لو تم الدفع من عهدة أخرى.
+                </p>
+              </div>
+
+              <div className="w-full lg:w-72">
+                <input
+                  type="text"
+                  value={contractorFilter}
+                  onChange={(event) => setContractorFilter(event.target.value)}
+                  placeholder="فلترة باسم المقاول أو الموقع..."
+                  className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                />
+              </div>
+            </div>
+
+            {linkedContractors.length > 0 && (
+              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <p className="text-xs font-black text-slate-500">
+                    المقاولون المرتبطون بالمشروع
+                  </p>
+                  <span className="rounded-lg bg-white px-2 py-1 text-[10px] font-extrabold text-slate-400">
+                    {linkedContractors.length} مقاول
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {linkedContractors.map((item) => (
+                    <Link
+                      key={item.contractorId}
+                      href={`/contractors/${item.contractorId}`}
+                      className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-black text-slate-700 transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-700"
+                    >
+                      <BriefcaseBusiness className="h-3.5 w-3.5" />
+                      <span>{item.contractorName}</span>
+                      <span className="text-[10px] font-semibold text-slate-400">
+                        {item.sites.join(" • ")}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {contractorMovements.length === 0 ? (
+            <div className="flex min-h-52 items-center justify-center px-5 py-10">
+              <div className="text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                  <BriefcaseBusiness className="h-6 w-6" />
+                </div>
+
+                <h3 className="mt-4 text-sm font-bold text-slate-700">
+                  لا توجد حركات مالية للمقاولين
+                </h3>
+
+                <p className="mt-1 max-w-md text-xs leading-5 text-slate-400">
+                  عند تسجيل سلفة لمقاول واختيار أحد مواقع هذا المشروع، ستظهر الحركة هنا تلقائيًا.
+                </p>
+              </div>
+            </div>
+          ) : filteredContractorMovements.length === 0 ? (
+            <div className="flex min-h-52 items-center justify-center px-5 py-10">
+              <div className="text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                  <BriefcaseBusiness className="h-6 w-6" />
+                </div>
+
+                <h3 className="mt-4 text-sm font-bold text-slate-700">
+                  لا توجد نتائج
+                </h3>
+
+                <p className="mt-1 text-xs leading-5 text-slate-400">
+                  لم يتم العثور على مقاول أو موقع مطابق للبحث.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[1050px] text-right">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50/70">
+                    <th className="px-5 py-4 text-xs font-bold text-slate-500">
+                      التاريخ
+                    </th>
+                    <th className="px-5 py-4 text-xs font-bold text-slate-500">
+                      اسم المقاول
+                    </th>
+                    <th className="px-5 py-4 text-xs font-bold text-slate-500">
+                      الموقع
+                    </th>
+                    <th className="px-5 py-4 text-xs font-bold text-slate-500">
+                      البيان
+                    </th>
+                    <th className="px-5 py-4 text-xs font-bold text-slate-500">
+                      العهدة الدافعة
+                    </th>
+                    <th className="px-5 py-4 text-left text-xs font-bold text-slate-500">
+                      المبلغ
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-slate-100">
+                  {filteredContractorMovements.map((expense) => {
+                    const contractor = expense.contractorId
+                      ? contractorsMap.get(expense.contractorId)
+                      : undefined;
+                    const site = expense.siteId
+                      ? projectSiteMap.get(expense.siteId)
+                      : undefined;
+                    const custody = expense.custodyId
+                      ? getCustodyById(expense.custodyId)
+                      : undefined;
+
+                    return (
+                      <tr
+                        key={expense.id}
+                        className="transition-colors hover:bg-slate-50/70"
+                      >
+                        <td className="whitespace-nowrap px-5 py-4 text-xs font-semibold text-slate-500">
+                          {formatDate(expense.date)}
+                        </td>
+
+                        <td className="px-5 py-4">
+                          <Link
+                            href={`/contractors/${expense.contractorId}`}
+                            className="flex items-center gap-2 text-sm font-extrabold text-slate-800 transition hover:text-blue-700"
+                          >
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+                              <BriefcaseBusiness className="h-4 w-4" />
+                            </div>
+                            {contractor?.name ?? "مقاول غير معروف"}
+                          </Link>
+                        </td>
+
+                        <td className="px-5 py-4">
+                          <span className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-2.5 py-1.5 text-xs font-bold text-blue-700">
+                            <MapPin className="h-3.5 w-3.5" />
+                            {site?.name ?? "موقع غير محدد"}
+                          </span>
+                        </td>
+
+                        <td className="px-5 py-4">
+                          <p className="max-w-[320px] text-sm font-bold leading-6 text-slate-800">
+                            {expense.description || "سلفة مقاول"}
+                          </p>
+                        </td>
+
+                        <td className="px-5 py-4">
+                          <span className="text-sm font-semibold text-slate-600">
+                            {custody?.name ?? "عهدة غير محددة"}
+                          </span>
+                        </td>
+
+                        <td className="whitespace-nowrap px-5 py-4 text-left">
+                          <span className="text-sm font-extrabold text-violet-600">
+                            -{formatAmount(Math.abs(Number(expense.amount || 0)))}
+                          </span>
+                          <span className="mr-1 text-[10px] font-medium text-slate-400">
+                            جنيه
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

@@ -54,8 +54,8 @@ export default function LoginPage() {
       <div className="pointer-events-none absolute -right-28 -top-28 h-72 w-72 rounded-full bg-blue-100/70 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-32 -left-24 h-80 w-80 rounded-full bg-slate-200/80 blur-3xl" />
 
-      <section className="ui-fade-up relative w-full max-w-115">
-        <div className="rounded-4xl border border-slate-200/90 bg-white p-5 shadow-[0_24px_80px_rgba(15,23,42,0.10)] sm:p-7">
+      <section className="ui-fade-up relative w-full max-w-[460px]">
+        <div className="rounded-[2rem] border border-slate-200/90 bg-white p-5 shadow-[0_24px_80px_rgba(15,23,42,0.10)] sm:p-7">
           <div className="text-center">
             <div className="flex items-center justify-center gap-3 sm:gap-4">
               <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-slate-200 bg-white p-2 shadow-sm sm:h-24 sm:w-24">

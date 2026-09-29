@@ -33,6 +33,8 @@ import {
 } from "@/lib/data/workers";
 
 import { getProjects } from "@/lib/data/projects";
+import { getProjectSites } from "@/lib/data/project-sites";
+import type { ProjectSite } from "@/types/project-site";
 
 import {
   getCustodies,
@@ -54,13 +56,15 @@ import {
 } from "@/lib/data/custody-financial-accounts";
 
 import {
-  addWorkerFinancialMovement,
-  deleteWorkerFinancialMovement,
   getWorkerFinancialMovementsByWorkerId,
   getWorkerFinancialSummary,
   getWorkerFinancialBalanceByProject,
-  updateWorkerFinancialMovement,
 } from "@/lib/data/worker-financial-movements";
+import {
+  createWorkerMovementWithPayment,
+  updateWorkerMovementWithPayment,
+  deleteWorkerMovementWithPayment,
+} from "@/lib/data/financial-transactions";
 
 import type { Worker, WorkerSiteAssignment } from "@/types/worker";
 import type {
@@ -405,6 +409,9 @@ export default function WorkerDetailsPage() {
   const [projects, setProjects] =
     useState<Project[]>([]);
 
+  const [sites, setSites] =
+    useState<ProjectSite[]>([]);
+
   const [custodies, setCustodies] =
     useState<Custody[]>([]);
 
@@ -448,6 +455,9 @@ export default function WorkerDetailsPage() {
     useState(false);
 
   const [transferProjectId, setTransferProjectId] =
+    useState("");
+
+  const [transferSiteId, setTransferSiteId] =
     useState("");
 
   const [transferDate, setTransferDate] =
@@ -564,6 +574,7 @@ export default function WorkerDetailsPage() {
     if (!currentWorker) {
       setWorker(null);
       setProjects([]);
+      setSites([]);
       setCustodies([]);
       setFinancialAccounts([]);
       setAssignments([]);
@@ -574,6 +585,8 @@ export default function WorkerDetailsPage() {
 
     const allProjects =
       getProjects();
+
+    const allSites = getProjectSites();
 
     const allCustodies =
       getCustodies();
@@ -601,6 +614,7 @@ export default function WorkerDetailsPage() {
 
     setWorker(currentWorker);
     setProjects(allProjects);
+    setSites(allSites);
     setCustodies(allCustodies);
     setAssignments(workerAssignments);
     setMovements(workerMovements);
@@ -743,12 +757,20 @@ export default function WorkerDetailsPage() {
     setError("");
     setSuccess("");
 
-    if (!transferProjectId) {
+    if (!transferSiteId) {
       setError(
-        "من فضلك اختر المشروع الجديد.",
+        "من فضلك اختر الموقع الجديد.",
       );
       return;
     }
+
+    const selectedTransferSite = sites.find((site) => site.id === transferSiteId);
+    if (!selectedTransferSite) {
+      setError("الموقع المحدد غير موجود.");
+      return;
+    }
+
+    const selectedTransferProjectId = selectedTransferSite.projectId;
 
     if (!transferDate) {
       setError(
@@ -776,7 +798,8 @@ export default function WorkerDetailsPage() {
     try {
       moveWorkerToProject({
         workerId: worker.id,
-        projectId: transferProjectId,
+        projectId: selectedTransferProjectId,
+        siteId: transferSiteId,
         startDate: transferDate,
         keepSalary: !transferSalary.trim(),
         ...(transferSalary.trim()
@@ -804,6 +827,7 @@ export default function WorkerDetailsPage() {
 
       setIsTransferOpen(false);
       setTransferProjectId("");
+      setTransferSiteId("");
       setTransferDate(getToday());
       setTransferSalary("");
 
@@ -976,77 +1000,18 @@ export default function WorkerDetailsPage() {
     setIsSaving(true);
 
     try {
-      const effect =
-        getMovementEffect(
-          movementType,
-        );
-
-      /*
-       * في المرحلة الحالية يتم تسجيل الحركة
-       * على حساب العامل أولًا.
-       */
-      const createdMovement = addWorkerFinancialMovement({
+      createWorkerMovementWithPayment({
         workerId: worker.id,
         type: movementType,
-        effect,
         amount,
         date: movementDate,
-        description:
-          movementDescription.trim(),
-        notes:
-          movementNotes.trim() ||
-          undefined,
+        description: movementDescription.trim(),
+        notes: movementNotes.trim() || undefined,
         custodyId: movementCustodyId,
-        financialAccountId:
-          movementFinancialAccountId ||
-          undefined,
-        projectId:
-          movementProjectId ||
-          undefined,
-        allocation:
-          movementProjectId
-            ? movementAllocation
-            : "general",
+        financialAccountId: movementFinancialAccountId || undefined,
+        projectId: movementProjectId || undefined,
+        allocation: movementProjectId ? movementAllocation : "general",
       });
-
-      /*
-       * الحركات النقدية الفعلية تخصم من العهدة
-       * ويتم ربط حركة العهدة بحركة العامل.
-       */
-      if (cashOutMovement) {
-        updateCustodyBalance(
-          movementCustodyId,
-          amount,
-          "out",
-        );
-
-        if (movementFinancialAccountId) {
-          updateCustodyFinancialAccountBalance(
-            movementFinancialAccountId,
-            amount,
-            "out",
-          );
-        }
-
-        addCustodyTransaction({
-          id: crypto.randomUUID(),
-          custodyId: movementCustodyId,
-          type: "out",
-          amount,
-          date: movementDate,
-          description:
-            `${getMovementLabel(
-              movementType,
-            )} للعامل ${worker.name}: ${movementDescription.trim()}`,
-          source: "حساب العامل",
-          workerFinancialMovementId: createdMovement.id,
-          projectId: movementProjectId || undefined,
-          financialAccountId:
-            movementFinancialAccountId || undefined,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
-      }
 
       setSuccess(
         movementType === "salary"
@@ -1245,80 +1210,17 @@ export default function WorkerDetailsPage() {
     setIsSaving(true);
 
     try {
-      const transactions = getCustodyTransactions();
-      const oldTransaction = transactions.find(
-        (transaction) =>
-          transaction.workerFinancialMovementId === currentMovement.id,
-      );
-
-      if (oldTransaction && oldIsCashOut) {
-        reverseCustodyBalance(
-          oldTransaction.custodyId,
-          oldTransaction.amount,
-          "out",
-        );
-
-        if (oldTransaction.financialAccountId) {
-          reverseCustodyFinancialAccountBalance(
-            oldTransaction.financialAccountId,
-            oldTransaction.amount,
-            "out",
-          );
-        }
-
-        deleteCustodyTransaction(oldTransaction.id);
-      }
-
-      const updatedMovement = updateWorkerFinancialMovement(
-        currentMovement.id,
-        {
-          type: editMovementType,
-          amount,
-          date: editMovementDate,
-          description: editMovementDescription.trim(),
-          notes: editMovementNotes.trim() || undefined,
-          custodyId: editMovementCustodyId,
-          financialAccountId: editMovementFinancialAccountId || undefined,
-          projectId: editMovementProjectId || undefined,
-          allocation: editMovementProjectId
-            ? editMovementAllocation
-            : "general",
-        },
-      );
-
-      if (nextIsCashOut) {
-        updateCustodyBalance(
-          editMovementCustodyId,
-          amount,
-          "out",
-        );
-
-        if (editMovementFinancialAccountId) {
-          updateCustodyFinancialAccountBalance(
-            editMovementFinancialAccountId,
-            amount,
-            "out",
-          );
-        }
-
-        addCustodyTransaction({
-          id: crypto.randomUUID(),
-          custodyId: editMovementCustodyId,
-          type: "out",
-          amount,
-          date: editMovementDate,
-          description:
-            `${getMovementLabel(
-              editMovementType,
-            )} للعامل ${worker.name}: ${editMovementDescription.trim()}`,
-          source: "حساب العامل",
-          workerFinancialMovementId: updatedMovement.id,
-          projectId: editMovementProjectId || undefined,
-          financialAccountId: editMovementFinancialAccountId || undefined,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
-      }
+      updateWorkerMovementWithPayment(currentMovement.id, {
+        type: editMovementType,
+        amount,
+        date: editMovementDate,
+        description: editMovementDescription.trim(),
+        notes: editMovementNotes.trim() || undefined,
+        custodyId: editMovementCustodyId,
+        financialAccountId: editMovementFinancialAccountId || undefined,
+        projectId: editMovementProjectId || undefined,
+        allocation: editMovementProjectId ? editMovementAllocation : "general",
+      });
 
       setSuccess("تم تعديل الحركة المالية وتحديث أثرها على العهدة بنجاح.");
       closeMovementEdit();
@@ -1351,29 +1253,7 @@ export default function WorkerDetailsPage() {
     setIsSaving(true);
 
     try {
-      const transaction = getCustodyTransactions().find(
-        (item) => item.workerFinancialMovementId === movement.id,
-      );
-
-      if (transaction && isCashOutMovement(movement.type)) {
-        reverseCustodyBalance(
-          transaction.custodyId,
-          transaction.amount,
-          "out",
-        );
-
-        if (transaction.financialAccountId) {
-          reverseCustodyFinancialAccountBalance(
-            transaction.financialAccountId,
-            transaction.amount,
-            "out",
-          );
-        }
-
-        deleteCustodyTransaction(transaction.id);
-      }
-
-      deleteWorkerFinancialMovement(movement.id);
+      deleteWorkerMovementWithPayment(movement.id);
       setSuccess("تم حذف الحركة وعكس أثرها المالي بنجاح.");
       loadData();
     } catch (caughtError) {
@@ -3023,47 +2903,31 @@ export default function WorkerDetailsPage() {
               <div className="space-y-4 p-5 sm:p-6">
                 <div>
                   <label className="mb-1.5 block text-xs font-bold text-slate-600">
-                    المشروع الجديد
+                    الموقع الجديد
                   </label>
 
                   <select
-                    value={
-                      transferProjectId
-                    }
-                    onChange={(event) =>
-                      setTransferProjectId(
-                        event.target.value,
-                      )
-                    }
+                    value={transferSiteId}
+                    onChange={(event) => {
+                      const nextSiteId = event.target.value;
+                      setTransferSiteId(nextSiteId);
+                      const site = sites.find((item) => item.id === nextSiteId);
+                      setTransferProjectId(site?.projectId ?? "");
+                    }}
                     className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold outline-none focus:border-slate-400"
                   >
-                    <option value="">
-                      اختر المشروع
-                    </option>
-
-                    {projects
-                      .filter(
-                        (project) =>
-                          project.id !==
-                          currentProject?.id,
-                      )
-                      .map(
-                        (project) => (
-                          <option
-                            key={
-                              project.id
-                            }
-                            value={
-                              project.id
-                            }
-                          >
-                            {
-                              project.name
-                            }
-                          </option>
-                        ),
-                      )}
+                    <option value="">اختر الموقع</option>
+                    {sites.map((site) => (
+                      <option key={site.id} value={site.id}>
+                        {site.name} — {projects.find((project) => project.id === site.projectId)?.name ?? "مشروع غير موجود"}
+                      </option>
+                    ))}
                   </select>
+                  {transferSiteId && transferProjectId && (
+                    <p className="mt-1.5 text-[11px] font-bold text-slate-400">
+                      المشروع المرتبط: {projects.find((project) => project.id === transferProjectId)?.name ?? "-"}
+                    </p>
+                  )}
                 </div>
 
                 <div>

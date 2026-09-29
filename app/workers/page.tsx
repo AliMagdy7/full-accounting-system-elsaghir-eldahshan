@@ -32,6 +32,8 @@ import {
 } from "@/lib/data/workers";
 
 import { getProjects } from "@/lib/data/projects";
+import { getProjectSites } from "@/lib/data/project-sites";
+import type { ProjectSite } from "@/types/project-site";
 
 import type {
   Worker,
@@ -67,12 +69,20 @@ function getWorkerProject(
   );
 }
 
+function getWorkerSite(worker: Worker, sites: ProjectSite[]) {
+  if (!worker.currentSiteId) return undefined;
+  return sites.find((site) => site.id === worker.currentSiteId);
+}
+
 export default function WorkersPage() {
   const [workers, setWorkers] =
     useState<Worker[]>([]);
 
   const [projects, setProjects] =
     useState<Project[]>([]);
+
+  const [sites, setSites] =
+    useState<ProjectSite[]>([]);
 
   const [search, setSearch] =
     useState("");
@@ -86,6 +96,9 @@ export default function WorkersPage() {
   const [name, setName] = useState("");
 
   const [projectId, setProjectId] =
+    useState("");
+
+  const [siteId, setSiteId] =
     useState("");
 
   const [startDate, setStartDate] =
@@ -118,6 +131,7 @@ export default function WorkersPage() {
   const loadData = () => {
     setWorkers(getWorkers());
     setProjects(getProjects());
+    setSites(getProjectSites());
   };
 
   useEffect(() => {
@@ -186,6 +200,7 @@ export default function WorkersPage() {
   const resetForm = () => {
     setName("");
     setProjectId("");
+    setSiteId("");
     setStartDate(
       new Date()
         .toISOString()
@@ -245,12 +260,18 @@ export default function WorkersPage() {
       return;
     }
 
-    if (!projectId) {
-      setError(
-        "من فضلك اختر الموقع الحالي للعامل.",
-      );
+    if (!siteId) {
+      setError("من فضلك اختر الموقع الحالي للعامل.");
       return;
     }
+
+    const selectedSite = sites.find((site) => site.id === siteId);
+    if (!selectedSite) {
+      setError("الموقع المحدد غير موجود.");
+      return;
+    }
+
+    const selectedProjectId = selectedSite.projectId;
 
     if (!startDate) {
       setError(
@@ -316,7 +337,8 @@ export default function WorkersPage() {
     try {
       addWorker({
         name: trimmedName,
-        currentProjectId: projectId,
+        currentProjectId: selectedProjectId,
+        currentSiteId: siteId,
         startDate,
         payType,
 
@@ -662,10 +684,8 @@ export default function WorkersPage() {
                     {filteredWorkers.map(
                       (worker) => {
                         const project =
-                          getWorkerProject(
-                            worker,
-                            projects,
-                          );
+                          getWorkerProject(worker, projects);
+                        const site = getWorkerSite(worker, sites);
 
                         return (
                           <tr
@@ -691,8 +711,7 @@ export default function WorkersPage() {
                             </td>
 
                             <td className="px-5 py-4 text-sm font-bold text-slate-600">
-                              {project?.name ??
-                                "غير محدد"}
+                              {site?.name ?? project?.name ?? "غير محدد"}
                             </td>
 
                             <td className="px-5 py-4">
@@ -775,10 +794,8 @@ export default function WorkersPage() {
                 {filteredWorkers.map(
                   (worker) => {
                     const project =
-                      getWorkerProject(
-                        worker,
-                        projects,
-                      );
+                      getWorkerProject(worker, projects);
+                    const site = getWorkerSite(worker, sites);
 
                     return (
                       <Link
@@ -818,8 +835,7 @@ export default function WorkersPage() {
                             </p>
 
                             <p className="mt-1 truncate text-xs font-black text-slate-700">
-                              {project?.name ??
-                                "غير محدد"}
+                              {site?.name ?? project?.name ?? "غير محدد"}
                             </p>
                           </div>
 
@@ -1028,28 +1044,24 @@ export default function WorkersPage() {
                   </label>
 
                   <select
-                    value={projectId}
-                    onChange={(event) =>
-                      setProjectId(
-                        event.target.value,
-                      )
-                    }
+                    value={siteId}
+                    onChange={(event) => {
+                      const nextSiteId = event.target.value;
+                      setSiteId(nextSiteId);
+                      const nextSite = sites.find((site) => site.id === nextSiteId);
+                      setProjectId(nextSite?.projectId ?? "");
+                    }}
                     className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-slate-400"
                   >
-                    <option value="">
-                      اختر الموقع
-                    </option>
-
-                    {projects.map(
-                      (project) => (
-                        <option
-                          key={project.id}
-                          value={project.id}
-                        >
-                          {project.name}
+                    <option value="">اختر الموقع</option>
+                    {sites.filter((site) => site.active).map((site) => {
+                      const project = projects.find((item) => item.id === site.projectId);
+                      return (
+                        <option key={site.id} value={site.id}>
+                          {project?.name ? `${project.name} — ${site.name}` : site.name}
                         </option>
-                      ),
-                    )}
+                      );
+                    })}
                   </select>
                 </div>
 

@@ -40,6 +40,8 @@ import {
 import { getExpenses } from "@/lib/data/expenses";
 
 import { getProjects } from "@/lib/data/projects";
+import { getContractors } from "@/lib/data/contractors";
+import { getProjectSites } from "@/lib/data/project-sites";
 import { getCustodyFinancialAccounts } from "@/lib/data/custody-financial-accounts";
 import type { CustodyFinancialAccount } from "@/types/custody-financial-account";
 
@@ -481,6 +483,13 @@ export default function ReportsPage() {
   const [workerReportMonth, setWorkerReportMonth] = useState(
     new Date().toISOString().slice(0, 7),
   );
+
+  const [contractorReportContractor, setContractorReportContractor] = useState("");
+  const [contractorReportProject, setContractorReportProject] = useState("");
+  const [contractorReportSite, setContractorReportSite] = useState("");
+  const [contractorReportCustody, setContractorReportCustody] = useState("");
+  const [contractorReportFrom, setContractorReportFrom] = useState("");
+  const [contractorReportTo, setContractorReportTo] = useState("");
 
   const [loaded, setLoaded] =
     useState(false);
@@ -1320,6 +1329,38 @@ export default function ReportsPage() {
     setTransferTo("");
   };
 
+  const exportFinancialCsv = () => {
+    const rows = getExpenses().map((expense) => {
+      const contractor = expense.contractorId ? getContractors().find((item) => item.id === expense.contractorId) : undefined;
+      const site = expense.siteId ? getProjectSites().find((item) => item.id === expense.siteId) : undefined;
+      const custody = getCustodies().find((item) => item.id === expense.custodyId);
+      return [
+        expense.date,
+        expense.movementType === "contractor_advance" ? "سلف المقاولين" : expense.movementType === "worker_advance" ? "سلف العمال" : "مصروف",
+        expense.description,
+        expense.amount,
+        contractor?.name ?? "",
+        projectName(expense.projectId, projects),
+        site?.name ?? "",
+        custody?.name ?? "",
+      ];
+    });
+    const escapeCsv = (value: unknown) => `"${String(value ?? "").replace(/"/g, '""')}"`;
+    const csv = [
+      ["التاريخ", "النوع", "البيان", "المبلغ", "المقاول", "المشروع", "الموقع", "العهدة الدافعة"],
+      ...rows,
+    ].map((row) => row.map(escapeCsv).join(",")).join("\r\n");
+    const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `elsaghir-eldahshan-financial-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const printReports = () => window.print();
+
   if (!loaded) {
     return (
       <AppShell>
@@ -1357,13 +1398,21 @@ export default function ReportsPage() {
               </div>
             </div>
 
-            <Link
-              href="/"
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 hover:text-slate-900"
-            >
-              <ArrowRight className="h-4 w-4" />
-              الرئيسية
-            </Link>
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={exportFinancialCsv} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-xs font-bold text-white transition hover:bg-slate-800">
+                تصدير CSV / Excel
+              </button>
+              <button type="button" onClick={printReports} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-600 transition hover:bg-slate-50">
+                طباعة / PDF
+              </button>
+              <Link
+                href="/"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 hover:text-slate-900"
+              >
+                <ArrowRight className="h-4 w-4" />
+                الرئيسية
+              </Link>
+            </div>
           </div>
         </section>
 
@@ -2912,6 +2961,184 @@ export default function ReportsPage() {
               <>
                 <div className="grid grid-cols-1 gap-3 border-b border-slate-100 p-5 sm:grid-cols-3"><div className="rounded-2xl border border-slate-200 p-4"><p className="text-xs font-bold text-slate-400">عدد العمال</p><p className="mt-2 text-2xl font-extrabold text-slate-900">{rows.length}</p></div><div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4"><p className="text-xs font-bold text-blue-600">إجمالي المستحق للعمال</p><p className="mt-2 text-2xl font-extrabold text-blue-600">{money(payable)} جنيه</p></div><div className="rounded-2xl border border-red-100 bg-red-50/50 p-4"><p className="text-xs font-bold text-red-600">إجمالي المديونية على العمال</p><p className="mt-2 text-2xl font-extrabold text-red-600">{money(debt)} جنيه</p></div></div>
                 {!rows.length ? <EmptyState text="لا يوجد عمال مطابقون للفلاتر الحالية." /> : <div className="overflow-x-auto"><table className="min-w-[900px] w-full"><thead className="bg-slate-50"><tr>{["العامل", "الموقع الحالي", "الرصيد المرحل", "الزيادات", "التخفيضات", "الرصيد الحالي", "الحالة"].map((title) => <th key={title} className="px-5 py-4 text-right text-xs font-extrabold text-slate-500">{title}</th>)}</tr></thead><tbody>{rows.map(({ worker, increase, decrease, balance }) => <tr key={worker.id} className="border-b border-slate-100 last:border-b-0"><td className="px-5 py-4"><p className="font-extrabold text-slate-800">{worker.name}</p><p className="mt-1 text-[11px] text-slate-400">{worker.id}</p></td><td className="px-5 py-4 text-sm font-semibold text-slate-600">{projectName(worker.currentProjectId, projects)}</td><td className="px-5 py-4 text-sm font-bold text-slate-600">{money(worker.carriedSalary)}</td><td className="px-5 py-4 text-sm font-bold text-emerald-600">{money(increase)}</td><td className="px-5 py-4 text-sm font-bold text-red-600">{money(decrease)}</td><td className={`px-5 py-4 text-sm font-extrabold ${balance >= 0 ? "text-blue-600" : "text-red-600"}`}>{money(Math.abs(balance))} جنيه</td><td className="px-5 py-4"><span className={`rounded-lg px-2.5 py-1.5 text-xs font-bold ${balance > 0 ? "bg-blue-50 text-blue-700" : balance < 0 ? "bg-red-50 text-red-700" : "bg-slate-100 text-slate-600"}`}>{balance > 0 ? "مستحق للعامل" : balance < 0 ? "على العامل" : "متزن"}</span></td></tr>)}</tbody></table></div>}
+              </>
+            );
+          })()}
+        </section>
+
+        {/* Contractor Reports */}
+
+        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-100 bg-slate-50/70 p-5 sm:p-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="flex items-start gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                  <ReceiptText className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-extrabold text-slate-900">تقارير المقاولين</h2>
+                  <p className="mt-1 text-xs leading-6 text-slate-500">
+                    كشف سلف المقاولين حسب المقاول والمشروع والموقع والعهدة والفترة، مع فتح حساب المقاول مباشرة.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setContractorReportContractor("");
+                  setContractorReportProject("");
+                  setContractorReportSite("");
+                  setContractorReportCustody("");
+                  setContractorReportFrom("");
+                  setContractorReportTo("");
+                }}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-600 hover:bg-slate-100"
+              >
+                <RotateCcw className="h-4 w-4" />
+                مسح تقارير المقاولين
+              </button>
+            </div>
+
+            <div className="mt-5 w-full overflow-x-auto pb-1">
+              <div className="flex min-w-[1280px] flex-nowrap items-end gap-3">
+              <div className="w-[200px] shrink-0">
+              <SelectBox
+                id="contractor-report-contractor"
+                label="المقاول"
+                value={contractorReportContractor}
+                onChange={setContractorReportContractor}
+                placeholder="كل المقاولين"
+                options={getContractors().map((contractor) => ({ value: contractor.id, label: contractor.name }))}
+              />
+              </div>
+              <div className="w-[200px] shrink-0">
+              <SelectBox
+                id="contractor-report-project"
+                label="المشروع"
+                value={contractorReportProject}
+                onChange={(value) => { setContractorReportProject(value); setContractorReportSite(""); }}
+                placeholder="كل المشاريع"
+                options={projects.map((project) => ({ value: project.id, label: project.name }))}
+              />
+              </div>
+              <div className="w-[200px] shrink-0">
+              <SelectBox
+                id="contractor-report-site"
+                label="الموقع"
+                value={contractorReportSite}
+                onChange={setContractorReportSite}
+                placeholder="كل المواقع"
+                options={getProjectSites().filter((site) => !contractorReportProject || site.projectId === contractorReportProject).map((site) => ({ value: site.id, label: site.name }))}
+              />
+              </div>
+              <div className="w-[200px] shrink-0">
+              <SelectBox
+                id="contractor-report-custody"
+                label="العهدة الدافعة"
+                value={contractorReportCustody}
+                onChange={setContractorReportCustody}
+                placeholder="كل العهد"
+                options={custodies.map((custody) => ({ value: custody.id, label: custody.name }))}
+              />
+              </div>
+              <div className="w-[200px] shrink-0">
+              <DateInput
+                value={contractorReportFrom}
+                onChange={setContractorReportFrom}
+                placeholder="من تاريخ"
+                className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold"
+              />
+              </div>
+              <div className="w-[200px] shrink-0">
+              <DateInput
+                value={contractorReportTo}
+                onChange={setContractorReportTo}
+                placeholder="إلى تاريخ"
+                className="h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold"
+              />
+              </div>
+              </div>
+            </div>
+          </div>
+
+          {(() => {
+            const contractors = getContractors();
+            const sites = getProjectSites();
+            const contractorMap = new Map(contractors.map((contractor) => [contractor.id, contractor]));
+            const siteMap = new Map(sites.map((site) => [site.id, site]));
+            const rows = expenses
+              .filter((expense) => expense.movementType === "contractor_advance")
+              .filter((expense) => !contractorReportContractor || expense.contractorId === contractorReportContractor)
+              .filter((expense) => !contractorReportProject || expense.projectId === contractorReportProject)
+              .filter((expense) => !contractorReportSite || expense.siteId === contractorReportSite)
+              .filter((expense) => !contractorReportCustody || expense.custodyId === contractorReportCustody)
+              .filter((expense) => !contractorReportFrom || expense.date >= contractorReportFrom)
+              .filter((expense) => !contractorReportTo || expense.date <= contractorReportTo)
+              .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+
+            const total = rows.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+            const uniqueContractors = new Set(rows.map((expense) => expense.contractorId).filter(Boolean)).size;
+            const uniqueSites = new Set(rows.map((expense) => expense.siteId).filter(Boolean)).size;
+
+            return (
+              <>
+                <div className="grid grid-cols-1 gap-3 border-b border-slate-100 p-5 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-violet-100 bg-violet-50/60 p-4">
+                    <p className="text-xs font-bold text-violet-600">إجمالي السلف الظاهرة</p>
+                    <p className="mt-2 text-2xl font-extrabold text-violet-700">{money(total)} جنيه</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <p className="text-xs font-bold text-slate-400">عدد حركات السلف</p>
+                    <p className="mt-2 text-2xl font-extrabold text-slate-900">{rows.length}</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <p className="text-xs font-bold text-slate-400">المقاولون / المواقع</p>
+                    <p className="mt-2 text-2xl font-extrabold text-slate-900">{uniqueContractors} <span className="text-sm text-slate-400">مقاول</span> · {uniqueSites} <span className="text-sm text-slate-400">موقع</span></p>
+                  </div>
+                </div>
+
+                {!rows.length ? (
+                  <EmptyState text="لا توجد سلف مقاولين مطابقة للفلاتر الحالية." />
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-[1200px] w-full">
+                      <thead className="bg-slate-50">
+                        <tr className="border-b border-slate-100">
+                          {["التاريخ", "المقاول", "المشروع", "الموقع", "العهدة الدافعة", "البيان", "المبلغ", "الحساب"].map((title) => (
+                            <th key={title} className="px-5 py-4 text-right text-xs font-extrabold text-slate-500">{title}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((expense) => {
+                          const contractor = expense.contractorId ? contractorMap.get(expense.contractorId) : undefined;
+                          const site = expense.siteId ? siteMap.get(expense.siteId) : undefined;
+                          return (
+                            <tr key={expense.id} className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/70">
+                              <td className="whitespace-nowrap px-5 py-4 text-xs font-semibold text-slate-500">{dateLabel(expense.date)}</td>
+                              <td className="px-5 py-4">
+                                {contractor ? <Link href={`/contractors/${contractor.id}`} className="font-extrabold text-violet-700 hover:underline">{contractor.name}</Link> : <span className="text-sm font-semibold text-slate-400">مقاول غير موجود</span>}
+                              </td>
+                              <td className="px-5 py-4 text-sm font-semibold text-slate-600">{projectName(expense.projectId, projects)}</td>
+                              <td className="px-5 py-4 text-sm font-semibold text-slate-600">{site?.name ?? "موقع غير موجود"}</td>
+                              <td className="px-5 py-4 text-sm font-semibold text-blue-700">{custodies.find((custody) => custody.id === expense.custodyId)?.name ?? "عهدة غير موجودة"}</td>
+                              <td className="max-w-[320px] px-5 py-4 text-sm font-semibold text-slate-700">{expense.description}</td>
+                              <td className="px-5 py-4 text-left text-sm font-extrabold text-red-600">{money(Number(expense.amount || 0))} جنيه</td>
+                              <td className="px-5 py-4"><Link href={expense.contractorId ? `/contractors/${expense.contractorId}` : "/contractors"} className="inline-flex h-9 items-center justify-center rounded-lg bg-slate-900 px-3 text-xs font-bold text-white hover:bg-slate-800">فتح الحساب</Link></td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot>
+                        <tr className="bg-slate-50/70">
+                          <td colSpan={6} className="px-5 py-4 text-right text-sm font-extrabold text-slate-700">إجمالي سلف المقاولين</td>
+                          <td className="px-5 py-4 text-left text-sm font-extrabold text-red-600">{money(total)} جنيه</td>
+                          <td />
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
               </>
             );
           })()}

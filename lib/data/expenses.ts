@@ -1,8 +1,13 @@
 import { assertCurrentUserPermission } from "@/lib/permission-check";
 import type { Expense } from "@/types/expense";
 import { addAuditLog } from "@/lib/data/audit-logs";
+import { getCustodyTransactionById } from "@/lib/data/custody-transactions";
 
 const STORAGE_KEY = "elsaghir-eldahshan-expenses";
+
+function notifyDataUpdated() {
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
+}
 
 function canUseStorage() {
   return typeof window !== "undefined";
@@ -41,6 +46,8 @@ function saveExpenses(expenses: Expense[]) {
     STORAGE_KEY,
     JSON.stringify(expenses),
   );
+  notifyDataUpdated();
+
 }
 
 export function getExpenses(): Expense[] {
@@ -78,6 +85,19 @@ export function addExpense(
   if (expense.movementType === "worker_advance") {
     throw new Error("سلفة العامل يجب أن تسجل من حركة العامل المرتبطة بالعهدة، وليس كمصروف وهمي.");
   }
+
+  if (expense.movementType === "contractor_advance") {
+    if (!expense.contractorId) {
+      throw new Error("سلفة المقاول تحتاج إلى مقاول.");
+    }
+    if (!expense.siteId) {
+      throw new Error("سلفة المقاول تحتاج إلى موقع.");
+    }
+    if (!expense.custodyTransactionId || !getCustodyTransactionById(expense.custodyTransactionId)) {
+      throw new Error("سلفة المقاول يجب أن تكون مرتبطة بحركة عهدة فعلية.");
+    }
+  }
+
   const expenses = readExpenses();
 
   expenses.push(expense);

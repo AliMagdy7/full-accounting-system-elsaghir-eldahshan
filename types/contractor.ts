@@ -4,6 +4,7 @@ export interface Contractor {
   phone?: string;
   nationalId?: string;
   notes?: string;
+  totalWork?: number;
   createdAt: string;
   updatedAt: string;
 }

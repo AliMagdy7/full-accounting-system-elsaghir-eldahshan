@@ -13,6 +13,7 @@ import {
   Receipt,
   ArrowLeft,
   UserRound,
+  Building2,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -23,6 +24,8 @@ import {
 } from "react";
 
 import { getProjects } from "@/lib/data/projects";
+import { getContractors } from "@/lib/data/contractors";
+import { getProjectSites } from "@/lib/data/project-sites";
 import { getWorkers } from "@/lib/data/workers";
 import { getCustodies } from "@/lib/data/custodies";
 import { getExpenses } from "@/lib/data/expenses";
@@ -45,7 +48,7 @@ type SearchResult = {
   title: string;
   subtitle: string;
   href: string;
-  type: "project" | "worker" | "custody" | "expense";
+  type: "project" | "worker" | "custody" | "expense" | "contractor" | "site";
   icon: typeof FolderKanban;
 };
 
@@ -169,6 +172,26 @@ export default function AppHeader({
         icon: Wallet,
       }));
 
+    const contractorResults: SearchResult[] =
+      getContractors().map((contractor) => ({
+        id: `contractor-${contractor.id}`,
+        title: contractor.name,
+        subtitle: "مقاول",
+        href: `/contractors/${contractor.id}`,
+        type: "contractor",
+        icon: HardHat,
+      }));
+
+    const siteResults: SearchResult[] =
+      getProjectSites().map((site) => ({
+        id: `site-${site.id}`,
+        title: site.name,
+        subtitle: `موقع — ${getProjects().find((project) => project.id === site.projectId)?.name ?? "مشروع غير موجود"}`,
+        href: `/projects/${site.projectId}/sites`,
+        type: "site",
+        icon: Building2,
+      }));
+
     const expenseResults: SearchResult[] =
       getExpenses().map((expense) => ({
         id: `expense-${expense.id}`,
@@ -185,6 +208,8 @@ export default function AppHeader({
       ...projectResults,
       ...workerResults,
       ...custodyResults,
+      ...contractorResults,
+      ...siteResults,
       ...expenseResults,
     ];
   }, [dataVersion]);

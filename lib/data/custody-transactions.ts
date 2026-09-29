@@ -5,6 +5,10 @@ import { addAuditLog } from "@/lib/data/audit-logs";
 const STORAGE_KEY =
   "elsaghir-eldahshan-custody-transactions";
 
+function notifyDataUpdated() {
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
+}
+
 function canUseStorage(): boolean {
   return typeof window !== "undefined";
 }
@@ -45,6 +49,8 @@ function saveTransactions(
     STORAGE_KEY,
     JSON.stringify(transactions),
   );
+  notifyDataUpdated();
+
 }
 
 export function getCustodyTransactions(): CustodyTransaction[] {
@@ -122,9 +128,11 @@ export function updateCustodyTransaction(
     return undefined;
   }
 
+  const previousTransaction = transactions[index];
+
   const updatedTransaction: CustodyTransaction =
     {
-      ...transactions[index],
+      ...previousTransaction,
       ...updates,
       updatedAt:
         new Date().toISOString(),
@@ -143,7 +151,7 @@ export function updateCustodyTransaction(
     notificationTitle: "تعديل حركة عهدة",
     notificationType: "info",
     notificationHref: "/custodies",
-    metadata: { previous: transactions[index], updates },
+    metadata: { previous: previousTransaction, updates },
   });
 
   return updatedTransaction;

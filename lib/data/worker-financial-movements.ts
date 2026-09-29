@@ -25,6 +25,10 @@ import type {
 const STORAGE_KEY =
   "elsaghir-eldahshan-worker-financial-movements";
 
+function notifyDataUpdated() {
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
+}
+
 function readMovements(): WorkerFinancialMovement[] {
   if (typeof window === "undefined") {
     return [];
@@ -62,6 +66,8 @@ function saveMovements(
     STORAGE_KEY,
     JSON.stringify(movements),
   );
+  notifyDataUpdated();
+
 }
 
 export function getWorkerFinancialMovements() {

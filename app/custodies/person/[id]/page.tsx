@@ -7,7 +7,6 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowDownLeft,
-  ArrowLeft,
   ArrowRight,
   ArrowUpLeft,
   Edit3,

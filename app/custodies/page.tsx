@@ -236,6 +236,26 @@ export default function CustodiesPage() {
       [custodies],
     );
 
+  const totalIn =
+    useMemo(
+    () =>
+      custodies.reduce(
+        (total, custody) => total + custody.totalIn,
+        0,
+      ),
+    [custodies],
+  );
+
+  const totalOut =
+    useMemo(
+     () =>
+      custodies.reduce(
+        (total, custody) => total + custody.totalOut,
+        0,
+      ),
+       [custodies],
+  );
+
   const latestTransactions =
     transactions.slice(0, 8);
 
@@ -657,9 +677,7 @@ export default function CustodiesPage() {
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-bold text-slate-400">إجمالي الداخل</p>
             <p className="mt-2 text-2xl font-extrabold text-emerald-600">
-              {formatAmount(
-                custodies.reduce((total, custody) => total + custody.totalIn, 0),
-              )}
+              {formatAmount(totalIn,)}
               <span className="mr-2 text-xs font-medium text-slate-400">جنيه</span>
             </p>
           </div>
@@ -667,9 +685,7 @@ export default function CustodiesPage() {
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-bold text-slate-400">إجمالي الخارج</p>
             <p className="mt-2 text-2xl font-extrabold text-red-600">
-              {formatAmount(
-                custodies.reduce((total, custody) => total + custody.totalOut, 0),
-              )}
+              {formatAmount(totalOut,)}
               <span className="mr-2 text-xs font-medium text-slate-400">جنيه</span>
             </p>
           </div>

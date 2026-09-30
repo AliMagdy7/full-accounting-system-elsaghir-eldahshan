@@ -6,7 +6,7 @@ import { Eye, EyeOff, Loader2, LockKeyhole, LogIn, UserRound } from "lucide-reac
 import { useRouter } from "next/navigation";
 import { authenticateUser, getCurrentSession, signInUser } from "@/lib/data/users";
 import { formatDisplayDate } from "@/lib/formatters";
-
+import type { SubmitEvent  } from "react";
 export default function LoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
@@ -20,7 +20,7 @@ export default function LoginPage() {
     if (getCurrentSession()) router.replace("/");
   }, [router]);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: SubmitEvent <HTMLFormElement>) => {
     event.preventDefault();
     setError("");
 

@@ -9,6 +9,7 @@ import { canCurrentUser } from "@/lib/permission-check";
 import { getProjectById } from "@/lib/data/projects";
 import { addProjectSite, deleteProjectSite, getProjectSites, updateProjectSite } from "@/lib/data/project-sites";
 import type { ProjectSite } from "@/types/project-site";
+import type { SubmitEvent  } from "react";
 
 export default function ProjectSitesPage() {
   const params = useParams(); const router = useRouter(); const projectId = String(params.id);
@@ -18,7 +19,7 @@ export default function ProjectSitesPage() {
   const load=()=>{const p=getProjectById(projectId); if(!p){router.push("/projects");return;} setProjectName(p.name);setSites(getProjectSites(projectId));}; useEffect(()=>{load();},[projectId]);
   const reset=()=>{setEditing(null);setName("");setAddress("");setResponsiblePerson("");setNotes("");setError("");};
   const edit=(s:ProjectSite)=>{setEditing(s);setName(s.name);setAddress(s.address??"");setResponsiblePerson(s.responsiblePerson??"");setNotes(s.notes??"");setError("");};
-  const submit=(e:React.FormEvent)=>{e.preventDefault();try{if(editing)updateProjectSite(editing.id,{name,address,responsiblePerson,notes});else addProjectSite({projectId,name,address,responsiblePerson,notes,active:true});reset();load();}catch(err){setError(err instanceof Error?err.message:"حدث خطأ.")}};
+  const submit=(e:SubmitEvent )=>{e.preventDefault();try{if(editing)updateProjectSite(editing.id,{name,address,responsiblePerson,notes});else addProjectSite({projectId,name,address,responsiblePerson,notes,active:true});reset();load();}catch(err){setError(err instanceof Error?err.message:"حدث خطأ.")}};
   const remove=(id:string)=>{
     const site = sites.find((item) => item.id === id);
     confirm({

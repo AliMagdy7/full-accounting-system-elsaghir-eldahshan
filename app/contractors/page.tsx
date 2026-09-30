@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { FormEvent } from "react";
+import type { SubmitEvent  } from "react";
 import {
   HardHat,
   Plus,
@@ -115,7 +115,7 @@ export default function ContractorsPage() {
     resetForm();
   };
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = (event: SubmitEvent <HTMLFormElement>) => {
     event.preventDefault();
     setError("");
 

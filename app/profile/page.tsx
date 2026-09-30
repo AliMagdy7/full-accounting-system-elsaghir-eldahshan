@@ -17,7 +17,7 @@ import {
   changeCurrentUserPassword,
   getCurrentSession,
   getUserById,
-  updateCurrentAdminUsername,
+  updateCurrentAdminCredentials,
   updateUserProfile,
 } from "@/lib/data/users";
 import type { SystemUser } from "@/types/user";
@@ -74,8 +74,8 @@ export default function ProfilePage() {
     setMessage("");
 
     try {
-      if (user.role === "admin" && username.trim() !== user.username) {
-        updateCurrentAdminUsername(username);
+      if (user.role === "admin") {
+        updateCurrentAdminCredentials(username);
       }
 
       updateUserProfile(user.id, { name, email, phone, jobTitle });

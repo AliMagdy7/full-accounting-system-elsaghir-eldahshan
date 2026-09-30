@@ -31,15 +31,18 @@ import {
   deleteProjectMovement,
   getProjectMovementRecords,
   updateProjectMovement,
-} from "@/lib/data/project-movements";
+} from "@/lib/data/financial-transactions";
 import { getWorkers } from "@/lib/data/workers";
+import { getContractors } from "@/lib/data/contractors";
+import { getProjectSites } from "@/lib/data/project-sites";
+import { getContractorSiteAssignments } from "@/lib/data/contractor-site-assignments";
 import type { Custody } from "@/types/custody";
 import type { CustodyFinancialAccount } from "@/types/custody-financial-account";
 import type {
   ProjectMovementDraft,
   ProjectMovementRecord,
   ProjectMovementType,
-} from "@/lib/data/project-movements";
+} from "@/lib/data/financial-transactions";
 
 interface ProjectExpensesTableProps {
   projectId: string;
@@ -102,6 +105,8 @@ function defaultDraft(
     custodyId,
     amount: 0,
     workerId,
+    contractorId: undefined,
+    siteId: undefined,
     financialAccountId: undefined,
   };
 }
@@ -113,6 +118,8 @@ export default function ProjectExpensesTable({
   const [rows, setRows] = useState<ProjectMovementRecord[]>([]);
   const [custodies, setCustodies] = useState<Custody[]>([]);
   const [workers, setWorkers] = useState(getWorkers());
+  const [contractors, setContractors] = useState(getContractors());
+  const [projectSites, setProjectSites] = useState(getProjectSites());
   const [accounts, setAccounts] = useState<CustodyFinancialAccount[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -134,6 +141,8 @@ export default function ProjectExpensesTable({
     setRows(getProjectMovementRecords(projectId));
     setCustodies(getCustodies());
     setWorkers(getWorkers());
+    setContractors(getContractors());
+    setProjectSites(getProjectSites());
     setCategories([
       ...new Set([
         ...getExpenseCategories(),
@@ -156,6 +165,16 @@ export default function ProjectExpensesTable({
     () => new Map(workers.map((worker) => [worker.id, worker.name])),
     [workers],
   );
+
+  const projectContractors = useMemo(() => {
+    const ids = new Set<string>();
+    contractors.forEach((contractor) => {
+      getContractorSiteAssignments(contractor.id).forEach((assignment) => {
+        if (projectSites.some((site) => site.id === assignment.siteId && site.projectId === projectId)) ids.add(contractor.id);
+      });
+    });
+    return contractors.filter((contractor) => ids.has(contractor.id)).sort((a, b) => a.name.localeCompare(b.name, "ar"));
+  }, [contractors, projectSites, projectId]);
 
   const activeWorkers = useMemo(
     () =>
@@ -296,6 +315,8 @@ export default function ProjectExpensesTable({
       custodyId: row.custodyId,
       amount: row.amount,
       workerId: row.workerId,
+      contractorId: row.contractorId,
+      siteId: row.siteId,
       financialAccountId: row.financialAccountId,
     });
 
@@ -333,6 +354,8 @@ export default function ProjectExpensesTable({
           movementType: type,
           category: WORKER_CATEGORY,
           workerId: activeWorkers[0]?.id,
+          contractorId: undefined,
+          siteId: undefined,
         };
       }
 
@@ -342,6 +365,8 @@ export default function ProjectExpensesTable({
           movementType: type,
           category: CONTRACTOR_CATEGORY,
           workerId: undefined,
+          contractorId: current.contractorId,
+          siteId: current.siteId,
         };
       }
 
@@ -354,6 +379,8 @@ export default function ProjectExpensesTable({
             ? ""
             : current.category,
         workerId: undefined,
+        contractorId: undefined,
+        siteId: undefined,
       };
     });
   };
@@ -376,30 +403,36 @@ export default function ProjectExpensesTable({
     setError("");
 
     try {
-      if (draft.movementType === "worker_advance") {
-        draft.category = WORKER_CATEGORY;
+      let normalizedDraft = { ...draft };
+      if (normalizedDraft.movementType === "worker_advance") {
+        normalizedDraft = { ...normalizedDraft, category: WORKER_CATEGORY };
       }
 
-      if (draft.movementType === "contractor_advance") {
-        draft.category = CONTRACTOR_CATEGORY;
+      if (normalizedDraft.movementType === "contractor_advance") {
+        normalizedDraft = { ...normalizedDraft, category: CONTRACTOR_CATEGORY };
       }
 
-      if (draft.movementType === "worker_advance" && !draft.workerId) {
+      if (normalizedDraft.movementType === "worker_advance" && !normalizedDraft.workerId) {
         throw new Error("اختر العامل أولًا.");
       }
 
-      if (draft.movementType === "expense") {
-        addExpenseCategory(draft.category);
+      if (normalizedDraft.movementType === "contractor_advance") {
+        if (!normalizedDraft.contractorId) throw new Error("اختر المقاول أولًا.");
+        if (!normalizedDraft.siteId) throw new Error("اختر موقع المقاول أولًا.");
+      }
+
+      if (normalizedDraft.movementType === "expense") {
+        addExpenseCategory(normalizedDraft.category);
       }
 
       if (editingId === "new") {
-        createProjectMovement(projectId, draft);
+        createProjectMovement(projectId, normalizedDraft);
       } else {
         const current = rows.find((row) => row.id === editingId);
         if (!current) {
           throw new Error("الحركة المطلوب تعديلها غير موجودة.");
         }
-        updateProjectMovement(projectId, current, draft);
+        updateProjectMovement(projectId, current, normalizedDraft);
       }
 
       load();
@@ -529,12 +562,35 @@ export default function ProjectExpensesTable({
                 </option>
               ))}
             </select>
+          ) : draft.movementType === "contractor_advance" ? (
+            <div className="space-y-2">
+              <select
+                value={draft.contractorId ?? ""}
+                onChange={(event) => { updateDraft("contractorId", event.target.value || undefined); updateDraft("siteId", undefined); }}
+                className="h-9 w-full min-w-[160px] rounded-lg border border-violet-200 bg-white px-2 text-xs font-semibold outline-none focus:border-violet-500"
+              >
+                <option value="">اختر المقاول</option>
+                {projectContractors.map((contractor) => (
+                  <option key={contractor.id} value={contractor.id}>{contractor.name}</option>
+                ))}
+              </select>
+              {draft.contractorId && (
+                <select
+                  value={draft.siteId ?? ""}
+                  onChange={(event) => updateDraft("siteId", event.target.value || undefined)}
+                  className="h-9 w-full min-w-[160px] rounded-lg border border-violet-200 bg-violet-50 px-2 text-[11px] font-semibold outline-none focus:border-violet-500"
+                >
+                  <option value="">اختر موقع المقاول</option>
+                  {getContractorSiteAssignments(draft.contractorId).map((assignment) => {
+                    const site = projectSites.find((item) => item.id === assignment.siteId && item.projectId === projectId);
+                    if (!site) return null;
+                    return <option key={assignment.id} value={site.id}>{site.name}{assignment.endDate ? " (منتهية)" : " (مستمرة)"}</option>;
+                  })}
+                </select>
+              )}
+            </div>
           ) : (
-            <span className="text-xs font-semibold text-slate-400">
-              {draft.movementType === "contractor_advance"
-                ? "ربط المقاول لاحقًا"
-                : "-"}
-            </span>
+            <span className="text-xs font-semibold text-slate-400">-</span>
           )}
         </td>
 
@@ -666,7 +722,7 @@ export default function ProjectExpensesTable({
                   <th className="px-3 py-3 text-xs font-extrabold text-slate-500">البيان</th>
                   <th className="px-3 py-3 text-xs font-extrabold text-slate-500">نوع البيان</th>
                   <th className="px-3 py-3 text-xs font-extrabold text-slate-500">التصنيف</th>
-                  <th className="px-3 py-3 text-xs font-extrabold text-slate-500">العامل</th>
+                  <th className="px-3 py-3 text-xs font-extrabold text-slate-500">العامل / المقاول</th>
                   <th className="px-3 py-3 text-xs font-extrabold text-slate-500">العهدة الدافعة</th>
                   <th className="px-3 py-3 text-left text-xs font-extrabold text-slate-500">المبلغ</th>
                   <th className="px-3 py-3 text-xs font-extrabold text-slate-500">الإجراء</th>
@@ -737,7 +793,7 @@ export default function ProjectExpensesTable({
                 <th className="px-3 py-3 text-xs font-extrabold text-slate-500">البيان</th>
                 <th className="px-3 py-3 text-xs font-extrabold text-slate-500">نوع البيان</th>
                 <th className="px-3 py-3 text-xs font-extrabold text-slate-500">التصنيف</th>
-                <th className="px-3 py-3 text-xs font-extrabold text-slate-500">العامل</th>
+                <th className="px-3 py-3 text-xs font-extrabold text-slate-500">العامل / المقاول</th>
                 <th className="px-3 py-3 text-xs font-extrabold text-slate-500">العهدة الدافعة</th>
                 <th className="px-3 py-3 text-left text-xs font-extrabold text-slate-500">المبلغ</th>
                 <th className="px-3 py-3 text-xs font-extrabold text-slate-500">الإجراء</th>

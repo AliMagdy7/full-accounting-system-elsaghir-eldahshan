@@ -14,6 +14,9 @@ export interface Worker {
 
   currentProjectId: string;
 
+  /** الموقع الحالي الفعلي للعامل. */
+  currentSiteId?: string;
+
   startDate: string;
 
   payType: WorkerPayType;
@@ -43,6 +46,9 @@ export interface WorkerSiteAssignment {
   workerId: string;
 
   projectId: string;
+
+  /** الموقع الفعلي الذي يعمل به العامل داخل المشروع. */
+  siteId?: string;
 
   startDate: string;
 

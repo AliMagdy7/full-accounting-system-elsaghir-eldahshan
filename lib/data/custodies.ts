@@ -4,6 +4,10 @@ import { addAuditLog } from "@/lib/data/audit-logs";
 
 const STORAGE_KEY = "accounting-system-custodies";
 
+function notifyDataUpdated() {
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
+}
+
 function canUseStorage(): boolean {
   return typeof window !== "undefined";
 }
@@ -54,6 +58,8 @@ function saveCustodies(
     STORAGE_KEY,
     JSON.stringify(custodies),
   );
+  notifyDataUpdated();
+
 }
 
 export function getCustodies(): Custody[] {

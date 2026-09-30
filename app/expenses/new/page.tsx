@@ -23,17 +23,8 @@ import AppShell from "@/components/layout/AppShell";
 import {
   getCustodies,
   getProjectCustody,
-  reverseCustodyBalance,
-  updateCustodyBalance,
 } from "@/lib/data/custodies";
-import {
-  addCustodyTransaction,
-  deleteCustodyTransaction,
-} from "@/lib/data/custody-transactions";
-import {
-  addExpense,
-  deleteExpense,
-} from "@/lib/data/expenses";
+import { createExpenseWithPayment } from "@/lib/data/financial-transactions";
 import {
   getProjects,
 } from "@/lib/data/projects";
@@ -42,8 +33,6 @@ import type { Custody } from "@/types/custody";
 import type { Project } from "@/types/project";
 import {
   getCustodyFinancialAccounts,
-  reverseCustodyFinancialAccountBalance,
-  updateCustodyFinancialAccountBalance,
 } from "@/lib/data/custody-financial-accounts";
 import type { CustodyFinancialAccount } from "@/types/custody-financial-account";
 
@@ -380,82 +369,18 @@ export default function NewExpensePage() {
     setError("");
     setIsSaving(true);
 
-    const now = new Date().toISOString();
-    const expenseId = crypto.randomUUID();
-    const transactionId = crypto.randomUUID();
-    let custodyUpdated = false;
-    let accountUpdated = false;
-    let transactionCreated = false;
-    let expenseCreated = false;
-
     try {
-      /*
-       * الرصيد والحركة والمصروف مرتبطون ببعضهم.
-       * لا نحفظ المصروف إلا بعد نجاح الأثر المالي،
-       * ومع أي خطأ نرجع كل ما تم تسجيله.
-       */
-      updateCustodyBalance(custodyId, numericAmount, "out");
-      custodyUpdated = true;
-
-      if (isCentralCustody && financialAccountId) {
-        updateCustodyFinancialAccountBalance(
-          financialAccountId,
-          numericAmount,
-          "out",
-        );
-        accountUpdated = true;
-      }
-
-      addCustodyTransaction({
-        id: transactionId,
-        custodyId,
-        type: "out",
-        amount: numericAmount,
-        date,
-        description: trimmedDescription,
-        source: "مصروف",
-        ...(isCentralCustody && financialAccountId ? { financialAccountId } : {}),
-        ...(projectId ? { projectId } : {}),
-        createdAt: now,
-        updatedAt: now,
-      });
-      transactionCreated = true;
-
-      addExpense({
-        id: expenseId,
+      createExpenseWithPayment({
         date,
         amount: numericAmount,
         category: trimmedCategory,
         description: trimmedDescription,
         custodyId,
-        ...(isCentralCustody && financialAccountId ? { financialAccountId } : {}),
-        ...(projectId ? { projectId } : {}),
+        financialAccountId: isCentralCustody ? financialAccountId || undefined : undefined,
+        projectId: projectId || undefined,
         movementType: "expense",
-        custodyTransactionId: transactionId,
-        createdAt: now,
-        updatedAt: now,
       });
-      expenseCreated = true;
     } catch (caughtError) {
-      if (expenseCreated) {
-        try { deleteExpense(expenseId); } catch { /* keep original error */ }
-      }
-      if (transactionCreated) {
-        try { deleteCustodyTransaction(transactionId); } catch { /* keep original error */ }
-      }
-      if (accountUpdated && financialAccountId) {
-        try {
-          reverseCustodyFinancialAccountBalance(
-            financialAccountId,
-            numericAmount,
-            "out",
-          );
-        } catch { /* keep original error */ }
-      }
-      if (custodyUpdated) {
-        try { reverseCustodyBalance(custodyId, numericAmount, "out"); } catch { /* keep original error */ }
-      }
-
       setError(
         caughtError instanceof Error
           ? caughtError.message

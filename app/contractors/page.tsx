@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { FormEvent } from "react";
+import type { SubmitEvent  } from "react";
 import {
   HardHat,
   Plus,
@@ -10,8 +10,10 @@ import {
   Trash2,
   X,
   Save,
+  ArrowLeft,
 } from "lucide-react";
 
+import Link from "next/link";
 import AppShell from "@/components/layout/AppShell";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { canCurrentUser } from "@/lib/permission-check";
@@ -23,6 +25,8 @@ import {
   updateContractor,
 } from "@/lib/data/contractors";
 import type { Contractor } from "@/types/contractor";
+import { getActiveContractorSiteAssignments } from "@/lib/data/contractor-site-assignments";
+import { getProjectSites } from "@/lib/data/project-sites";
 
 const money = (value: number) =>
   value.toLocaleString("en-US", {
@@ -39,6 +43,7 @@ export default function ContractorsPage() {
   const [phone, setPhone] = useState("");
   const [nationalId, setNationalId] = useState("");
   const [notes, setNotes] = useState("");
+  const [totalWork, setTotalWork] = useState("0");
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const { confirm, dialog } = useConfirmDialog();
@@ -48,6 +53,11 @@ export default function ContractorsPage() {
   useEffect(() => {
     load();
   }, []);
+
+  const siteNames = useMemo(
+    () => new Map(getProjectSites().map((site) => [site.id, site.name])),
+    [items],
+  );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -79,6 +89,7 @@ export default function ContractorsPage() {
     setPhone("");
     setNationalId("");
     setNotes("");
+    setTotalWork("0");
     setError("");
   };
 
@@ -93,6 +104,7 @@ export default function ContractorsPage() {
     setPhone(item.phone ?? "");
     setNationalId(item.nationalId ?? "");
     setNotes(item.notes ?? "");
+    setTotalWork(String(item.totalWork ?? 0));
     setError("");
     setIsModalOpen(true);
   };
@@ -103,13 +115,18 @@ export default function ContractorsPage() {
     resetForm();
   };
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = (event: SubmitEvent <HTMLFormElement>) => {
     event.preventDefault();
     setError("");
 
     const trimmedName = name.trim();
+    const normalizedTotalWork = Number(totalWork.replace(/,/g, ""));
     if (!trimmedName) {
       setError("من فضلك أدخل اسم المقاول.");
+      return;
+    }
+    if (!Number.isFinite(normalizedTotalWork) || normalizedTotalWork < 0) {
+      setError("إجمالي الأعمال يجب أن يكون رقمًا صحيحًا يساوي صفرًا أو أكثر.");
       return;
     }
 
@@ -122,6 +139,7 @@ export default function ContractorsPage() {
           phone: phone.trim(),
           nationalId: nationalId.trim(),
           notes: notes.trim(),
+          totalWork: normalizedTotalWork,
         });
       } else {
         addContractor({
@@ -129,6 +147,7 @@ export default function ContractorsPage() {
           phone: phone.trim(),
           nationalId: nationalId.trim(),
           notes: notes.trim(),
+          totalWork: normalizedTotalWork,
         });
       }
 
@@ -209,7 +228,7 @@ export default function ContractorsPage() {
           </div>
         </section>
 
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="accounting-card ui-fade-up p-5">
             <p className="text-sm text-slate-500">إجمالي المقاولين</p>
             <p className="accounting-number mt-2 text-2xl font-extrabold text-slate-900">
@@ -218,7 +237,14 @@ export default function ContractorsPage() {
           </div>
 
           <div className="accounting-card ui-fade-up p-5">
-            <p className="text-sm text-slate-500">إجمالي المدفوع</p>
+            <p className="text-sm text-slate-500">إجمالي الأعمال</p>
+            <p className="accounting-number mt-2 text-2xl font-extrabold text-slate-900">
+              {money(filtered.reduce((sum, item) => sum + Number(item.totalWork || 0), 0))} <span className="text-sm font-bold">جنيه</span>
+            </p>
+          </div>
+
+          <div className="accounting-card ui-fade-up p-5">
+            <p className="text-sm text-slate-500">إجمالي السلف</p>
             <p className="accounting-number mt-2 text-2xl font-extrabold text-slate-900">
               {money(totals.paid)} <span className="text-sm font-bold">جنيه</span>
             </p>
@@ -285,27 +311,53 @@ export default function ContractorsPage() {
                         {item.phone || "بدون هاتف"}
                         {item.nationalId ? ` • ${item.nationalId}` : ""}
                       </p>
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                        <span className="text-[11px] font-black text-slate-400">المواقع الحالية:</span>
+                        {getActiveContractorSiteAssignments(item.id).length === 0 ? (
+                          <span className="text-[11px] font-semibold text-slate-400">لا يوجد</span>
+                        ) : (
+                          getActiveContractorSiteAssignments(item.id).map((assignment) => (
+                            <span key={assignment.id} className="rounded-lg bg-blue-50 px-2 py-1 text-[10px] font-black text-blue-700">
+                              {siteNames.get(assignment.siteId) ?? "موقع غير معروف"}
+                            </span>
+                          ))
+                        )}
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-5 text-right">
+                    <div className="grid grid-cols-3 gap-5 text-right">
                       <div>
-                        <p className="text-[11px] text-slate-400">المدفوع</p>
+                        <p className="text-[11px] text-slate-400">الأعمال</p>
                         <p className="accounting-number mt-1 font-extrabold text-slate-900">
-                          {money(summary.totalPaid)}
+                          {money(summary.totalWork)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-slate-400">السلف</p>
+                        <p className="accounting-number mt-1 font-extrabold text-slate-900">
+                          {money(summary.totalAdvances)}
                         </p>
                       </div>
                       <div>
                         <p className="text-[11px] text-slate-400">المتبقي</p>
                         <p
                           className={`accounting-number mt-1 font-extrabold ${
-                            summary.remaining < 0
-                              ? "text-red-600"
-                              : "text-slate-900"
+                            summary.remaining < 0 ? "text-red-600" : "text-slate-900"
                           }`}
                         >
                           {money(summary.remaining)}
                         </p>
                       </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/contractors/${item.id}`}
+                        className="inline-flex h-10 items-center gap-2 rounded-xl bg-slate-900 px-3 text-xs font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-sm"
+                      >
+                        فتح الحساب
+                        <ArrowLeft className="h-4 w-4" />
+                      </Link>
                     </div>
 
                     <div className="flex gap-2">
@@ -428,6 +480,20 @@ export default function ContractorsPage() {
                     placeholder="الرقم القومي"
                     className="h-11 w-full px-3 text-sm font-semibold"
                     inputMode="numeric"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-bold text-slate-600">
+                    إجمالي قيمة الأعمال
+                  </label>
+                  <input
+                    type="text"
+                    value={totalWork}
+                    onChange={(event) => setTotalWork(event.target.value)}
+                    placeholder="0"
+                    className="h-11 w-full px-3 text-sm font-semibold"
+                    inputMode="decimal"
                   />
                 </div>
 

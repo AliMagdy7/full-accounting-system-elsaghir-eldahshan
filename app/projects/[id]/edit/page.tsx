@@ -8,6 +8,8 @@ import {
   useState,
 } from "react";
 import { useParams, useRouter } from "next/navigation";
+import RouteGuard from "@/components/auth/RouteGuard";
+
 import { ArrowRight, Save } from "lucide-react";
 
 import {
@@ -384,7 +386,8 @@ export default function EditProjectPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <RouteGuard permission="update">
+      <div className="space-y-6">
       {/* Header */}
       <div>
         <button
@@ -590,6 +593,7 @@ export default function EditProjectPage() {
           </button>
         </div>
       </form>
-    </div>
+      </div>
+    </RouteGuard>
   );
 }

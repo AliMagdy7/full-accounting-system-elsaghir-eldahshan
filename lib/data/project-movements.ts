@@ -29,6 +29,9 @@ import {
   updateWorkerFinancialMovement,
 } from "@/lib/data/worker-financial-movements";
 import { getWorkerById } from "@/lib/data/workers";
+import { getContractorById } from "@/lib/data/contractors";
+import { getContractorSiteAssignments, isContractorAssignedToSiteOnDate } from "@/lib/data/contractor-site-assignments";
+import { getProjectSiteById } from "@/lib/data/project-sites";
 import type { Expense } from "@/types/expense";
 import type { CustodyTransaction } from "@/types/custody-transaction";
 
@@ -45,6 +48,8 @@ export interface ProjectMovementDraft {
   custodyId: string;
   amount: number;
   workerId?: string;
+  contractorId?: string;
+  siteId?: string;
   financialAccountId?: string;
 }
 
@@ -110,11 +115,16 @@ function validateDraft(
   }
 
   if (draft.movementType === "contractor_advance") {
-    if (draft.category !== "سلف المقاولين") {
-      throw new Error(
-        "تصنيف سلفة المقاول يجب أن يكون سلف المقاولين.",
-      );
+    if (!draft.contractorId) throw new Error("المقاول مطلوب للسلفة.");
+    if (!getContractorById(draft.contractorId)) throw new Error("المقاول المحدد غير موجود.");
+    if (!draft.siteId) throw new Error("الموقع مطلوب لسلفة المقاول.");
+    const site = getProjectSiteById(draft.siteId);
+    if (!site || site.projectId !== projectId) throw new Error("الموقع المحدد غير تابع لهذا المشروع.");
+    if (!getContractorSiteAssignments(draft.contractorId).some((assignment) => assignment.siteId === draft.siteId)) throw new Error("المقاول غير مرتبط بالموقع المحدد.");
+    if (!isContractorAssignedToSiteOnDate(draft.contractorId, draft.siteId, draft.date)) {
+      throw new Error("تاريخ السلفة خارج فترة ارتباط المقاول بالموقع المحدد.");
     }
+    if (draft.category !== "سلف المقاولين") throw new Error("تصنيف سلفة المقاول يجب أن يكون سلف المقاولين.");
   }
 
   if (custody.id === "central") {
@@ -196,6 +206,8 @@ function applyPayment(
       financialAccountId: draft.financialAccountId,
       workerFinancialMovementId: movementId,
       projectId,
+      ...(draft.contractorId ? { contractorId: draft.contractorId } : {}),
+      ...(draft.siteId ? { siteId: draft.siteId } : {}),
       createdAt: timestamp,
       updatedAt: timestamp,
     });
@@ -297,6 +309,8 @@ export function getProjectMovementRecords(
         custodyId: expense.custodyId,
         amount: expense.amount,
         financialAccountId: expense.financialAccountId,
+        contractorId: expense.contractorId,
+        siteId: expense.siteId,
         createdAt: expense.createdAt,
         updatedAt: expense.updatedAt,
       }));
@@ -356,6 +370,8 @@ export function createProjectMovement(
     category: draft.category.trim(),
     amount: Number(draft.amount),
     workerId: draft.workerId || undefined,
+    contractorId: draft.contractorId || undefined,
+    siteId: draft.siteId || undefined,
     financialAccountId:
       draft.financialAccountId || undefined,
   };
@@ -420,6 +436,8 @@ export function createProjectMovement(
       projectId,
       financialAccountId:
         normalizedDraft.financialAccountId,
+      contractorId: normalizedDraft.contractorId,
+      siteId: normalizedDraft.siteId,
       movementType:
         normalizedDraft.movementType === "contractor_advance"
           ? "contractor_advance"
@@ -464,6 +482,8 @@ export function updateProjectMovement(
     category: draft.category.trim(),
     amount: Number(draft.amount),
     workerId: draft.workerId || undefined,
+    contractorId: draft.contractorId || undefined,
+    siteId: draft.siteId || undefined,
     financialAccountId:
       draft.financialAccountId || undefined,
   };

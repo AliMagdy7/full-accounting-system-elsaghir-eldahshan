@@ -243,14 +243,25 @@ export function changeCurrentUserPassword(
 }
 
 export function updateCurrentAdminUsername(username: string): SystemUser | undefined {
+  return updateCurrentAdminCredentials(username);
+}
+
+export function updateCurrentAdminCredentials(
+  username: string,
+  password?: string,
+): SystemUser | undefined {
   const session = getCurrentSession();
   if (!session || session.role !== "admin") {
-    throw new Error("تغيير اسم المستخدم متاح للمدير فقط.");
+    throw new Error("تعديل بيانات دخول المدير متاح للمدير فقط.");
   }
 
   const nextUsername = username.trim();
   if (!nextUsername) {
     throw new Error("اسم المستخدم مطلوب.");
+  }
+
+  if (password !== undefined && password.length < 6) {
+    throw new Error("كلمة المرور يجب ألا تقل عن 6 أحرف.");
   }
 
   const existingUser = getUserByUsername(nextUsername);
@@ -262,27 +273,54 @@ export function updateCurrentAdminUsername(username: string): SystemUser | undef
   const index = users.findIndex((user) => user.id === session.userId);
   if (index === -1) return undefined;
 
-  users[index] = { ...users[index], username: nextUsername };
+  const previousUser = users[index];
+  const nextUser: SystemUser = {
+    ...previousUser,
+    username: nextUsername,
+    ...(password !== undefined ? { password } : {}),
+  };
+
+  // Save username/password together so credentials cannot be left half-updated.
+  users[index] = nextUser;
   window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
 
-  writeSession({
-    ...session,
-    username: nextUsername,
-    userName: users[index].name,
-  }, Boolean(window.localStorage.getItem(LOCAL_SESSION_STORAGE_KEY)));
+  const rememberMe = Boolean(window.localStorage.getItem(LOCAL_SESSION_STORAGE_KEY));
+  writeSession(
+    { ...session, username: nextUser.username, userName: nextUser.name },
+    rememberMe,
+  );
+
+  // Verify persistence before reporting success.
+  const persistedUser = getUserById(session.userId);
+  if (
+    !persistedUser ||
+    persistedUser.username !== nextUser.username ||
+    (password !== undefined && persistedUser.password !== nextUser.password)
+  ) {
+    users[index] = previousUser;
+    window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+    writeSession(
+      { ...session, username: previousUser.username, userName: previousUser.name },
+      rememberMe,
+    );
+    throw new Error("تعذر حفظ بيانات الدخول. لم يتم تطبيق التغيير.");
+  }
+
   dispatchAuthUpdated();
 
   addAuditLog({
     action: "update",
     entity: "user",
     entityId: session.userId,
-    description: `تم تغيير اسم مستخدم المدير إلى ${nextUsername}.`,
-    notificationTitle: "تغيير اسم المستخدم",
+    description: password !== undefined
+      ? `تم تحديث اسم المستخدم وكلمة مرور المدير إلى ${nextUsername}.`
+      : `تم تغيير اسم مستخدم المدير إلى ${nextUsername}.`,
+    notificationTitle: "تحديث بيانات الدخول",
     notificationType: "success",
     notificationHref: "/profile",
   });
 
-  return users[index];
+  return nextUser;
 }
 
 export function updateUserCredentials(

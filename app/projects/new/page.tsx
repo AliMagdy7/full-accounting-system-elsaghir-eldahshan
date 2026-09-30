@@ -10,6 +10,8 @@ import {
   FolderPlus,
 } from "lucide-react";
 
+import RouteGuard from "@/components/auth/RouteGuard";
+
 import { addProject } from "@/lib/data/projects";
 import {
   ensureProjectCustody,
@@ -139,7 +141,8 @@ export default function NewProjectPage() {
   };
 
   return (
-    <div
+    <RouteGuard permission="create">
+      <div
       dir="rtl"
       className="space-y-6"
     >
@@ -355,6 +358,7 @@ export default function NewProjectPage() {
           </button>
         </div>
       </form>
-    </div>
+      </div>
+    </RouteGuard>
   );
 }

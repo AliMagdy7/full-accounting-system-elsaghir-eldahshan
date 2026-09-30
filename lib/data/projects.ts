@@ -5,6 +5,10 @@ import { addAuditLog } from "@/lib/data/audit-logs";
 const STORAGE_KEY =
   "elsaghir-eldahshan-projects";
 
+function notifyDataUpdated() {
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
+}
+
 function canUseStorage(): boolean {
   return typeof window !== "undefined";
 }
@@ -45,6 +49,8 @@ function saveProjects(
     STORAGE_KEY,
     JSON.stringify(projects),
   );
+  notifyDataUpdated();
+
 }
 
 export function getProjects(): Project[] {

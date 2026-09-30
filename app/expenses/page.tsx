@@ -48,11 +48,16 @@ import { getProjects } from "@/lib/data/projects";
 import {
   createWorkerAdvanceWithPayment,
   deleteWorkerAdvanceWithPayment,
-  getWorkerFinancialMovementsByType,
   updateWorkerAdvanceWithPayment,
-} from "@/lib/data/worker-financial-movements";
+  createExpenseWithPayment,
+  updateExpenseWithPayment,
+  deleteExpenseWithPayment,
+} from "@/lib/data/financial-transactions";
 import { getWorkers } from "@/lib/data/workers";
+import { getWorkerFinancialMovementsByType } from "@/lib/data/worker-financial-movements";
 import { getContractorById, getContractors } from "@/lib/data/contractors";
+import { getContractorSiteAssignments, isContractorAssignedToSiteOnDate } from "@/lib/data/contractor-site-assignments";
+import { getProjectSites } from "@/lib/data/project-sites";
 import type { Custody } from "@/types/custody";
 import type { CustodyFinancialAccount } from "@/types/custody-financial-account";
 import type { CustodyTransaction } from "@/types/custody-transaction";
@@ -70,6 +75,7 @@ interface ExpenseDraft {
   projectId?: string;
   workerId?: string;
   contractorId?: string;
+  siteId?: string;
   custodyId: string;
   amount: number;
   financialAccountId?: string;
@@ -140,7 +146,8 @@ function getExpenseTransaction(
         transaction.projectId === expense.projectId &&
         transaction.date === expense.date &&
         transaction.amount === expense.amount &&
-        transaction.description === expense.description,
+        transaction.description === expense.description &&
+        (transaction.siteId ?? "") === (expense.siteId ?? ""),
     )
     .sort((a, b) =>
       b.createdAt.localeCompare(a.createdAt),
@@ -221,6 +228,12 @@ function applyPayment(
       ...(draft.projectId
         ? { projectId: draft.projectId }
         : {}),
+      ...(draft.contractorId
+        ? { contractorId: draft.contractorId }
+        : {}),
+      ...(draft.siteId
+        ? { siteId: draft.siteId }
+        : {}),
       createdAt: now,
       updatedAt: now,
     });
@@ -296,6 +309,23 @@ function validateDraft(
 
   if (draft.movementType === "contractor_advance" && draft.contractorId && !getContractorById(draft.contractorId)) {
     throw new Error("المقاول المحدد غير موجود.");
+  }
+
+  if (draft.movementType === "contractor_advance") {
+    if (!draft.siteId) {
+      throw new Error("اختر الموقع المرتبط بسلفة المقاول.");
+    }
+    const siteExists = getProjectSites().some((site) => site.id === draft.siteId);
+    if (!siteExists) {
+      throw new Error("الموقع المحدد غير موجود.");
+    }
+    const assignmentExists = getContractorSiteAssignments(draft.contractorId!).some((assignment) => assignment.siteId === draft.siteId);
+    if (!assignmentExists) {
+      throw new Error("المقاول غير مرتبط بالموقع المحدد.");
+    }
+    if (!isContractorAssignedToSiteOnDate(draft.contractorId!, draft.siteId, draft.date)) {
+      throw new Error("تاريخ السلفة خارج فترة ارتباط المقاول بالموقع المحدد.");
+    }
   }
 
   if (
@@ -387,6 +417,7 @@ function defaultDraft(
     projectId,
     workerId: undefined,
     contractorId: undefined,
+    siteId: undefined,
     custodyId: defaultCustodyId,
     amount: 0,
     financialAccountId: undefined,
@@ -795,6 +826,7 @@ export default function ExpensesPage() {
       projectId: expense.projectId,
       workerId: expense.workerId,
       contractorId: expense.contractorId,
+      siteId: expense.siteId,
       custodyId: expense.custodyId,
       amount: expense.amount,
       financialAccountId:
@@ -849,6 +881,7 @@ export default function ExpensesPage() {
           movementType,
           workerId: undefined,
           contractorId: current.contractorId,
+          siteId: current.siteId,
           category: CONTRACTOR_CATEGORY,
         };
       }
@@ -859,6 +892,7 @@ export default function ExpensesPage() {
           movementType,
           workerId: current.workerId,
           contractorId: undefined,
+          siteId: undefined,
           category: "سلف العمال",
         };
       }
@@ -868,6 +902,7 @@ export default function ExpensesPage() {
         movementType: "expense",
         workerId: undefined,
         contractorId: undefined,
+        siteId: undefined,
         category:
           current.category === CONTRACTOR_CATEGORY || current.category === "سلف العمال"
             ? ""
@@ -923,6 +958,7 @@ export default function ExpensesPage() {
 
     if (normalized.movementType === "expense") {
       addExpenseCategory(normalized.category);
+      return createExpenseWithPayment(normalized);
     }
 
     if (normalized.movementType === "worker_advance") {
@@ -937,81 +973,7 @@ export default function ExpensesPage() {
       });
     }
 
-    const now =
-      new Date().toISOString();
-
-    let transaction:
-      | CustodyTransaction
-      | undefined;
-    let expense:
-      | Expense
-      | undefined;
-
-    try {
-      transaction = applyPayment(
-        normalized,
-      );
-
-      expense = addExpense({
-        id: crypto.randomUUID(),
-        date: normalized.date,
-        amount: normalized.amount,
-        category: normalized.category,
-        description:
-          normalized.description,
-        custodyId:
-          normalized.custodyId,
-        ...(normalized.projectId
-          ? {
-              projectId: normalized.projectId,
-            }
-          : {}),
-        ...(normalized.contractorId
-          ? {
-              contractorId: normalized.contractorId,
-            }
-          : {}),
-        ...(normalized.financialAccountId
-          ? {
-              financialAccountId:
-                normalized.financialAccountId,
-            }
-          : {}),
-        movementType:
-          normalized.movementType,
-        custodyTransactionId:
-          transaction.id,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      return {
-        expense,
-        transaction,
-      };
-    } catch (error) {
-      if (expense) {
-        deleteExpense(expense.id);
-      }
-
-      if (transaction) {
-        deleteCustodyTransaction(
-          transaction.id,
-        );
-      }
-
-      try {
-        reversePayment(
-          normalized.custodyId,
-          normalized.amount,
-          normalized.financialAccountId,
-        );
-      } catch {
-        // Preserve the original error.
-      }
-
-      throw error;
-    }
+    return createExpenseWithPayment(normalized);
   };
 
   const updateExisting = (
@@ -1021,10 +983,7 @@ export default function ExpensesPage() {
     
     const normalized = normalizeDraft(currentDraft);
 
-    validateDraft(
-      normalized,
-      expense,
-    );
+    validateDraft(normalized, expense);
 
     if (normalized.movementType === "expense") {
       addExpenseCategory(normalized.category);
@@ -1050,146 +1009,7 @@ export default function ExpensesPage() {
       throw new Error("لا يمكن تحويل مصروف موجود إلى سلفة عامل من شاشة المصروفات. أنشئ سلفة جديدة من نوع سلف العمال.");
     }
 
-    const oldTransaction =
-      getExpenseTransaction(expense);
-
-    if (!oldTransaction) {
-      throw new Error(
-        "حركة العهدة المرتبطة بهذا المصروف غير موجودة، لذلك لا يمكن تعديله بأمان.",
-      );
-    }
-
-    const oldExpenseSnapshot: Partial<Expense> = {
-      date: expense.date,
-      amount: expense.amount,
-      category: expense.category,
-      description: expense.description,
-      custodyId: expense.custodyId,
-      projectId: expense.projectId,
-      contractorId: expense.contractorId,
-      financialAccountId:
-        expense.financialAccountId,
-      movementType:
-        expense.movementType,
-      custodyTransactionId:
-        expense.custodyTransactionId,
-    };
-
-    reversePayment(
-      oldTransaction.custodyId,
-      oldTransaction.amount,
-      oldTransaction.financialAccountId,
-    );
-
-    let newTransaction:
-      | CustodyTransaction
-      | undefined;
-    let updated = false;
-
-    try {
-      newTransaction =
-        applyPayment(normalized);
-
-      const nextExpense =
-        updateExpense(
-          expense.id,
-          {
-            date: normalized.date,
-            amount: normalized.amount,
-            category:
-              normalized.category,
-            description:
-              normalized.description,
-            custodyId:
-              normalized.custodyId,
-            projectId:
-              normalized.projectId,
-            contractorId: normalized.contractorId,
-            financialAccountId:
-              normalized.financialAccountId,
-            movementType:
-              normalized.movementType,
-            custodyTransactionId:
-              newTransaction.id,
-          },
-        );
-
-      if (!nextExpense) {
-        throw new Error(
-          "تعذر تحديث المصروف.",
-        );
-      }
-
-      updated = true;
-
-      deleteCustodyTransaction(
-        oldTransaction.id,
-      );
-
-      return nextExpense;
-    } catch (error) {
-      if (updated) {
-        updateExpense(
-          expense.id,
-          oldExpenseSnapshot,
-        );
-      }
-
-      if (newTransaction) {
-        try {
-          deleteCustodyTransaction(
-            newTransaction.id,
-          );
-        } catch {
-          // Preserve the original error.
-        }
-
-        try {
-          reversePayment(
-            normalized.custodyId,
-            normalized.amount,
-            normalized.financialAccountId,
-          );
-        } catch {
-          // Preserve the original error.
-        }
-      }
-
-      try {
-        const restoredTransaction =
-          applyPayment({
-            date: oldTransaction.date,
-            description:
-              oldTransaction.description,
-            movementType:
-              normalizedMovementType(
-                expense.movementType,
-              ),
-            category: expense.category,
-            projectId:
-              expense.projectId,
-            custodyId:
-              oldTransaction.custodyId,
-            amount:
-              oldTransaction.amount,
-            financialAccountId:
-              oldTransaction.financialAccountId,
-          });
-
-        updateExpense(
-          expense.id,
-          {
-            ...oldExpenseSnapshot,
-            custodyTransactionId:
-              restoredTransaction.id,
-          },
-        );
-      } catch {
-        // Keep the original error.
-      }
-
-      throw error;
-    }
+    return updateExpenseWithPayment(expense.id, normalized);
   };
 
   const saveRow = () => {
@@ -1234,9 +1054,7 @@ export default function ExpensesPage() {
     }
   };
 
-  const removeExpense = (
-    expense: Expense,
-  ) => {
+  const removeExpense = (expense: Expense) => {
     confirm(
       {
         title: "تأكيد حذف المصروف",
@@ -1247,120 +1065,30 @@ export default function ExpensesPage() {
       },
       () => {
         setSaving(true);
-    setError("");
-
-    try {
-      if (expense.movementType === "worker_advance") {
-        if (!expense.workerId) {
-          throw new Error("العامل المرتبط بالسلفة غير موجود.");
-        }
-        deleteWorkerAdvanceWithPayment(expense.workerId && expense.id.startsWith("worker-advance:") ? expense.id.replace("worker-advance:", "") : expense.id);
-        load();
-        cancelEdit();
-        return;
-      }
-
-      const transaction =
-        getExpenseTransaction(
-          expense,
-        );
-
-      if (!transaction) {
-        throw new Error(
-          "حركة العهدة المرتبطة بهذا المصروف غير موجودة، لذلك لا يمكن حذفه بأمان.",
-        );
-      }
-
-      reversePayment(
-        transaction.custodyId,
-        transaction.amount,
-        transaction.financialAccountId,
-      );
-
-      try {
-        deleteCustodyTransaction(
-          transaction.id,
-        );
-      } catch (transactionError) {
+        setError("");
         try {
-          applyPayment({
-            date: transaction.date,
-            description:
-              transaction.description,
-            movementType:
-              normalizedMovementType(
-                expense.movementType,
-              ),
-            category: expense.category,
-            projectId:
-              expense.projectId,
-            custodyId:
-              transaction.custodyId,
-            amount:
-              transaction.amount,
-            financialAccountId:
-              transaction.financialAccountId,
-          });
-        } catch {
-          // Keep the original error.
-        }
-
-        throw transactionError;
-      }
-
-      const deleted =
-        deleteExpense(expense.id);
-
-      if (!deleted) {
-        try {
-          const restoredTransaction =
-            applyPayment({
-              date: transaction.date,
-              description:
-                transaction.description,
-              movementType:
-                normalizedMovementType(
-                  expense.movementType,
-                ),
-              category: expense.category,
-              projectId:
-                expense.projectId,
-              custodyId:
-                transaction.custodyId,
-              amount:
-                transaction.amount,
-              financialAccountId:
-                transaction.financialAccountId,
-            });
-
-          updateExpense(
-            expense.id,
-            {
-              custodyTransactionId:
-                restoredTransaction.id,
-            },
+          if (expense.movementType === "worker_advance") {
+            if (!expense.workerId) throw new Error("العامل المرتبط بالسلفة غير موجود.");
+            deleteWorkerAdvanceWithPayment(
+              expense.id.startsWith("worker-advance:")
+                ? expense.id.replace("worker-advance:", "")
+                : expense.id,
+            );
+          } else {
+            deleteExpenseWithPayment(expense.id);
+          }
+          load();
+          cancelEdit();
+        } catch (deleteError) {
+          setError(
+            deleteError instanceof Error
+              ? deleteError.message
+              : "حدث خطأ أثناء حذف المصروف.",
           );
-        } catch {
-          // Keep the original error.
+        } finally {
+          setSaving(false);
         }
-
-        throw new Error(
-          "تعذر حذف المصروف.",
-        );
-      }
-
-      load();
-      cancelEdit();
-    } catch (deleteError) {
-      setError(
-        deleteError instanceof Error
-          ? deleteError.message
-          : "حدث خطأ أثناء حذف المصروف.",
-      );
-    } finally {
-      setSaving(false);
-    }
-       },
+      },
     );
   };
 
@@ -1450,16 +1178,38 @@ export default function ExpensesPage() {
               ))}
             </select>
           ) : draft.movementType === "contractor_advance" ? (
-            <select
-              value={draft.contractorId ?? ""}
-              onChange={(event) => updateDraft("contractorId", event.target.value || undefined)}
-              className="h-9 w-full min-w-[150px] rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold outline-none focus:border-blue-500"
-            >
-              <option value="">اختر المقاول</option>
-              {contractors.map((contractor) => (
-                <option key={contractor.id} value={contractor.id}>{contractor.name}</option>
-              ))}
-            </select>
+            <div className="space-y-2">
+              <select
+                value={draft.contractorId ?? ""}
+                onChange={(event) => { updateDraft("contractorId", event.target.value || undefined); updateDraft("siteId", undefined); }}
+                className="h-9 w-full min-w-[150px] rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold outline-none focus:border-blue-500"
+              >
+                <option value="">اختر المقاول</option>
+                {contractors.map((contractor) => (
+                  <option key={contractor.id} value={contractor.id}>{contractor.name}</option>
+                ))}
+              </select>
+              {draft.contractorId && (
+                <select
+                  value={draft.siteId ?? ""}
+                  onChange={(event) => {
+                    const nextSiteId = event.target.value || undefined;
+                    updateDraft("siteId", nextSiteId);
+                    const site = nextSiteId ? getProjectSites().find((item) => item.id === nextSiteId) : undefined;
+                    updateDraft("projectId", site?.projectId);
+                  }}
+                  className="h-9 w-full min-w-[150px] rounded-lg border border-violet-200 bg-violet-50/40 px-2 text-xs font-semibold outline-none focus:border-violet-500"
+                >
+                  <option value="">اختر موقع المقاول</option>
+                  {getContractorSiteAssignments(draft.contractorId).map((assignment) => {
+                    const site = getProjectSites().find((item) => item.id === assignment.siteId);
+                    const project = site ? projects.find((item) => item.id === site.projectId) : undefined;
+                    if (!site) return null;
+                    return <option key={assignment.id} value={site.id}>{project ? `${project.name} — ` : ""}{site.name}{assignment.endDate ? " (منتهية)" : " (مستمرة)"}</option>;
+                  })}
+                </select>
+              )}
+            </div>
           ) : (
             <input
               value={draft.category}
@@ -2046,6 +1796,11 @@ export default function ExpensesPage() {
                           {expense.movementType === "contractor_advance" && expense.contractorId && (
                             <p className="mt-1 text-[11px] font-semibold text-violet-600">
                               المقاول: {contractors.find((contractor) => contractor.id === expense.contractorId)?.name ?? "مقاول غير معروف"}
+                            </p>
+                          )}
+                          {expense.movementType === "contractor_advance" && expense.siteId && (
+                            <p className="mt-1 text-[11px] font-semibold text-slate-500">
+                              الموقع: {getProjectSites().find((site) => site.id === expense.siteId)?.name ?? "موقع غير معروف"}
                             </p>
                           )}
                         </td>

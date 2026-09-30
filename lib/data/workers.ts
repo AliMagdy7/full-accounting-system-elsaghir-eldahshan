@@ -1,5 +1,6 @@
 import { assertCurrentUserPermission } from "@/lib/permission-check";
 import { addAuditLog } from "@/lib/data/audit-logs";
+import { getProjectSiteById } from "@/lib/data/project-sites";
 
 import type {
   Worker,
@@ -10,6 +11,10 @@ import type {
 
 const WORKERS_STORAGE_KEY =
   "elsaghir-eldahshan-workers";
+
+function notifyDataUpdated() {
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
+}
 
 const ASSIGNMENTS_STORAGE_KEY =
   "elsaghir-eldahshan-worker-site-assignments";
@@ -31,9 +36,31 @@ function readWorkers(): Worker[] {
 
     const parsed = JSON.parse(raw);
 
-    return Array.isArray(parsed)
-      ? parsed
-      : [];
+    if (!Array.isArray(parsed)) return [];
+
+    let assignments: Array<{ workerId?: string; siteId?: string; projectId?: string; endDate?: string }> = [];
+    try {
+      const assignmentRaw = window.localStorage.getItem(ASSIGNMENTS_STORAGE_KEY);
+      const assignmentParsed = assignmentRaw ? JSON.parse(assignmentRaw) : [];
+      assignments = Array.isArray(assignmentParsed) ? assignmentParsed : [];
+    } catch {
+      assignments = [];
+    }
+
+    return parsed.map((worker) => {
+      if (!worker || typeof worker !== "object") return worker;
+      const record = worker as Worker;
+      if (record.currentSiteId) return record;
+      const currentAssignment = assignments.find(
+        (assignment) => assignment.workerId === record.id && !assignment.endDate,
+      );
+      if (!currentAssignment?.siteId) return record;
+      return {
+        ...record,
+        currentSiteId: currentAssignment.siteId,
+        currentProjectId: currentAssignment.projectId || record.currentProjectId,
+      };
+    });
   } catch {
     return [];
   }
@@ -50,6 +77,8 @@ function saveWorkers(
     WORKERS_STORAGE_KEY,
     JSON.stringify(workers),
   );
+  notifyDataUpdated();
+
 }
 
 function readAssignments(): WorkerSiteAssignment[] {
@@ -88,6 +117,8 @@ function saveAssignments(
     ASSIGNMENTS_STORAGE_KEY,
     JSON.stringify(assignments),
   );
+  notifyDataUpdated();
+
 }
 
 function normalizeName(
@@ -182,6 +213,8 @@ export function addWorker(input: {
 
   currentProjectId: string;
 
+  currentSiteId: string;
+
   startDate: string;
 
   payType: WorkerPayType;
@@ -218,12 +251,13 @@ export function addWorker(input: {
     );
   }
 
-  if (
-    !input.currentProjectId
-  ) {
-    throw new Error(
-      "الموقع الحالي للعامل مطلوب.",
-    );
+  if (!input.currentSiteId) {
+    throw new Error("الموقع الحالي للعامل مطلوب.");
+  }
+
+  const currentSite = getProjectSiteById(input.currentSiteId);
+  if (!currentSite || currentSite.projectId !== input.currentProjectId) {
+    throw new Error("الموقع الحالي لا يتبع المشروع المحدد.");
   }
 
   if (!input.startDate) {
@@ -298,6 +332,9 @@ export function addWorker(input: {
     currentProjectId:
       input.currentProjectId,
 
+    currentSiteId:
+      input.currentSiteId,
+
     startDate:
       input.startDate,
 
@@ -346,6 +383,9 @@ export function addWorker(input: {
 
       projectId:
         worker.currentProjectId,
+
+      siteId:
+        worker.currentSiteId,
 
       startDate:
         worker.startDate,
@@ -490,6 +530,12 @@ export function getWorkerSiteAssignments(
     );
 }
 
+export function getWorkerSiteAssignmentsBySiteId(siteId: string) {
+  return readAssignments()
+    .filter((assignment) => assignment.siteId === siteId)
+    .sort((a, b) => b.startDate.localeCompare(a.startDate));
+}
+
 export function getCurrentWorkerSiteAssignment(
   workerId: string,
 ) {
@@ -509,6 +555,8 @@ export function moveWorkerToProject(
     workerId: string;
 
     projectId: string;
+
+    siteId?: string;
 
     startDate: string;
 
@@ -536,8 +584,15 @@ export function moveWorkerToProject(
 
   if (!input.projectId) {
     throw new Error(
-      "الموقع الجديد مطلوب.",
+      "المشروع المطلوب غير محدد.",
     );
+  }
+
+  if (input.siteId) {
+    const site = getProjectSiteById(input.siteId);
+    if (!site || site.projectId !== input.projectId) {
+      throw new Error("الموقع المحدد غير تابع للمشروع المختار.");
+    }
   }
 
   if (!input.startDate) {
@@ -726,6 +781,8 @@ export function moveWorkerToProject(
       projectId:
         input.projectId,
 
+      ...(input.siteId ? { siteId: input.siteId } : {}),
+
       startDate:
         input.startDate,
 
@@ -773,6 +830,9 @@ export function moveWorkerToProject(
       {
         currentProjectId:
           input.projectId,
+
+        currentSiteId:
+          input.siteId,
 
         startDate:
           worker.startDate,
@@ -830,6 +890,25 @@ export function deleteWorker(
     throw new Error(
       "العامل غير موجود.",
     );
+  }
+
+  const movementRaw = typeof window !== "undefined"
+    ? window.localStorage.getItem("elsaghir-eldahshan-worker-financial-movements")
+    : null;
+  if (movementRaw) {
+    try {
+      const movements = JSON.parse(movementRaw);
+      if (Array.isArray(movements) && movements.some((item) => item?.workerId === id)) {
+        throw new Error("لا يمكن حذف العامل لأنه مرتبط بحركات مالية. أغلق الحساب أو اترك السجل محفوظًا.");
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith("لا يمكن حذف العامل")) throw error;
+    }
+  }
+
+  const assignments = readAssignments();
+  if (assignments.some((assignment) => assignment.workerId === id)) {
+    throw new Error("لا يمكن حذف العامل لأنه مرتبط بفترات عمل. أغلق آخر فترة بدلًا من حذف السجل.");
   }
 
   saveWorkers(

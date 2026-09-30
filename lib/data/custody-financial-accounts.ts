@@ -5,6 +5,10 @@ import { addAuditLog } from "@/lib/data/audit-logs";
 
 const STORAGE_KEY = "elsaghir-eldahshan-custody-financial-accounts";
 
+function notifyDataUpdated() {
+  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
+}
+
 function readAccounts(): CustodyFinancialAccount[] {
   if (typeof window === "undefined") return [];
 
@@ -22,6 +26,8 @@ function readAccounts(): CustodyFinancialAccount[] {
 function saveAccounts(accounts: CustodyFinancialAccount[]) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
+  notifyDataUpdated();
+
 }
 
 export function getCustodyFinancialAccounts(custodyId?: string) {

@@ -64,7 +64,6 @@ import type { CustodyTransaction } from "@/types/custody-transaction";
 import type { Expense, ProjectExpenseMovementType } from "@/types/expense";
 import type { Project } from "@/types/project";
 import type { Worker } from "@/types/worker";
-import type { WorkerFinancialMovement } from "@/types/worker-financial-movement";
 
 type MovementFilter = "all" | ProjectExpenseMovementType;
 
@@ -260,6 +259,26 @@ function applyPayment(
   }
 }
 
+function normalizeDraft(
+  draft: ExpenseDraft,
+  ): ExpenseDraft {
+    return {
+        ...draft,
+        description: draft.description.trim(),
+        category:
+          draft.movementType === "contractor_advance"
+            ? CONTRACTOR_CATEGORY
+            : draft.movementType === "worker_advance"
+              ? "سلف العمال"
+              : draft.category.trim(),
+        amount: Number(draft.amount),
+        financialAccountId: draft.financialAccountId || undefined,
+        projectId: draft.projectId || undefined,
+        workerId: draft.workerId || undefined,
+        contractorId: draft.contractorId || undefined,
+    };
+}
+
 function validateDraft(
   draft: ExpenseDraft,
   oldExpense?: Expense,
@@ -451,8 +470,11 @@ export default function ExpensesPage() {
         0,
       ),
     );
+
+    const custodyTransactions = getCustodyTransactions();
+
     const linkedWorkerAdvances = workerAdvanceMovements.reduce<Expense[]>((rows, movement) => {
-      const transaction = getCustodyTransactions().find(
+      const transaction = custodyTransactions.find(
         (item) => item.workerFinancialMovementId === movement.id,
       );
       if (!transaction) return rows;
@@ -929,22 +951,8 @@ export default function ExpensesPage() {
   };
 
   const saveNew = (currentDraft: ExpenseDraft) => {
-    const normalized: ExpenseDraft = {
-      ...currentDraft,
-      description: currentDraft.description.trim(),
-      category:
-        currentDraft.movementType === "contractor_advance"
-          ? CONTRACTOR_CATEGORY
-          : currentDraft.movementType === "worker_advance"
-            ? "سلف العمال"
-            : currentDraft.category.trim(),
-      amount: Number(currentDraft.amount),
-      financialAccountId: currentDraft.financialAccountId || undefined,
-      projectId: currentDraft.projectId || undefined,
-      workerId: currentDraft.workerId || undefined,
-      contractorId: currentDraft.contractorId || undefined,
-      siteId: currentDraft.siteId || undefined,
-    };
+
+    const normalized = normalizeDraft(currentDraft);
 
     validateDraft(normalized);
 
@@ -972,22 +980,8 @@ export default function ExpensesPage() {
     expense: Expense,
     currentDraft: ExpenseDraft,
   ) => {
-    const normalized: ExpenseDraft = {
-      ...currentDraft,
-      description: currentDraft.description.trim(),
-      category:
-        currentDraft.movementType === "contractor_advance"
-          ? CONTRACTOR_CATEGORY
-          : currentDraft.movementType === "worker_advance"
-            ? "سلف العمال"
-            : currentDraft.category.trim(),
-      amount: Number(currentDraft.amount),
-      financialAccountId: currentDraft.financialAccountId || undefined,
-      projectId: currentDraft.projectId || undefined,
-      workerId: currentDraft.workerId || undefined,
-      contractorId: currentDraft.contractorId || undefined,
-      siteId: currentDraft.siteId || undefined,
-    };
+    
+    const normalized = normalizeDraft(currentDraft);
 
     validateDraft(normalized, expense);
 

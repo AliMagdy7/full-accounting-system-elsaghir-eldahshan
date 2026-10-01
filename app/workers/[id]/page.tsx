@@ -8,8 +8,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import {
   ArrowRight,
-  CalendarDays,
-  CircleDollarSign,
   Edit3,
   FileText,
   History,
@@ -18,7 +16,6 @@ import {
   Save,
   Trash2,
   UserRound,
-  WalletCards,
   X,
 } from "lucide-react";
 
@@ -38,26 +35,15 @@ import type { ProjectSite } from "@/types/project-site";
 
 import {
   getCustodies,
-  reverseCustodyBalance,
-  updateCustodyBalance,
 } from "@/lib/data/custodies";
-
-import {
-  addCustodyTransaction,
-  deleteCustodyTransaction,
-  getCustodyTransactions,
-} from "@/lib/data/custody-transactions";
 
 import {
   getCustodyFinancialAccounts,
   getCustodyFinancialAccountById,
-  reverseCustodyFinancialAccountBalance,
-  updateCustodyFinancialAccountBalance,
 } from "@/lib/data/custody-financial-accounts";
 
 import {
   getWorkerFinancialMovementsByWorkerId,
-  getWorkerFinancialSummary,
   getWorkerFinancialBalanceByProject,
 } from "@/lib/data/worker-financial-movements";
 import {
@@ -79,68 +65,11 @@ import type {
 
 const CENTRAL_CUSTODY_ID = "central";
 
-type WorkerAttendanceStatus =
-  | "present"
-  | "absent"
-
-interface WorkerAttendanceRecord {
-  id: string;
-  workerId: string;
-  date: string;
-  status: WorkerAttendanceStatus;
-  overtime: number;
-  deduction: number;
-  transport: number;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-const WORKER_ATTENDANCE_STORAGE_KEY =
-  "elsaghir-eldahshan-worker-attendance";
-
-function readWorkerAttendance(): WorkerAttendanceRecord[] {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
-  try {
-    const raw = window.localStorage.getItem(
-      WORKER_ATTENDANCE_STORAGE_KEY,
-    );
-
-    if (!raw) {
-      return [];
-    }
-
-    const parsed = JSON.parse(raw);
-
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveWorkerAttendance(
-  records: WorkerAttendanceRecord[],
-) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  window.localStorage.setItem(
-    WORKER_ATTENDANCE_STORAGE_KEY,
-    JSON.stringify(records),
-  );
-}
-
 function getMonthKey(date: Date): string {
   return `${date.getFullYear()}-${String(
     date.getMonth() + 1,
   ).padStart(2, "0")}`;
 }
-
-
 
 interface WorkerMonthlyPayrollSummary {
   workerId: string;
@@ -228,77 +157,6 @@ function readWorkerMonthlyPayrollSummaries(): WorkerMonthlyPayrollSummary[] {
   }
 }
 
-function saveWorkerMonthlyPayrollSummary(
-  summary: WorkerMonthlyPayrollSummary,
-) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const summaries = readWorkerMonthlyPayrollSummaries();
-  const cleanSummary: WorkerMonthlyPayrollSummary = {
-    workerId: summary.workerId,
-    month: summary.month,
-    present: summary.present,
-    absent: summary.absent,
-    overtime: summary.overtime,
-    deduction: summary.deduction,
-    transport: summary.transport,
-    notes: summary.notes,
-    updatedAt: summary.updatedAt,
-  };
-
-  const index = summaries.findIndex(
-    (item) =>
-      item.workerId === cleanSummary.workerId &&
-      item.month === cleanSummary.month,
-  );
-
-  if (index === -1) {
-    summaries.push(cleanSummary);
-  } else {
-    summaries[index] = cleanSummary;
-  }
-
-  window.localStorage.setItem(
-    WORKER_MONTHLY_PAYROLL_STORAGE_KEY,
-    JSON.stringify(summaries),
-  );
-}
-
-function derivePayrollSummaryFromAttendance(
-  worker: Worker,
-  month: string,
-) {
-  const records = readWorkerAttendance().filter(
-    (record) =>
-      record.workerId === worker.id &&
-      record.date.startsWith(`${month}-`),
-  );
-
-  let present = 0;
-  let absent = 0;
-  let overtime = 0;
-  let deduction = 0;
-  let transport = 0;
-
-  records.forEach((record) => {
-    if (record.status === "present") present += 1;
-    if (record.status === "absent") absent += 1;
-    overtime += Number(record.overtime || 0);
-    deduction += Number(record.deduction || 0);
-    transport += Number(record.transport || 0);
-  });
-
-  return {
-    present,
-    absent,
-    overtime,
-    deduction,
-    transport,
-  };
-}
-
 const MOVEMENT_LABELS: Record<
   WorkerFinancialMovementType,
   string
@@ -324,36 +182,6 @@ function formatDate(date?: string): string {
 
 function getToday(): string {
   return new Date().toISOString().slice(0, 10);
-}
-
-function getMovementEffect(
-  type: WorkerFinancialMovementType,
-): "increase" | "decrease" {
-  /*
-   * الرصيد هنا معناه:
-   *
-   * موجب = مبلغ مستحق للعامل.
-   * سالب = مبلغ على العامل للشركة.
-   *
-   * لذلك:
-   * الراتب     -> يقلل مستحق العامل.
-   * السلفة     -> تقلل مستحق العامل وتزيد مديونيته.
-   * الخصم      -> يقلل مستحق العامل.
-   * الدفعة      -> تقلل مستحق العامل.
-   *
-   * المكافأة والإكرامية والمواصلات
-   * -> تزيد مستحق العامل.
-   */
-  if (
-    type === "salary" ||
-    type === "advance" ||
-    type === "deduction" ||
-    type === "payment"
-  ) {
-    return "decrease";
-  }
-
-  return "increase";
 }
 
 function getMovementLabel(
@@ -542,24 +370,8 @@ export default function WorkerDetailsPage() {
   const [attendanceMonth, setAttendanceMonth] =
     useState(getMonthKey(new Date()));
 
-  const [payrollInputs, setPayrollInputs] =
-    useState<WorkerMonthlyPayrollSummary>({
-      workerId: workerId,
-      month: getMonthKey(new Date()),
-      present: 0,
-      absent: 0,
-      overtime: 0,
-      deduction: 0,
-      transport: 0,
-      notes: "",
-      updatedAt: new Date().toISOString(),
-    });
-
-
   const [projectPayrollInputs, setProjectPayrollInputs] =
     useState<Record<string, WorkerMonthlyProjectPayrollSummary>>({});
-  const [isPayrollNotesEditing, setIsPayrollNotesEditing] =
-    useState(false);
 
   /*
    * تحميل البيانات
@@ -1270,15 +1082,6 @@ export default function WorkerDetailsPage() {
   };
 
   /*
-   * إجمالي الحركات
-        },
-    );
-  };
-
-  const totalMovements =
-    movements.length;
-
-  /*
    * تحميل ملخصات الشهر لكل موقع.
    * كل موقع له حساب مستقل، لذلك لا نشارك أرقام الحضور أو المرتب بين المواقع.
    */
@@ -1325,23 +1128,6 @@ export default function WorkerDetailsPage() {
     });
 
     setProjectPayrollInputs(next);
-
-    const firstProject = projectIds[0] ?? movementCurrentProjectId;
-    const first = next[firstProject];
-    if (first) {
-      setPayrollInputs({
-        workerId: worker.id,
-        month: attendanceMonth,
-        present: first.present,
-        absent: first.absent,
-        overtime: first.overtime,
-        deduction: first.deduction,
-        transport: first.transport,
-        notes: first.notes,
-        updatedAt: first.updatedAt,
-      });
-    }
-    setIsPayrollNotesEditing(false);
   }, [worker, assignments, movements, attendanceMonth, movementCurrentProjectId]);
 
   const updateProjectPayrollInput = (
@@ -1376,26 +1162,6 @@ export default function WorkerDetailsPage() {
 
     setProjectPayrollInputs((items) => ({ ...items, [projectId]: next }));
     saveWorkerMonthlyProjectPayrollSummary(next);
-    setPayrollInputs({
-      workerId: worker.id,
-      month: attendanceMonth,
-      present: next.present,
-      absent: next.absent,
-      overtime: next.overtime,
-      deduction: next.deduction,
-      transport: next.transport,
-      notes: next.notes,
-      updatedAt: next.updatedAt,
-    });
-  };
-
-  const updatePayrollInput = (
-    field: "present" | "absent" | "overtime" | "deduction" | "transport",
-    value: string,
-  ) => {
-    if (movementCurrentProjectId) {
-      updateProjectPayrollInput(movementCurrentProjectId, field, value);
-    }
   };
 
   const updateProjectPayrollNotes = (projectId: string, value: string) => {
@@ -1418,21 +1184,8 @@ export default function WorkerDetailsPage() {
 
     saveWorkerMonthlyProjectPayrollSummary(next);
     setProjectPayrollInputs((items) => ({ ...items, [projectId]: next }));
-    setIsPayrollNotesEditing(false);
     setSuccess("تم حفظ ملاحظات الموقع بنجاح.");
     setError("");
-  };
-
-  const updatePayrollNotes = (value: string) => {
-    if (movementCurrentProjectId) {
-      updateProjectPayrollNotes(movementCurrentProjectId, value);
-    }
-  };
-
-  const savePayrollNotes = () => {
-    if (movementCurrentProjectId) {
-      saveProjectPayrollNotes(movementCurrentProjectId);
-    }
   };
 
   function getProjectAssignment(projectId: string): WorkerSiteAssignment | undefined {

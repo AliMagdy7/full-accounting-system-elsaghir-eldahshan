@@ -94,10 +94,6 @@ export default function WorkersPage() {
     useState(false);
 
   const [name, setName] = useState("");
-
-  const [projectId, setProjectId] =
-    useState("");
-
   const [siteId, setSiteId] =
     useState("");
 
@@ -170,36 +166,30 @@ export default function WorkersPage() {
   }, [workers, search, filter]);
 
   const statistics = useMemo(() => {
-    const dailyWorkers =
-      workers.filter(
-        (worker) =>
-          worker.payType === "daily",
-      ).length;
 
-    const monthlyWorkers =
-      workers.filter(
-        (worker) =>
-          worker.payType === "monthly",
-      ).length;
+    let daily = 0;
+    let monthly = 0;
+    let balances = 0;
 
-    const totalBalances =
-      workers.reduce(
-        (total, worker) =>
-          total + worker.carriedSalary,
-        0,
-      );
+    for (const worker of workers) {
+      balances += worker.carriedSalary;
 
+      if (worker.payType === "daily") {
+        daily++;
+      } else if(worker.payType === "monthly"){
+        monthly++;
+      }
+    }
     return {
       total: workers.length,
-      daily: dailyWorkers,
-      monthly: monthlyWorkers,
-      balances: totalBalances,
+      daily: daily,
+      monthly: monthly,
+      balances: balances,
     };
   }, [workers]);
 
   const resetForm = () => {
     setName("");
-    setProjectId("");
     setSiteId("");
     setStartDate(
       new Date()
@@ -1046,10 +1036,7 @@ export default function WorkersPage() {
                   <select
                     value={siteId}
                     onChange={(event) => {
-                      const nextSiteId = event.target.value;
-                      setSiteId(nextSiteId);
-                      const nextSite = sites.find((site) => site.id === nextSiteId);
-                      setProjectId(nextSite?.projectId ?? "");
+                      setSiteId(event.target.value);
                     }}
                     className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-slate-400"
                   >

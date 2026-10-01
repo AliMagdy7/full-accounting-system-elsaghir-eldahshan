@@ -59,21 +59,6 @@ function formatDate(date?: string) {
   return formatDisplayDate(date);
 }
 
-function getWorkerProject(
-  worker: Worker,
-  projects: Project[],
-) {
-  return projects.find(
-    (project) =>
-      project.id === worker.currentProjectId,
-  );
-}
-
-function getWorkerSite(worker: Worker, sites: ProjectSite[]) {
-  if (!worker.currentSiteId) return undefined;
-  return sites.find((site) => site.id === worker.currentSiteId);
-}
-
 export default function WorkersPage() {
   const [workers, setWorkers] =
     useState<Worker[]>([]);
@@ -140,6 +125,16 @@ export default function WorkersPage() {
     );
   }, []);
 
+  const projectsById = useMemo(
+    () => new Map(projects.map((project) => [project.id, project])),
+    [projects],
+  );
+
+  const sitesById = useMemo(
+    () => new Map(sites.map((site) => [site.id, site])),
+    [sites],
+  );
+  
   const filteredWorkers = useMemo(() => {
     const normalizedSearch =
       search.trim().toLocaleLowerCase();
@@ -674,8 +669,11 @@ export default function WorkersPage() {
                     {filteredWorkers.map(
                       (worker) => {
                         const project =
-                          getWorkerProject(worker, projects);
-                        const site = getWorkerSite(worker, sites);
+                        projectsById.get(worker.currentProjectId);
+                        const site = worker.currentSiteId 
+                        ? 
+                        sitesById.get(worker.currentSiteId) 
+                        : undefined;
 
                         return (
                           <tr
@@ -784,8 +782,11 @@ export default function WorkersPage() {
                 {filteredWorkers.map(
                   (worker) => {
                     const project =
-                      getWorkerProject(worker, projects);
-                    const site = getWorkerSite(worker, sites);
+                    projectsById.get(worker.currentProjectId);
+                   const site = worker.currentSiteId 
+                   ? 
+                   sitesById.get(worker.currentSiteId) 
+                   : undefined;
 
                     return (
                       <Link
@@ -1042,7 +1043,7 @@ export default function WorkersPage() {
                   >
                     <option value="">اختر الموقع</option>
                     {sites.filter((site) => site.active).map((site) => {
-                      const project = projects.find((item) => item.id === site.projectId);
+                      const project = projectsById.get(site.projectId);
                       return (
                         <option key={site.id} value={site.id}>
                           {project?.name ? `${project.name} — ${site.name}` : site.name}

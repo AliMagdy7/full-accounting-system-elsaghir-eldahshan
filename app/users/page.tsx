@@ -8,12 +8,6 @@ import { hasPermission, type Permission } from "@/lib/auth-permissions";
 import type { SystemUser, UserRole } from "@/types/user";
 import { useRouter } from "next/navigation";
 
-const roleLabels: Record<UserRole, string> = {
-  admin: "Admin",
-  accountant: "Accountant",
-  viewer: "Viewer",
-};
-
 const permissionLabels: Record<Permission, string> = {
   view: "عرض البيانات",
   create: "إضافة",

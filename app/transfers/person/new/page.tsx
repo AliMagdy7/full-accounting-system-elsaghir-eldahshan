@@ -483,7 +483,7 @@ function NewTransferPageContent() {
 
   return (
     <AppShell>
-      <div className="mx-auto w-full max-w-4xl space-y-6">
+      <div className="app-page mx-auto w-full max-w-4xl space-y-6">
 
         {/* ================================================== */}
         {/* Page Header */}

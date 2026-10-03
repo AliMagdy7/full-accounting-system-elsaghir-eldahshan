@@ -523,7 +523,7 @@ export default function ContractorDetailsPage() {
 
   return (
     <AppShell>
-      <div dir="rtl" className="space-y-6">
+      <div dir="rtl" className="app-page space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link
             href="/contractors"

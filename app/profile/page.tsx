@@ -132,7 +132,7 @@ export default function ProfilePage() {
 
   return (
     <AppShell>
-      <div className="space-y-6">
+      <div className="app-page space-y-6">
         <section className="ui-fade-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
             <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-xl font-black text-white shadow-sm">

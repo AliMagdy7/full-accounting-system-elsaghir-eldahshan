@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowDownLeft,
   ArrowRight,
@@ -70,6 +71,7 @@ const movementTypes = [
 
 
 export default function NewCentralCustodyTransactionPage() {
+  const router = useRouter();
   const [movementType, setMovementType] =
     useState<MovementType>("in");
 
@@ -447,8 +449,7 @@ export default function NewCentralCustodyTransactionPage() {
     /*
      * الرجوع إلى كشف عهدتي أنا
      */
-    window.location.href =
-      "/custodies/central";
+    router.push("/custodies/central");
   };
 
   return (

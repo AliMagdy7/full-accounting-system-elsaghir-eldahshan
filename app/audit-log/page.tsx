@@ -15,6 +15,10 @@ const actionLabels: Record<AuditLog["action"], string> = {
   reverse: "عكس حركة",
   system: "نظام",
   user: "مستخدم",
+  company: "شركة",
+  settlement: "مستخلص",
+  company_check: "شيك شركة",
+  asset: "أصل",
 };
 
 const entityLabels: Record<AuditLog["entity"], string> = {
@@ -31,6 +35,11 @@ const entityLabels: Record<AuditLog["entity"], string> = {
   user: "مستخدم",
   contractor: "مقاول",
   project_site: "موقع مشروع",
+  company: "شركة",
+  settlement: "مستخلص",
+  company_check: "شيك شركة",
+  partner_financial_account: "حساب شريك",
+  company_asset: "أصل شركة",
 };
 
 export default function AuditLogPage() {
@@ -53,7 +62,7 @@ export default function AuditLogPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6">
+      <div className="app-page space-y-6">
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-4">

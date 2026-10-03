@@ -8,6 +8,11 @@ import { getWorkers, getWorkerSiteAssignments } from "@/lib/data/workers";
 import { getWorkerFinancialMovements } from "@/lib/data/worker-financial-movements";
 import { getContractors } from "@/lib/data/contractors";
 import { getContractorSiteAssignments, isContractorAssignedToSiteOnDate } from "@/lib/data/contractor-site-assignments";
+import { getCompanies } from "@/lib/data/companies";
+import { getSettlements, getSettlementPaidAmount as getSettlementCollectedAmount } from "@/lib/data/settlements";
+import { getCompanyChecks, normalizeCheckNumber } from "@/lib/data/company-checks";
+import { getPartnerFinancialAccounts } from "@/lib/data/partner-financial-accounts";
+import { getCompanyAssets, getCompanyAssetTransactions } from "@/lib/data/company-assets";
 
 export type IntegritySeverity = "error" | "warning";
 
@@ -37,6 +42,12 @@ export interface SystemIntegrityReport {
     contractorAssignments: number;
     workerAssignments: number;
     financialAccounts: number;
+    companies: number;
+    settlements: number;
+    companyChecks: number;
+    partnerFinancialAccounts: number;
+    companyAssets: number;
+    assetTransactions: number;
   };
 }
 
@@ -63,6 +74,12 @@ export function getSystemIntegrityReport(): SystemIntegrityReport {
   const contractorAssignments = contractors.flatMap((contractor) => getContractorSiteAssignments(contractor.id));
   const workerAssignments = workers.flatMap((worker) => getWorkerSiteAssignments(worker.id));
   const financialAccounts = getCustodyFinancialAccounts();
+  const companies = getCompanies();
+  const settlements = getSettlements();
+  const companyChecks = getCompanyChecks();
+  const partnerFinancialAccounts = getPartnerFinancialAccounts();
+  const companyAssets = getCompanyAssets();
+  const assetTransactions = getCompanyAssetTransactions();
 
   const projectIds = new Set(projects.map((item) => item.id));
   const workerIds = new Set(workers.map((item) => item.id));
@@ -71,7 +88,57 @@ export function getSystemIntegrityReport(): SystemIntegrityReport {
   const transactionIds = new Set(custodyTransactions.map((item) => item.id));
   const workerMovementIds = new Set(workerMovements.map((item) => item.id));
   const financialAccountIds = new Set(financialAccounts.map((item) => item.id));
+  const partnerAccountIds = new Set(partnerFinancialAccounts.map((item) => item.id));
   const issues: IntegrityIssue[] = [];
+
+  const companyIds = new Set(companies.map(item => item.id));
+  const checkNumbers = new Map<string, string>();
+  for (const check of companyChecks) {
+    const normalized = normalizeCheckNumber(check.number);
+    const previous = checkNumbers.get(normalized);
+    if (previous) issue(issues, "error", "CHECK_NUMBER_DUPLICATE", "company_check", `رقم الشيك ${check.number} مكرر في أكثر من سجل.`, check.id);
+    else checkNumbers.set(normalized, check.id);
+    if (!companyIds.has(check.companyId)) issue(issues, "error", "CHECK_COMPANY_MISSING", "company_check", "الشيك مرتبط بشركة غير موجودة.", check.id);
+    const settlement = settlements.find(item => item.id === check.settlementId);
+    if (!settlement) issue(issues, "error", "CHECK_SETTLEMENT_MISSING", "company_check", "الشيك مرتبط بمستخلص غير موجود.", check.id);
+    else if (settlement.companyId !== check.companyId) issue(issues, "error", "CHECK_SETTLEMENT_COMPANY_MISMATCH", "company_check", "الشركة في الشيك لا تطابق شركة المستخلص.", check.id);
+    if (check.amount <= 0) issue(issues, "error", "CHECK_AMOUNT_INVALID", "company_check", "قيمة الشيك يجب أن تكون أكبر من صفر.", check.id);
+    if (check.issueDate && check.dueDate && check.issueDate > check.dueDate) issue(issues, "error", "CHECK_DATE_RANGE", "company_check", `تاريخ استحقاق الشيك رقم ${check.number} يسبق تاريخ إصداره.`, check.id);
+    if (check.partnerAccountId && !partnerAccountIds.has(check.partnerAccountId)) issue(issues, "error", "CHECK_PARTNER_ACCOUNT_MISSING", "company_check", `الشيك رقم ${check.number} مرتبط بحساب شريك غير موجود.`, check.id);
+    if (check.partnerAccountId && check.financialAccountId) issue(issues, "error", "CHECK_MULTIPLE_DESTINATIONS", "company_check", `الشيك رقم ${check.number} مرتبط بحساب شريك وحساب مركزي في نفس الوقت.`, check.id);
+    if (check.status === "collected" && !check.partnerAccountId && (!check.financialAccountId || !check.custodyTransactionId)) issue(issues, "error", "CHECK_COLLECTION_LINK_MISSING", "company_check", "الشيك المحصل عندي بدون رابط حركة مالية مكتمل.", check.id);
+    if (check.status === "collected" && check.partnerAccountId && check.custodyTransactionId) issue(issues, "error", "PARTNER_CHECK_CENTRAL_TRANSACTION", "company_check", `الشيك رقم ${check.number} دخل حساب شريك لكنه مرتبط بحركة في العهدة المركزية.`, check.id);
+    if (check.status === "collected" && !check.partnerAccountId && !check.financialAccountId) issue(issues, "error", "COLLECTED_CHECK_DESTINATION_MISSING", "company_check", `الشيك رقم ${check.number} محصل بدون تحديد الحساب الذي دخل إليه.`, check.id);
+    if (check.custodyTransactionId && !transactionIds.has(check.custodyTransactionId)) issue(issues, "error", "CHECK_TRANSACTION_MISSING", "company_check", "حركة تحصيل الشيك غير موجودة.", check.id);
+  }
+
+  for (const asset of companyAssets) {
+    if (asset.quantity < -0.01) issue(issues, "error", "ASSET_NEGATIVE_QUANTITY", "company_asset", `الأصل ${asset.name} يحمل كمية سالبة.`, asset.id);
+    if (asset.totalCost < -0.01 || asset.currentValue < -0.01) issue(issues, "error", "ASSET_NEGATIVE_VALUE", "company_asset", `قيمة الأصل ${asset.name} غير صحيحة.`, asset.id);
+    const txs = assetTransactions.filter(item => item.assetId === asset.id);
+    const purchaseQty = txs.filter(item => item.type !== "sale").reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    const purchaseCost = txs.filter(item => item.type !== "sale").reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const soldQty = txs.filter(item => item.type === "sale").reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    if (soldQty > purchaseQty + 0.01) issue(issues, "error", "ASSET_SOLD_OVER_QUANTITY", "company_asset", `إجمالي بيع الأصل ${asset.name} أكبر من الكمية المشتراة.`, asset.id);
+    const expectedQty = Math.max(0, purchaseQty - soldQty);
+    const avgCost = purchaseQty > 0 ? purchaseCost / purchaseQty : 0;
+    const expectedCost = Math.max(0, purchaseCost - soldQty * avgCost);
+    if (Math.abs(asset.quantity - expectedQty) > 0.01) issue(issues, "error", "ASSET_QUANTITY_MISMATCH", "company_asset", `كمية الأصل ${asset.name} لا تطابق حركاته.`, asset.id);
+    if (Math.abs(asset.totalCost - expectedCost) > 0.01) issue(issues, "error", "ASSET_COST_MISMATCH", "company_asset", `تكلفة الأصل ${asset.name} لا تطابق حركات الشراء والبيع.`, asset.id);
+    for (const tx of txs) {
+      if (tx.amount <= 0 || tx.quantity <= 0) issue(issues, "error", "ASSET_TRANSACTION_INVALID", "company_asset_transaction", "حركة أصل بقيمة أو كمية غير صحيحة.", tx.id);
+      if (tx.financialAccountId && !financialAccountIds.has(tx.financialAccountId)) issue(issues, "error", "ASSET_TRANSACTION_ACCOUNT_MISSING", "company_asset_transaction", "حركة أصل مرتبطة بوسيلة دفع غير موجودة.", tx.id);
+    }
+  }
+
+  for (const settlement of settlements) {
+    if (!companyIds.has(settlement.companyId)) issue(issues, "error", "SETTLEMENT_COMPANY_MISSING", "settlement", "المستخلص مرتبط بشركة غير موجودة.", settlement.id);
+    if (settlement.workValue < 0 || settlement.deductions < 0 || settlement.deductions > settlement.workValue || Math.abs(settlement.netValue - (settlement.workValue - settlement.deductions)) > 0.01) issue(issues, "error", "SETTLEMENT_TOTAL_MISMATCH", "settlement", `صافي المستخلص رقم ${settlement.number} لا يساوي قيمة الأعمال ناقص الخصومات.`, settlement.id);
+    const settlementChecks = companyChecks.filter((check) => check.settlementId === settlement.id && check.status !== "cancelled" && check.status !== "returned");
+    const settlementChecksTotal = settlementChecks.reduce((sum, check) => sum + Number(check.amount || 0), 0);
+    if (settlementChecksTotal > settlement.netValue + 0.01) issue(issues, "error", "SETTLEMENT_CHECKS_OVER_NET", "settlement", `إجمالي الشيكات الفعالة للمستخلص رقم ${settlement.number} يتجاوز صافي المستخلص.`, settlement.id);
+    if (settlement.status === "paid" && getSettlementCollectedAmount(settlement.id) + 0.01 < settlement.netValue) issue(issues, "warning", "SETTLEMENT_PAID_WITH_REMAINING", "settlement", `المستخلص رقم ${settlement.number} حالته مدفوع بينما لا يزال به مبلغ غير محصل.`, settlement.id);
+  }
 
   for (const site of sites) {
     if (!projectIds.has(site.projectId)) {
@@ -142,10 +209,27 @@ export function getSystemIntegrityReport(): SystemIntegrityReport {
     }
   }
 
+  const financialAccountNames = new Map<string, string>();
+  for (const account of financialAccounts) {
+    const normalizedName = account.name.replace(/\s+/g, " ").trim().toLocaleLowerCase();
+    const key = `${account.custodyId}:${normalizedName}`;
+    if (financialAccountNames.has(key)) {
+      issue(issues, "error", "FINANCIAL_ACCOUNT_NAME_DUPLICATE", "custody_financial_account", `وسيلة الدفع ${account.name} مكررة داخل نفس العهدة.`, account.id);
+    } else {
+      financialAccountNames.set(key, account.id);
+    }
+  }
+
   for (const account of financialAccounts) {
     if (!custodyIds.has(account.custodyId)) issue(issues, "error", "FINANCIAL_ACCOUNT_CUSTODY_MISSING", "custody_financial_account", "وسيلة دفع مرتبطة بعهدة غير موجودة.", account.id);
     if (account.balance < 0) issue(issues, "error", "FINANCIAL_ACCOUNT_NEGATIVE", "custody_financial_account", `وسيلة الدفع ${account.name} تحمل رصيدًا سالبًا.`, account.id);
     if (Math.abs(account.balance - (account.totalIn - account.totalOut)) > 0.01) issue(issues, "error", "FINANCIAL_ACCOUNT_TOTAL_MISMATCH", "custody_financial_account", `الرصيد الحالي لوسيلة الدفع ${account.name} لا يساوي إجمالي الداخل ناقص الخارج.`, account.id);
+  }
+
+
+  for (const account of partnerFinancialAccounts) {
+    if (account.balance < -0.01) issue(issues, "error", "PARTNER_ACCOUNT_NEGATIVE", "partner_financial_account", `حساب ${account.name} يحمل رصيدًا سالبًا.`, account.id);
+    if (Math.abs(account.balance - (account.totalIn - account.totalOut)) > 0.01) issue(issues, "error", "PARTNER_ACCOUNT_TOTAL_MISMATCH", "partner_financial_account", `الرصيد الحالي لحساب ${account.name} لا يساوي إجمالي الداخل ناقص الخارج.`, account.id);
   }
 
   for (const custody of custodies) {
@@ -210,6 +294,32 @@ export function getSystemIntegrityReport(): SystemIntegrityReport {
     }
   }
 
+  for (const asset of companyAssets) {
+    if (asset.quantity < -0.01) issue(issues, "error", "ASSET_NEGATIVE_QUANTITY", "company_asset", `الأصل ${asset.name} يحمل كمية سالبة.`, asset.id);
+    if (asset.totalCost < -0.01 || asset.currentValue < -0.01) issue(issues, "error", "ASSET_NEGATIVE_VALUE", "company_asset", `قيمة الأصل ${asset.name} غير صحيحة.`, asset.id);
+    const txs = assetTransactions.filter(item => item.assetId === asset.id);
+    const purchaseQty = txs.filter(item => item.type !== "sale").reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    const purchaseCost = txs.filter(item => item.type !== "sale").reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const soldQty = txs.filter(item => item.type === "sale").reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    if (soldQty > purchaseQty + 0.01) issue(issues, "error", "ASSET_SOLD_OVER_QUANTITY", "company_asset", `إجمالي بيع الأصل ${asset.name} أكبر من الكمية المشتراة.`, asset.id);
+    const expectedQty = Math.max(0, purchaseQty - soldQty);
+    const avgCost = purchaseQty > 0 ? purchaseCost / purchaseQty : 0;
+    const expectedCost = Math.max(0, purchaseCost - soldQty * avgCost);
+    if (Math.abs(asset.quantity - expectedQty) > 0.01) issue(issues, "error", "ASSET_QUANTITY_MISMATCH", "company_asset", `كمية الأصل ${asset.name} لا تطابق حركاته.`, asset.id);
+    if (Math.abs(asset.totalCost - expectedCost) > 0.01) issue(issues, "error", "ASSET_COST_MISMATCH", "company_asset", `تكلفة الأصل ${asset.name} لا تطابق حركات الشراء والبيع.`, asset.id);
+    for (const tx of txs) {
+      if (tx.amount <= 0 || tx.quantity <= 0) issue(issues, "error", "ASSET_TRANSACTION_INVALID", "company_asset_transaction", "حركة أصل بقيمة أو كمية غير صحيحة.", tx.id);
+      if (tx.financialAccountId && !financialAccountIds.has(tx.financialAccountId)) issue(issues, "error", "ASSET_TRANSACTION_ACCOUNT_MISSING", "company_asset_transaction", "حركة أصل مرتبطة بوسيلة دفع غير موجودة.", tx.id);
+    }
+  }
+
+  for (const settlement of settlements) {
+    const linkedChecks = companyChecks.filter(item => item.settlementId === settlement.id && item.status !== "cancelled" && item.status !== "returned");
+    const linkedTotal = linkedChecks.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    if (linkedTotal > settlement.netValue + 0.01) issue(issues, "error", "SETTLEMENT_CHECKS_OVERPAID", "settlement", `إجمالي الشيكات للمستخلص رقم ${settlement.number} يتجاوز صافي المستخلص.`, settlement.id);
+    if (settlement.status === "paid" && Math.abs(getSettlementCollectedAmount(settlement.id) - settlement.netValue) > 0.01) issue(issues, "warning", "SETTLEMENT_PAID_WITH_BALANCE", "settlement", `المستخلص رقم ${settlement.number} حالته مدفوع لكن لم يتم تحصيل كامل قيمته.`, settlement.id);
+  }
+
   const errors = issues.filter((item) => item.severity === "error").length;
   const warnings = issues.filter((item) => item.severity === "warning").length;
 
@@ -231,6 +341,12 @@ export function getSystemIntegrityReport(): SystemIntegrityReport {
       contractorAssignments: contractorAssignments.length,
       workerAssignments: workerAssignments.length,
       financialAccounts: financialAccounts.length,
+      companies: companies.length,
+      settlements: settlements.length,
+      companyChecks: companyChecks.length,
+      partnerFinancialAccounts: partnerFinancialAccounts.length,
+      companyAssets: companyAssets.length,
+      assetTransactions: assetTransactions.length,
     },
   };
 }

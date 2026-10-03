@@ -1375,7 +1375,7 @@ export default function ReportsPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6">
+      <div className="app-page space-y-6">
         {/* Page Header */}
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">

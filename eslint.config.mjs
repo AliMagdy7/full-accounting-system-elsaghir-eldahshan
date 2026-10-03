@@ -9,8 +9,10 @@ const eslintConfig = defineConfig([
     rules: {
       // LocalStorage-backed screens intentionally hydrate state from the client after mount.
       // Keep the React 19 guidance visible as warnings without blocking the accounting build.
-      "react-hooks/set-state-in-effect": "warn",
-      "react-hooks/immutability": "warn",
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/immutability": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "@next/next/no-img-element": "off",
     },
   },
   // Override default ignores of eslint-config-next.

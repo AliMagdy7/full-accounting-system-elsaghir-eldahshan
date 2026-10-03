@@ -8,7 +8,6 @@ import {
   ArrowRight,
   BriefcaseBusiness,
   CalendarDays,
-  ChevronLeft,
   CircleDollarSign,
   Edit3,
   History,
@@ -126,75 +125,8 @@ function getStatusClasses(
   }
 }
 
-function getTransactionTypeLabel(
-  transaction: CustodyTransaction,
-): string {
-  switch (transaction.type) {
-    case "in":
-      return "وارد";
 
-    case "out":
-      return "صرف";
 
-    case "transfer":
-      return "تحويل";
-
-    default:
-      return "حركة";
-  }
-}
-
-function getTransactionTypeClasses(
-  transaction: CustodyTransaction,
-): string {
-  switch (transaction.type) {
-    case "in":
-      return "bg-emerald-50 text-emerald-600";
-
-    case "out":
-      return "bg-red-50 text-red-600";
-
-    case "transfer":
-      return "bg-blue-50 text-blue-600";
-
-    default:
-      return "bg-slate-100 text-slate-600";
-  }
-}
-
-function getTransactionAmount(
-  transaction: CustodyTransaction,
-): number {
-  if (
-    transaction.type === "out" ||
-    transaction.type === "transfer"
-  ) {
-    return -Math.abs(transaction.amount);
-  }
-
-  return Math.abs(transaction.amount);
-}
-
-function formatTransactionAmount(
-  transaction: CustodyTransaction,
-): string {
-  const amount =
-    getTransactionAmount(transaction);
-
-  const absoluteAmount =
-    Math.abs(amount);
-
-  const prefix =
-    amount > 0
-      ? "+"
-      : amount < 0
-        ? "-"
-        : "";
-
-  return `${prefix}${formatAmount(
-    absoluteAmount,
-  )}`;
-}
 
 function getWorkerMovementTypeLabel(
   type: string,
@@ -678,7 +610,7 @@ export default function ProjectDetailsPage() {
     <AppShell>
       <div
         dir="rtl"
-        className="space-y-6"
+        className="app-page space-y-6"
       >
         {/* Header */}
 

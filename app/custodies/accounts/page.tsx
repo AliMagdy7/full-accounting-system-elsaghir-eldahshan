@@ -86,7 +86,7 @@ export default function CustodyAccountsPage() {
     <AppShell>
       <div
         dir="rtl"
-        className="mx-auto w-full max-w-5xl space-y-6"
+        className="app-page mx-auto w-full max-w-5xl space-y-6"
       >
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

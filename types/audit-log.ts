@@ -5,7 +5,11 @@ export type AuditAction =
   | "transfer"
   | "reverse"
   | "system"
-  | "user";
+  | "user"
+  | "company"
+  | "settlement"
+  | "company_check"
+  | "asset"
 
 export type AuditEntity =
   | "expense"
@@ -20,14 +24,24 @@ export type AuditEntity =
   | "project_site"
   | "transfer"
   | "system"
-  | "user";
+  | "user"
+  | "company"
+  | "settlement"
+  | "company_check"
+  | "partner_financial_account"
+  | "company_asset";
 
 export type AuditActorRole =
   | "admin"
   | "accountant"
   | "viewer"
   | "system"
-  | "user";
+  | "user"
+  | "company"
+  | "settlement"
+  | "company_check"
+  | "partner_financial_account"
+  | "company_asset";
 
 export interface AuditActor {
   userId: string;

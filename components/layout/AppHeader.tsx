@@ -16,6 +16,7 @@ import {
   Building2,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   useEffect,
   useMemo,
@@ -55,6 +56,7 @@ type SearchResult = {
 export default function AppHeader({
   onMenuClick,
 }: AppHeaderProps) {
+  const router = useRouter();
   const [searchOpen, setSearchOpen] =
     useState(false);
 
@@ -798,7 +800,7 @@ export default function AppHeader({
                           clearCurrentSession();
                           setCurrentSession(null);
                           setUserMenuOpen(false);
-                          window.location.href = "/login";
+                          router.push("/login");
                         },
                       );
                     }}

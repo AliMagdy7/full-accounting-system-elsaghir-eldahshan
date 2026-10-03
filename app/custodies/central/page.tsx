@@ -643,7 +643,7 @@ export default function CentralCustodyPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6">
+      <div className="app-page space-y-6">
 
         {/* ================================================== */}
         {/* Header */}

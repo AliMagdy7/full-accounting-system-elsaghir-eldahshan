@@ -587,7 +587,7 @@ export default function CustodiesPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6">
+      <div className="app-page space-y-6">
 
         {/* Page Header */}
 

@@ -1,7 +1,6 @@
 import type {
   AuditAction,
   AuditActor,
-  AuditActorRole,
   AuditEntity,
   AuditLog,
 } from "@/types/audit-log";

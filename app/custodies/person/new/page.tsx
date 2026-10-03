@@ -74,7 +74,7 @@ export default function NewPersonCustodyPage() {
 
   return (
     <AppShell>
-      <div className="mx-auto w-full max-w-4xl space-y-6">
+      <div className="app-page mx-auto w-full max-w-4xl space-y-6">
         {/* Page Header */}
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex items-start gap-3">

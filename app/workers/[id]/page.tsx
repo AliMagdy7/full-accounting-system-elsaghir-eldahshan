@@ -456,7 +456,6 @@ export default function WorkerDetailsPage() {
 
   useEffect(() => {
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workerId]);
 
   /*

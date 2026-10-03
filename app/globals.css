@@ -205,3 +205,146 @@ input[type="number"],
     transition-duration: .01ms !important;
   }
 }
+
+/* ---------- Unified page system ---------- */
+.app-page {
+  --page-gap: 1.25rem;
+  min-width: 0;
+  padding-bottom: 1.5rem;
+}
+
+.app-page > section,
+.app-page > .page-card,
+.app-page > .app-table-card {
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.app-page > section,
+.app-page > .page-card { transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+.app-page > section:hover,
+.app-page > .page-card:hover { border-color: #d5deea; box-shadow: 0 12px 36px rgba(15,23,42,.07); }
+
+.app-page .page-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  color: #2563eb;
+  font-size: .75rem;
+  font-weight: 900;
+}
+
+.app-page .page-title {
+  margin-top: .35rem;
+  color: #0f172a;
+  font-size: clamp(1.45rem, 2vw, 2rem);
+  font-weight: 900;
+  letter-spacing: -.035em;
+}
+
+.app-page .page-description {
+  margin-top: .4rem;
+  max-width: 58rem;
+  color: #64748b;
+  font-size: .82rem;
+  font-weight: 600;
+  line-height: 1.8;
+}
+
+.app-page .page-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.app-page .page-stat {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: linear-gradient(145deg, #fff, #f8fafc);
+  padding: 1rem;
+  box-shadow: 0 6px 22px rgba(15,23,42,.045);
+}
+
+.app-page .page-stat::after {
+  content: "";
+  position: absolute;
+  inset: auto -2rem -2.5rem auto;
+  width: 6rem;
+  height: 6rem;
+  border-radius: 999px;
+  background: rgba(37,99,235,.05);
+}
+
+.app-page .page-stat-label { color: #64748b; font-size: .72rem; font-weight: 800; }
+.app-page .page-stat-value { margin-top: .35rem; color: #0f172a; font-size: 1.55rem; font-weight: 900; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.app-page .page-stat-note { margin-top: .3rem; color: #94a3b8; font-size: .68rem; font-weight: 700; }
+
+.app-page .page-table {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background: #fff;
+  box-shadow: var(--shadow-card);
+}
+
+.app-page .page-table-wrap { overflow-x: auto; }
+.app-page .page-table tbody tr { border-top: 1px solid #eef2f7; }
+.app-page .page-table tbody tr:hover { background: #f8fafc; }
+.app-page .page-table th { padding: .8rem 1rem; }
+.app-page .page-table td { padding: .9rem 1rem; }
+
+.app-page .page-filter {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: #fff;
+  padding: .9rem;
+  box-shadow: 0 5px 18px rgba(15,23,42,.035);
+}
+
+.app-page .page-empty {
+  display: flex;
+  min-height: 11rem;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #94a3b8;
+  text-align: center;
+  font-size: .82rem;
+  font-weight: 800;
+}
+
+.app-page .action-primary,
+.app-page .action-secondary,
+.app-page .action-danger {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  border-radius: .8rem;
+  padding: 0 .95rem;
+  font-size: .78rem;
+  font-weight: 900;
+  transition: transform .18s ease, background-color .18s ease, border-color .18s ease;
+}
+.app-page .action-primary { background: #0f172a; color: #fff; box-shadow: 0 6px 18px rgba(15,23,42,.12); }
+.app-page .action-primary:hover { background: #1e293b; transform: translateY(-1px); }
+.app-page .action-secondary { border: 1px solid var(--border); background: #fff; color: #334155; }
+.app-page .action-secondary:hover { background: #f8fafc; border-color: #cbd5e1; }
+.app-page .action-danger { border: 1px solid #fecaca; background: #fff; color: #dc2626; }
+.app-page .action-danger:hover { background: #fef2f2; }
+
+@media (max-width: 767px) {
+  .app-page { --page-gap: 1rem; }
+  .app-page > section,
+  .app-page > .page-card,
+  .app-page .page-table { border-radius: 1rem; }
+  .app-page .page-title { font-size: 1.4rem; }
+  .app-page .page-stat-value { font-size: 1.35rem; }
+}

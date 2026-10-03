@@ -193,7 +193,7 @@ export default function ContractorsPage() {
 
   return (
     <AppShell>
-      <div dir="rtl" className="space-y-6">
+      <div dir="rtl" className="app-page space-y-6">
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 ui-fade-up">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>

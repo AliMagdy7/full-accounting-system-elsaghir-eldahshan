@@ -1,5 +1,5 @@
 import { assertCurrentUserPermission } from "@/lib/permission-check";
-import { updateCustodyBalance } from "@/lib/data/custodies";
+import { getCustodyById, updateCustodyBalance, reverseCustodyBalance } from "@/lib/data/custodies";
 import type { CustodyFinancialAccount } from "@/types/custody-financial-account";
 import { addAuditLog } from "@/lib/data/audit-logs";
 
@@ -50,6 +50,14 @@ export function addCustodyFinancialAccount(input: {
   const name = input.name.trim();
   if (!name) throw new Error("اسم وسيلة الدفع مطلوب.");
 
+  const accounts = readAccounts();
+  const normalizedName = name.replace(/\s+/g, " ").toLocaleLowerCase();
+  if (accounts.some((account) => account.custodyId === input.custodyId && account.name.replace(/\s+/g, " ").trim().toLocaleLowerCase() === normalizedName)) {
+    throw new Error("يوجد وسيلة دفع بنفس الاسم داخل هذه العهدة بالفعل.");
+  }
+
+  if (!getCustodyById(input.custodyId)) throw new Error("العهدة المحددة غير موجودة.");
+
   const openingBalance = Number(input.openingBalance ?? 0);
   if (!Number.isFinite(openingBalance) || openingBalance < 0) {
     throw new Error("الرصيد الافتتاحي يجب أن يكون صفرًا أو أكبر.");
@@ -68,10 +76,20 @@ export function addCustodyFinancialAccount(input: {
     updatedAt: now,
   };
 
-  saveAccounts([...readAccounts(), account]);
-
   if (openingBalance > 0) {
-    updateCustodyBalance(input.custodyId, openingBalance, "in");
+    const updatedCustody = updateCustodyBalance(input.custodyId, openingBalance, "in");
+    if (!updatedCustody) throw new Error("تعذر تحديث رصيد العهدة لإنشاء الرصيد الافتتاحي.");
+  }
+
+  try {
+    saveAccounts([...accounts, account]);
+  } catch (error) {
+    if (openingBalance > 0) {
+      try {
+        reverseCustodyBalance(input.custodyId, openingBalance, "in");
+      } catch { /* preserve original storage error */ }
+    }
+    throw error;
   }
 
   addAuditLog({

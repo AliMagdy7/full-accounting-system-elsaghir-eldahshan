@@ -20,30 +20,19 @@ import { canCurrentUser } from "@/lib/permission-check";
 import {
   getCustodies,
   getCustodyById,
-  reverseCustodyBalance,
-  updateCustodyBalance,
 } from "@/lib/data/custodies";
 import {
-  addCustodyTransaction,
-  deleteCustodyTransaction,
   getCustodyTransactions,
 } from "@/lib/data/custody-transactions";
 import {
   getCustodyFinancialAccountById,
   getCustodyFinancialAccounts,
-  reverseCustodyFinancialAccountBalance,
-  updateCustodyFinancialAccountBalance,
 } from "@/lib/data/custody-financial-accounts";
 import {
   addExpenseCategory,
   getExpenseCategories,
 } from "@/lib/data/expense-categories";
-import {
-  addExpense,
-  deleteExpense,
-  getExpenses,
-  updateExpense,
-} from "@/lib/data/expenses";
+import { getExpenses } from "@/lib/data/expenses";
 import { getProjects } from "@/lib/data/projects";
 import {
   createWorkerAdvanceWithPayment,
@@ -152,111 +141,6 @@ function getExpenseTransaction(
     .sort((a, b) =>
       b.createdAt.localeCompare(a.createdAt),
     )[0];
-}
-
-function reversePayment(
-  custodyId: string,
-  amount: number,
-  financialAccountId?: string,
-) {
-  if (financialAccountId) {
-    reverseCustodyFinancialAccountBalance(
-      financialAccountId,
-      amount,
-      "out",
-    );
-  }
-
-  reverseCustodyBalance(
-    custodyId,
-    amount,
-    "out",
-  );
-}
-
-function applyPayment(
-  draft: ExpenseDraft,
-): CustodyTransaction {
-  const custody = getCustodyById(draft.custodyId);
-
-  if (!custody) {
-    throw new Error("العهدة الدافعة غير موجودة.");
-  }
-
-  updateCustodyBalance(
-    custody.id,
-    draft.amount,
-    "out",
-  );
-
-  try {
-    if (
-      custody.id === "central" &&
-      draft.financialAccountId
-    ) {
-      updateCustodyFinancialAccountBalance(
-        draft.financialAccountId,
-        draft.amount,
-        "out",
-      );
-    }
-  } catch (error) {
-    reverseCustodyBalance(
-      custody.id,
-      draft.amount,
-      "out",
-    );
-    throw error;
-  }
-
-  try {
-    const now = new Date().toISOString();
-
-    return addCustodyTransaction({
-      id: crypto.randomUUID(),
-      custodyId: custody.id,
-      type: "out",
-      amount: draft.amount,
-      date: draft.date,
-      description: draft.description.trim(),
-      source:
-        draft.movementType === "contractor_advance"
-          ? "سلفة مقاول"
-          : "مصروف",
-      financialAccountId:
-        draft.financialAccountId,
-      ...(draft.projectId
-        ? { projectId: draft.projectId }
-        : {}),
-      ...(draft.contractorId
-        ? { contractorId: draft.contractorId }
-        : {}),
-      ...(draft.siteId
-        ? { siteId: draft.siteId }
-        : {}),
-      createdAt: now,
-      updatedAt: now,
-    });
-  } catch (error) {
-    if (
-      custody.id === "central" &&
-      draft.financialAccountId
-    ) {
-      reverseCustodyFinancialAccountBalance(
-        draft.financialAccountId,
-        draft.amount,
-        "out",
-      );
-    }
-
-    reverseCustodyBalance(
-      custody.id,
-      draft.amount,
-      "out",
-    );
-
-    throw error;
-  }
 }
 
 function normalizeDraft(

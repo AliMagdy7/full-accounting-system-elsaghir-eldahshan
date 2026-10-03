@@ -20,6 +20,10 @@ import {
   X,
   ShieldCheck,
   History,
+  Building2,
+  FileCheck2,
+  BadgeDollarSign,
+  PackageOpen,
 } from "lucide-react";
 
 interface AppSidebarProps {
@@ -54,6 +58,31 @@ const menuItems = [
     href: "/contractors",
   },
   {
+    title: "الشركات",
+    icon: Building2,
+    href: "/companies",
+  },
+  {
+    title: "المستخلصات",
+    icon: FileCheck2,
+    href: "/settlements",
+  },
+  {
+    title: "الشيكات",
+    icon: BadgeDollarSign,
+    href: "/checks",
+  },
+  {
+    title: "أصول الشركة",
+    icon: PackageOpen,
+    href: "/assets",
+  },
+  {
+    title: "حسابات الحجاج",
+    icon: Wallet,
+    href: "/partner-accounts",
+  },
+  {
     title: "المصروفات",
     icon: Receipt,
     href: "/expenses",
@@ -67,6 +96,11 @@ const menuItems = [
     title: "التقارير",
     icon: BarChart3,
     href: "/reports",
+  },
+  {
+    title: "تقارير الشركات",
+    icon: FileCheck2,
+    href: "/reports/company-settlements",
   },
   {
     title: "الإعدادات",

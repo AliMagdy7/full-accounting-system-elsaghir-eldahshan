@@ -1542,7 +1542,8 @@ export default function WorkerDetailsPage() {
             </div>
             <div className={`rounded-2xl border p-4 ${currentBalance >= 0 ? "border-emerald-100 bg-emerald-50/50" : "border-red-100 bg-red-50/50"}`}>
               <p className="text-[11px] font-bold text-slate-500">الرصيد الإجمالي الحالي</p>
-              <p className={`mt-2 text-2xl font-extrabold ${currentBalance >= 0 ? "text-emerald-600" : "text-red-600"}`}>{currentBalance > 0 ? "+" : ""}{formatAmount(currentBalance)} <span className="text-xs text-slate-400">جنيه</span></p>
+              <p className={`mt-2 text-2xl font-extrabold ${currentBalance >= 0 ? "text-emerald-600" : "text-red-600"}`}>{currentBalance > 0 ? "+" : ""}{formatAmount(currentBalance)} <span className="text-xs text-slate-400">جنيه</span>
+              </p>
             </div>
           </div>
 
@@ -1599,10 +1600,22 @@ export default function WorkerDetailsPage() {
                     </div>
 
                     <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                      <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-3"><p className="text-[10px] font-bold text-slate-500">الأساسي</p><p className="mt-1 text-lg font-extrabold text-blue-600">{formatAmount(site.baseSalary)} جنيه</p></div>
-                      <div className="rounded-xl border border-red-100 bg-red-50/50 p-3"><p className="text-[10px] font-bold text-slate-500">خصم الغياب</p><p className="mt-1 text-lg font-extrabold text-red-600">{formatAmount(site.salaryDeduction)} جنيه</p></div>
-                      <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-3"><p className="text-[10px] font-bold text-slate-500">السلف المصروفة</p><p className="mt-1 text-lg font-extrabold text-amber-700">{formatAmount(site.advance)} جنيه</p></div>
-                      <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-3"><p className="text-[10px] font-bold text-slate-500">الراتب المصروف</p><p className="mt-1 text-lg font-extrabold text-emerald-600">{formatAmount(site.salaryPaid)} جنيه</p></div>
+                      <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-3">
+                      <p className="text-[10px] font-bold text-slate-500">الأساسي</p>
+                      <p className="mt-1 text-lg font-extrabold text-blue-600">{formatAmount(site.baseSalary)} جنيه</p>
+                      </div>
+                      <div className="rounded-xl border border-red-100 bg-red-50/50 p-3">
+                      <p className="text-[10px] font-bold text-slate-500">خصم الغياب</p>
+                      <p className="mt-1 text-lg font-extrabold text-red-600">{formatAmount(site.salaryDeduction)} جنيه</p>
+                      </div>
+                      <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-3">
+                      <p className="text-[10px] font-bold text-slate-500">السلف المصروفة</p>
+                      <p className="mt-1 text-lg font-extrabold text-amber-700">{formatAmount(site.advance)} جنيه</p>
+                      </div>
+                      <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-3">
+                      <p className="text-[10px] font-bold text-slate-500">الراتب المصروف</p>
+                      <p className="mt-1 text-lg font-extrabold text-emerald-600">{formatAmount(site.salaryPaid)} جنيه</p>
+                      </div>
                     </div>
 
                     <div className="mt-3 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-start sm:justify-between">
@@ -2034,8 +2047,6 @@ export default function WorkerDetailsPage() {
                 </p>
               </div>
             )}
-
-
 
 
             <div className="mt-5 flex justify-end">

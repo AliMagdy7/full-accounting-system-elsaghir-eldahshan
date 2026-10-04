@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
+import AppShell from "@/components/layout/AppShell";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,7 +19,11 @@ export const metadata: Metadata = {
   description: "نظام الإدارة والمحاسبة للصغير والدهشان للمقاولات العامة",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
   return (
     <html
       lang="ar"
@@ -26,7 +31,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Suspense fallback={null}>
+          <AppShell>{children}</AppShell>
+        </Suspense>
+      </body>
     </html>
   );
 }

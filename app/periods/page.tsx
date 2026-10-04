@@ -1,2 +1,17 @@
-"use client"; import {useState} from "react"; import EnterpriseShell from "@/components/enterprise/EnterpriseShell"; import {getPeriodLocks,isPeriodClosed,reopenPeriod,setPeriodClosed} from "@/lib/data/enterprise";
-export default function Periods(){const [month,setMonth]=useState(new Date().toISOString().slice(0,7));const [reason,setReason]=useState("");const [rows,setRows]=useState(getPeriodLocks());const refresh=()=>setRows(getPeriodLocks());return <EnterpriseShell title="إقفال الفترات" description="اقفل الشهر بعد المراجعة لمنع تعديل الحركات المالية والمرتبات والضرائب داخله."><section className="rounded-3xl border bg-white p-5 shadow-sm"><div className="flex flex-wrap gap-3"><input type="month" value={month} onChange={e=>setMonth(e.target.value)} className="rounded-xl border p-3"/><input value={reason} onChange={e=>setReason(e.target.value)} placeholder="سبب الإقفال" className="min-w-64 rounded-xl border p-3"/><button onClick={()=>{setPeriodClosed(month,reason);refresh()}} className="rounded-xl bg-slate-950 px-5 font-bold text-white">إقفال الفترة</button><button onClick={()=>{reopenPeriod(month);refresh()}} className="rounded-xl border px-5 font-bold">فتح الفترة</button></div><div className="mt-6 overflow-auto"><table className="w-full text-sm"><thead><tr className="border-b"><th className="p-3 text-right">الفترة</th><th className="p-3 text-right">الحالة</th><th className="p-3 text-right">تاريخ الإقفال</th><th className="p-3 text-right">السبب</th></tr></thead><tbody>{rows.map(r=><tr key={r.id} className="border-b"><td className="p-3 font-bold">{r.month}</td><td className="p-3">{r.status==="closed"?"مغلقة":"مفتوحة"}</td><td className="p-3">{r.closedAt||"-"}</td><td className="p-3">{r.reason||"-"}</td></tr>)}</tbody></table></div><div className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm">الفترة الحالية: <b>{isPeriodClosed(month)?"مغلقة — أي حركة جديدة أو تعديل عليها مرفوض":"مفتوحة"}</b></div></section></EnterpriseShell>}
+"use client";
+import {useState} from "react";
+import {getPeriods,setPeriodStatus} from "@/lib/data/finance-extensions";
+import {ExtensionPage} from "@/components/ui/ExtensionPage";
+export default function Periods(){
+const [month,setMonth]=useState(new Date().toISOString().slice(0,7));
+const rows=getPeriods();
+return <ExtensionPage title="إقفال الفترات" description="قفل الشهر يمنع العمليات المالية عليه إلا بإعادة فتحه بصلاحية الإدارة.">
+<div className="rounded-2xl border bg-white p-5">
+<div className="flex flex-wrap gap-3">
+<input type="month" value={month} onChange={e=>setMonth(e.target.value)} className="rounded-xl border p-3"/>
+<button onClick={()=>setPeriodStatus(month,"closed","إقفال الفترة")} className="rounded-xl bg-slate-900 px-5 py-3 font-bold text-white">إقفال الفترة</button>
+<button onClick={()=>setPeriodStatus(month,"open")} className="rounded-xl border px-5 py-3 font-bold">فتح الفترة</button>
+</div>
+<div className="mt-6 space-y-3">{rows.map(x=><div key={x.id} className="flex justify-between rounded-xl border p-4"><span>{x.month}</span><b className={x.status==="closed"?"text-red-600":"text-emerald-600"}>{x.status==="closed"?"مقفلة":"مفتوحة"}</b></div>)}</div>
+</div>
+</ExtensionPage>}

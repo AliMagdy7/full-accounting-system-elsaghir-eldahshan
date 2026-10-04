@@ -1,6 +1,0 @@
-export interface PayrollRecord { id:string; workerId:string; month:string; presentDays:number; absentDays:number; overtimeHours:number; overtimeAmount:number; deductions:number; allowances:number; advance:number; gross:number; net:number; paid:number; notes:string; status:"draft"|"approved"|"paid"; createdAt:string; updatedAt:string }
-export interface TaxEntry { id:string; date:string; type:"vat_output"|"vat_input"|"withholding"|"other"; reference:string; description:string; taxableAmount:number; taxRate:number; taxAmount:number; paid:number; status:"open"|"settled"; createdAt:string; updatedAt:string }
-export interface DocumentRecord { id:string; title:string; category:string; entityType:string; entityId?:string; description:string; fileName?:string; fileDataUrl?:string; tags:string[]; createdAt:string; updatedAt:string }
-export interface PeriodLock { id:string; month:string; status:"open"|"closed"; closedAt?:string; closedBy?:string; reason?:string }
-export interface TransactionLock { id:string; transactionId:string; entity:string; reason:string; lockedAt:string; lockedBy:string }
-export interface BackupSchedule { enabled:boolean; frequency:"daily"|"weekly"; hour:number; keep:number; lastRunAt?:string }

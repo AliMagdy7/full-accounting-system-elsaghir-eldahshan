@@ -2,6 +2,7 @@ import { assertCurrentUserPermission } from "@/lib/permission-check";
 import type { Expense } from "@/types/expense";
 import { addAuditLog } from "@/lib/data/audit-logs";
 import { getCustodyTransactionById } from "@/lib/data/custody-transactions";
+import { assertTransactionEditable } from "@/lib/data/system-controls";
 
 const STORAGE_KEY = "elsaghir-eldahshan-expenses";
 
@@ -82,6 +83,7 @@ export function addExpense(
   expense: Expense,
 ): Expense {
   assertCurrentUserPermission("create");
+  assertTransactionEditable(expense.date);
   if (expense.movementType === "worker_advance") {
     throw new Error("سلفة العامل يجب أن تسجل من حركة العامل المرتبطة بالعهدة، وليس كمصروف وهمي.");
   }
@@ -122,6 +124,9 @@ export function updateExpense(
   updates: Partial<Expense>,
 ): Expense | undefined {
   assertCurrentUserPermission("update");
+  const current = readExpenses().find((expense) => expense.id === id);
+  if (current) assertTransactionEditable(current.date);
+  if (updates.date) assertTransactionEditable(updates.date);
   const expenses = readExpenses();
 
   const index = expenses.findIndex(
@@ -162,6 +167,8 @@ export function deleteExpense(
   id: string,
 ): boolean {
   assertCurrentUserPermission("delete");
+  const current = readExpenses().find((expense) => expense.id === id);
+  if (current) assertTransactionEditable(current.date);
   const expenses = readExpenses();
   const nextExpenses = expenses.filter(
     (expense) => expense.id !== id,

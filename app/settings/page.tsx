@@ -40,11 +40,12 @@ const defaultCompany: CompanySettings = {
 const settingsSections = [
   { title: "الملف الشخصي", description: "تعديل الاسم وبيانات الحساب وكلمة المرور الحالية.", icon: UserRound, href: "/profile" },
   { title: "بيانات الشركة", description: "بيانات الشركة التي تظهر في التقارير والطباعة.", icon: Building2 },
-  { title: "المستخدمون والصلاحيات", description: "إدارة المستخدمين والأدوار وصلاحيات الوصول.", icon: Users, href: "/users" },
-  { title: "سجل العمليات", description: "مراجعة من قام بالإضافة أو التعديل ومتى تم ذلك.", icon: History, href: "/audit-log" },
+  { title: "المستخدمون والصلاحيات", description: "إدارة المستخدمين والأدوار ومصفوفة الصلاحيات المرتبطة بهم.", icon: Users, href: "/users" },
+  { title: "سجل العمليات", description: "مراجعة من قام بالإضافة أو التعديل ومتى تم ذلك.", icon: History, href: "/audit" },
   { title: "الأمان", description: "حالة الحساب والصلاحيات المحلية في نسخة الواجهة الحالية.", icon: LockKeyhole },
-  { title: "النسخ والبيانات", description: "إنشاء نسخة احتياطية واستعادة بيانات النظام المحلية.", icon: Database },
-  { title: "التقارير والتصدير", description: "التقارير الحالية متاحة مع التصفية والتصدير CSV/Excel والطباعة.", icon: FileSpreadsheet, href: "/reports" },
+  { title: "النسخ الاحتياطي التلقائي", description: "إدارة تشغيل النسخ التلقائي وتكراره ومراجعة آخر نسخة.", icon: Database, href: "/backup" },
+  { title: "التصدير والاستيراد", description: "تصدير بيانات النظام واستعادة نسخة كاملة بعد التحقق.", icon: FileSpreadsheet, href: "/import-export" },
+  { title: "التسلسل الزمني", description: "مراجعة خط زمني لتغييرات وعمليات أي كيان داخل النظام.", icon: History, href: "/timeline" },
 ];
 
 export default function SettingsPage() {
@@ -62,7 +63,6 @@ export default function SettingsPage() {
   const [integrityReport, setIntegrityReport] = useState<SystemIntegrityReport | null>(null);
   const session = getCurrentSession();
   const isAdmin = session?.role === "admin";
-
 
 
   const saveCompany = () => {
@@ -148,7 +148,16 @@ export default function SettingsPage() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {settingsSections.map((section) => {
               const Icon = section.icon;
-              const content = <><div className="flex items-start justify-between gap-4"><div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-700 transition-colors group-hover:bg-slate-900 group-hover:text-white"><Icon className="h-5 w-5" /></div><ChevronLeft className="h-5 w-5 text-slate-300 transition-all group-hover:-translate-x-1 group-hover:text-slate-600" /></div><h3 className="mt-5 text-base font-extrabold text-slate-900">{section.title}</h3><p className="mt-2 text-xs leading-6 text-slate-400">{section.description}</p></>;
+              const content = <>
+              <div className="flex items-start justify-between gap-4">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-700 transition-colors group-hover:bg-slate-900 group-hover:text-white">
+              <Icon className="h-5 w-5" />
+              </div>
+              <ChevronLeft className="h-5 w-5 text-slate-300 transition-all group-hover:-translate-x-1 group-hover:text-slate-600" />
+              </div>
+              <h3 className="mt-5 text-base font-extrabold text-slate-900">{section.title}</h3>
+              <p className="mt-2 text-xs leading-6 text-slate-400">{section.description}</p>
+              </>;
               if (section.href) return <Link key={section.title} href={section.href} className="group block rounded-2xl border border-slate-200 bg-white p-5 text-right shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md">{content}</Link>;
               return <div key={section.title} className="group rounded-2xl border border-slate-200 bg-white p-5 text-right shadow-sm">{content}</div>;
             })}
@@ -157,7 +166,13 @@ export default function SettingsPage() {
 
         <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <div className="flex items-center gap-3"><Building2 className="h-5 w-5 text-blue-600" /><div><h2 className="text-base font-extrabold text-slate-900">بيانات الشركة</h2><p className="text-xs text-slate-400">تُحفظ محليًا وتستخدم كأساس للتقارير القادمة.</p></div></div>
+            <div className="flex items-center gap-3">
+            <Building2 className="h-5 w-5 text-blue-600" />
+            <div>
+            <h2 className="text-base font-extrabold text-slate-900">بيانات الشركة</h2>
+            <p className="text-xs text-slate-400">تُحفظ محليًا وتستخدم كأساس للتقارير القادمة.</p>
+            </div>
+            </div>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               {[['name','اسم الشركة'],['subtitle','وصف مختصر'],['phone','رقم الهاتف'],['address','العنوان']].map(([key,label]) => <label key={key} className="block text-right"><span className="mb-2 block text-xs font-bold text-slate-600">{label}</span><input value={company[key as keyof CompanySettings]} onChange={(e)=>setCompany((current)=>({...current,[key]:e.target.value}))} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10" /></label>)}
             </div>
@@ -165,10 +180,23 @@ export default function SettingsPage() {
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <div className="flex items-center gap-3"><Database className="h-5 w-5 text-blue-600" /><div><h2 className="text-base font-extrabold text-slate-900">النسخ والبيانات</h2><p className="text-xs text-slate-400">نسخة JSON تشمل بيانات النظام المحلية دون جلسة تسجيل الدخول.</p></div></div>
+            <div className="flex items-center gap-3">
+            <Database className="h-5 w-5 text-blue-600" />
+            <div>
+            <h2 className="text-base font-extrabold text-slate-900">النسخ والبيانات</h2>
+            <p className="text-xs text-slate-400">نسخة JSON تشمل بيانات النظام المحلية دون جلسة تسجيل الدخول.</p>
+            </div>
+            </div>
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              <button type="button" onClick={downloadBackup} disabled={!isAdmin} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"><FileDown className="h-4 w-4" />تصدير نسخة احتياطية</button>
-              <label className={`inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 ${!isAdmin ? "pointer-events-none opacity-50" : ""}`}><Upload className="h-4 w-4" />استعادة نسخة<input type="file" accept="application/json,.json" className="hidden" disabled={!isAdmin} onChange={(e)=>{const file=e.target.files?.[0]; if(file) void restoreBackup(file); e.currentTarget.value="";}} /></label>
+              <button type="button" onClick={downloadBackup} disabled={!isAdmin} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50">
+              <FileDown className="h-4 w-4" />تصدير نسخة احتياطية</button>
+              <label className={`inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 ${!isAdmin ? "pointer-events-none opacity-50" : ""}`}>
+              <Upload className="h-4 w-4" />استعادة نسخة<input type="file" accept="application/json,.json" className="hidden" disabled={!isAdmin} onChange={(e)=>{
+              const file=e.target.files?.[0];
+              if(file) void restoreBackup(file);
+              e.currentTarget.value="";
+              }} />
+              </label>
             </div>
             <p className="mt-3 text-xs leading-5 text-slate-400">النسخ والاستعادة متاحة للـ Admin فقط في النسخة الحالية لتقليل خطر استبدال بيانات النظام بالخطأ.</p>
           </div>
@@ -177,16 +205,28 @@ export default function SettingsPage() {
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <div className="flex items-center gap-3"><ShieldCheck className="h-5 w-5 text-blue-600" /><div><h2 className="text-base font-extrabold text-slate-900">فحص سلامة وترابط البيانات</h2><p className="text-xs leading-5 text-slate-400">يفحص العلاقات بين المشاريع والمواقع والعمال والمقاولين والعهد والحركات والمصروفات ووسائل الدفع.</p></div></div>
+              <div className="flex items-center gap-3">
+              <ShieldCheck className="h-5 w-5 text-blue-600" />
+              <div>
+              <h2 className="text-base font-extrabold text-slate-900">فحص سلامة وترابط البيانات</h2>
+              <p className="text-xs leading-5 text-slate-400">يفحص العلاقات بين المشاريع والمواقع والعمال والمقاولين والعهد والحركات والمصروفات ووسائل الدفع.</p>
+              </div>
+              </div>
             </div>
             <button type="button" onClick={runIntegrityCheck} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white transition hover:bg-slate-800">فحص النظام الآن</button>
           </div>
           {integrityReport && (
             <div className="mt-5 space-y-4">
               <div className="grid gap-3 sm:grid-cols-3">
-                <div className={`rounded-xl p-4 ${integrityReport.ok ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}><p className="text-xs font-bold">الحالة</p><p className="mt-1 text-lg font-black">{integrityReport.ok ? "سليم" : "يحتاج مراجعة"}</p></div>
+                <div className={`rounded-xl p-4 ${integrityReport.ok ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}>
+                <p className="text-xs font-bold">الحالة</p>
+                <p className="mt-1 text-lg font-black">{integrityReport.ok ? "سليم" : "يحتاج مراجعة"}</p>
+                </div>
                 <div className="rounded-xl bg-red-50 p-4 text-red-800"><p className="text-xs font-bold">أخطاء</p><p className="mt-1 text-lg font-black">{integrityReport.errorCount.toLocaleString("en-US")}</p></div>
-                <div className="rounded-xl bg-amber-50 p-4 text-amber-800"><p className="text-xs font-bold">تحذيرات</p><p className="mt-1 text-lg font-black">{integrityReport.warningCount.toLocaleString("en-US")}</p></div>
+                <div className="rounded-xl bg-amber-50 p-4 text-amber-800">
+                <p className="text-xs font-bold">تحذيرات</p>
+                <p className="mt-1 text-lg font-black">{integrityReport.warningCount.toLocaleString("en-US")}</p>
+                </div>
               </div>
               {integrityReport.issues.length > 0 && (
                 <div className="max-h-80 space-y-2 overflow-auto rounded-xl border border-slate-100 p-3">
@@ -204,7 +244,22 @@ export default function SettingsPage() {
 
         {(backupMessage || error) && <section className={`rounded-2xl border p-4 text-sm font-bold ${error ? "border-red-200 bg-red-50 text-red-700" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>{error || backupMessage}</section>}
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><h2 className="text-base font-extrabold text-slate-900">الأدوار الحالية</h2><div className="mt-4 grid gap-3 md:grid-cols-3"><div className="rounded-xl bg-slate-50 p-4"><b>Admin</b><p className="mt-1 text-xs text-slate-500">صلاحيات كاملة وإدارة المستخدمين.</p></div><div className="rounded-xl bg-slate-50 p-4"><b>Accountant</b><p className="mt-1 text-xs text-slate-500">تشغيل وتعديل الحركات والتقارير.</p></div><div className="rounded-xl bg-slate-50 p-4"><b>Viewer</b><p className="mt-1 text-xs text-slate-500">مشاهدة البيانات والتقارير فقط.</p></div></div>
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="text-base font-extrabold text-slate-900">الأدوار الحالية</h2>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <div className="rounded-xl bg-slate-50 p-4">
+        <b>Admin</b>
+        <p className="mt-1 text-xs text-slate-500">صلاحيات كاملة وإدارة المستخدمين.</p>
+        </div>
+        <div className="rounded-xl bg-slate-50 p-4">
+        <b>Accountant</b>
+        <p className="mt-1 text-xs text-slate-500">تشغيل وتعديل الحركات والتقارير.</p>
+        </div>
+        <div className="rounded-xl bg-slate-50 p-4">
+        <b>Viewer</b>
+        <p className="mt-1 text-xs text-slate-500">مشاهدة البيانات والتقارير فقط.</p>
+        </div>
+        </div>
         </section>
       </div>
     </AppShell>

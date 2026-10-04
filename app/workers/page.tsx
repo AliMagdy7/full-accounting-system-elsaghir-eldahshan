@@ -134,7 +134,7 @@ export default function WorkersPage() {
     () => new Map(sites.map((site) => [site.id, site])),
     [sites],
   );
-  
+
   const filteredWorkers = useMemo(() => {
     const normalizedSearch =
       search.trim().toLocaleLowerCase();
@@ -670,9 +670,9 @@ export default function WorkersPage() {
                       (worker) => {
                         const project =
                         projectsById.get(worker.currentProjectId);
-                        const site = worker.currentSiteId 
-                        ? 
-                        sitesById.get(worker.currentSiteId) 
+                        const site = worker.currentSiteId
+                        ?
+                        sitesById.get(worker.currentSiteId)
                         : undefined;
 
                         return (
@@ -783,9 +783,9 @@ export default function WorkersPage() {
                   (worker) => {
                     const project =
                     projectsById.get(worker.currentProjectId);
-                   const site = worker.currentSiteId 
-                   ? 
-                   sitesById.get(worker.currentSiteId) 
+                   const site = worker.currentSiteId
+                   ?
+                   sitesById.get(worker.currentSiteId)
                    : undefined;
 
                     return (

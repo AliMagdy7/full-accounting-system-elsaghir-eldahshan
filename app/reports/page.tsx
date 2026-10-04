@@ -1155,7 +1155,15 @@ export default function ReportsPage() {
         workerPaymentsTotal: 0,
         totalOutgoing: 0,
         balance: 0,
-        movements: [] as Array<{ id: string; date: string; createdAt: string; custodyName: string; projectName: string; type: "in" | "expense" | "transfer-in" | "transfer-out"; description: string; source: string; amount: number }>,
+        movements: [] as Array<{ id: string;
+        date: string;
+        createdAt: string;
+        custodyName: string;
+        projectName: string;
+        type: "in" | "expense" | "transfer-in" | "transfer-out";
+        description: string;
+        source: string;
+        amount: number }>,
       };
     }
 
@@ -2768,7 +2776,9 @@ export default function ReportsPage() {
                             <td className="px-5 py-4 text-sm font-semibold text-slate-600">{projectName(movement.projectId, projects)}</td>
                             <td className="px-5 py-4 text-sm font-semibold text-slate-600">{custodies.find((item) => item.id === movement.custodyId)?.name ?? "غير محددة"}</td>
                             <td className={`px-5 py-4 text-left text-sm font-extrabold ${movement.effect === "increase" ? "text-emerald-600" : "text-red-600"}`}>{movement.effect === "increase" ? "+" : "-"}{money(movement.amount)} جنيه</td>
-                            <td className="px-5 py-4"><span className={`rounded-lg px-2.5 py-1.5 text-xs font-bold ${movement.effect === "increase" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{movement.effect === "increase" ? "يزيد المستحق" : "يقلل المستحق"}</span></td>
+                            <td className="px-5 py-4">
+                            <span className={`rounded-lg px-2.5 py-1.5 text-xs font-bold ${movement.effect === "increase" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{movement.effect === "increase" ? "يزيد المستحق" : "يقلل المستحق"}</span>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -2803,7 +2813,9 @@ export default function ReportsPage() {
                     </div>
                     <div className="overflow-x-auto">
                       <table className="min-w-[850px] w-full">
-                        <thead><tr className="border-b border-slate-100">{["العامل", "نظام الأجر", "الأجر الحالي", "بداية العمل", "الحساب"].map((title) => <th key={title} className="px-5 py-3 text-right text-xs font-extrabold text-slate-500">{title}</th>)}</tr></thead>
+                        <thead>
+                        <tr className="border-b border-slate-100">{["العامل", "نظام الأجر", "الأجر الحالي", "بداية العمل", "الحساب"].map((title) => <th key={title} className="px-5 py-3 text-right text-xs font-extrabold text-slate-500">{title}</th>)}</tr>
+                        </thead>
                         <tbody>
                           {siteWorkers.map((worker) => (
                             <tr key={worker.id} className="border-b border-slate-100 last:border-b-0">
@@ -2811,7 +2823,9 @@ export default function ReportsPage() {
                               <td className="px-5 py-4 text-sm font-bold text-slate-600">{worker.payType === "daily" ? "يومي" : "شهري"}</td>
                               <td className="px-5 py-4 text-sm font-extrabold text-slate-700">{worker.payType === "daily" ? `${money(worker.dailyRate ?? 0)} جنيه / يوم` : `${money(worker.monthlySalary ?? 0)} جنيه / ${worker.monthlyDivision ?? 30}`}</td>
                               <td className="px-5 py-4 text-xs font-bold text-slate-500">{dateLabel(worker.startDate)}</td>
-                              <td className="px-5 py-4"><Link href={`/workers/${worker.id}`} className="inline-flex h-9 items-center justify-center rounded-lg bg-slate-900 px-3 text-xs font-bold text-white hover:bg-slate-800">فتح الحساب</Link></td>
+                              <td className="px-5 py-4">
+                              <Link href={`/workers/${worker.id}`} className="inline-flex h-9 items-center justify-center rounded-lg bg-slate-900 px-3 text-xs font-bold text-white hover:bg-slate-800">فتح الحساب</Link>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -2939,8 +2953,20 @@ export default function ReportsPage() {
 
             return (
               <>
-                <div className="border-b border-slate-100 p-5 sm:p-6"><div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4"><p className="text-xs font-bold text-amber-600">إجمالي السلف الظاهرة</p><p className="mt-2 text-2xl font-extrabold text-amber-700">{money(total)} جنيه</p></div></div>
-                {!rows.length ? <EmptyState text="لا توجد سلف مطابقة للفلاتر الحالية." /> : <div className="overflow-x-auto"><table className="min-w-[1000px] w-full"><thead className="bg-slate-50"><tr>{["التاريخ", "العامل", "المشروع", "العهدة", "البيان", "المبلغ", "ملاحظات"].map((title) => <th key={title} className="px-5 py-4 text-right text-xs font-extrabold text-slate-500">{title}</th>)}</tr></thead><tbody>{rows.map((movement) => <tr key={movement.id} className="border-b border-slate-100 last:border-b-0"><td className="px-5 py-4 text-xs font-semibold text-slate-500">{dateLabel(movement.date)}</td><td className="px-5 py-4 text-sm font-extrabold text-slate-800">{workers.find((worker) => worker.id === movement.workerId)?.name ?? "عامل غير موجود"}</td><td className="px-5 py-4 text-sm font-semibold text-slate-600">{projectName(movement.projectId, projects)}</td><td className="px-5 py-4 text-sm font-semibold text-slate-600">{custodies.find((custody) => custody.id === movement.custodyId)?.name ?? "غير محددة"}</td><td className="max-w-[320px] px-5 py-4 text-sm font-semibold text-slate-700">{movement.description}</td><td className="px-5 py-4 text-left text-sm font-extrabold text-red-600">{money(movement.amount)} جنيه</td><td className="px-5 py-4 text-xs text-slate-500">{movement.notes ?? "-"}</td></tr>)}</tbody></table></div>}
+                <div className="border-b border-slate-100 p-5 sm:p-6">
+                <div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4">
+                <p className="text-xs font-bold text-amber-600">إجمالي السلف الظاهرة</p>
+                <p className="mt-2 text-2xl font-extrabold text-amber-700">{money(total)} جنيه</p>
+                </div>
+                </div>
+                {!rows.length ? <EmptyState text="لا توجد سلف مطابقة للفلاتر الحالية." /> : <div className="overflow-x-auto">
+                <table className="min-w-[1000px] w-full">
+                <thead className="bg-slate-50">
+                <tr>{["التاريخ", "العامل", "المشروع", "العهدة", "البيان", "المبلغ", "ملاحظات"].map((title) => <th key={title} className="px-5 py-4 text-right text-xs font-extrabold text-slate-500">{title}</th>)}</tr>
+                </thead>
+                <tbody>{rows.map((movement) => <tr key={movement.id} className="border-b border-slate-100 last:border-b-0"><td className="px-5 py-4 text-xs font-semibold text-slate-500">{dateLabel(movement.date)}</td><td className="px-5 py-4 text-sm font-extrabold text-slate-800">{workers.find((worker) => worker.id === movement.workerId)?.name ?? "عامل غير موجود"}</td><td className="px-5 py-4 text-sm font-semibold text-slate-600">{projectName(movement.projectId, projects)}</td><td className="px-5 py-4 text-sm font-semibold text-slate-600">{custodies.find((custody) => custody.id === movement.custodyId)?.name ?? "غير محددة"}</td><td className="max-w-[320px] px-5 py-4 text-sm font-semibold text-slate-700">{movement.description}</td><td className="px-5 py-4 text-left text-sm font-extrabold text-red-600">{money(movement.amount)} جنيه</td><td className="px-5 py-4 text-xs text-slate-500">{movement.notes ?? "-"}</td></tr>)}</tbody>
+                </table>
+                </div>}
               </>
             );
           })()}
@@ -2959,8 +2985,28 @@ export default function ReportsPage() {
 
             return (
               <>
-                <div className="grid grid-cols-1 gap-3 border-b border-slate-100 p-5 sm:grid-cols-3"><div className="rounded-2xl border border-slate-200 p-4"><p className="text-xs font-bold text-slate-400">عدد العمال</p><p className="mt-2 text-2xl font-extrabold text-slate-900">{rows.length}</p></div><div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4"><p className="text-xs font-bold text-blue-600">إجمالي المستحق للعمال</p><p className="mt-2 text-2xl font-extrabold text-blue-600">{money(payable)} جنيه</p></div><div className="rounded-2xl border border-red-100 bg-red-50/50 p-4"><p className="text-xs font-bold text-red-600">إجمالي المديونية على العمال</p><p className="mt-2 text-2xl font-extrabold text-red-600">{money(debt)} جنيه</p></div></div>
-                {!rows.length ? <EmptyState text="لا يوجد عمال مطابقون للفلاتر الحالية." /> : <div className="overflow-x-auto"><table className="min-w-[900px] w-full"><thead className="bg-slate-50"><tr>{["العامل", "الموقع الحالي", "الرصيد المرحل", "الزيادات", "التخفيضات", "الرصيد الحالي", "الحالة"].map((title) => <th key={title} className="px-5 py-4 text-right text-xs font-extrabold text-slate-500">{title}</th>)}</tr></thead><tbody>{rows.map(({ worker, increase, decrease, balance }) => <tr key={worker.id} className="border-b border-slate-100 last:border-b-0"><td className="px-5 py-4"><p className="font-extrabold text-slate-800">{worker.name}</p><p className="mt-1 text-[11px] text-slate-400">{worker.id}</p></td><td className="px-5 py-4 text-sm font-semibold text-slate-600">{projectName(worker.currentProjectId, projects)}</td><td className="px-5 py-4 text-sm font-bold text-slate-600">{money(worker.carriedSalary)}</td><td className="px-5 py-4 text-sm font-bold text-emerald-600">{money(increase)}</td><td className="px-5 py-4 text-sm font-bold text-red-600">{money(decrease)}</td><td className={`px-5 py-4 text-sm font-extrabold ${balance >= 0 ? "text-blue-600" : "text-red-600"}`}>{money(Math.abs(balance))} جنيه</td><td className="px-5 py-4"><span className={`rounded-lg px-2.5 py-1.5 text-xs font-bold ${balance > 0 ? "bg-blue-50 text-blue-700" : balance < 0 ? "bg-red-50 text-red-700" : "bg-slate-100 text-slate-600"}`}>{balance > 0 ? "مستحق للعامل" : balance < 0 ? "على العامل" : "متزن"}</span></td></tr>)}</tbody></table></div>}
+                <div className="grid grid-cols-1 gap-3 border-b border-slate-100 p-5 sm:grid-cols-3">
+                <div className="rounded-2xl border border-slate-200 p-4">
+                <p className="text-xs font-bold text-slate-400">عدد العمال</p>
+                <p className="mt-2 text-2xl font-extrabold text-slate-900">{rows.length}</p>
+                </div>
+                <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4">
+                <p className="text-xs font-bold text-blue-600">إجمالي المستحق للعمال</p>
+                <p className="mt-2 text-2xl font-extrabold text-blue-600">{money(payable)} جنيه</p>
+                </div>
+                <div className="rounded-2xl border border-red-100 bg-red-50/50 p-4">
+                <p className="text-xs font-bold text-red-600">إجمالي المديونية على العمال</p>
+                <p className="mt-2 text-2xl font-extrabold text-red-600">{money(debt)} جنيه</p>
+                </div>
+                </div>
+                {!rows.length ? <EmptyState text="لا يوجد عمال مطابقون للفلاتر الحالية." /> : <div className="overflow-x-auto">
+                <table className="min-w-[900px] w-full">
+                <thead className="bg-slate-50">
+                <tr>{["العامل", "الموقع الحالي", "الرصيد المرحل", "الزيادات", "التخفيضات", "الرصيد الحالي", "الحالة"].map((title) => <th key={title} className="px-5 py-4 text-right text-xs font-extrabold text-slate-500">{title}</th>)}</tr>
+                </thead>
+                <tbody>{rows.map(({ worker, increase, decrease, balance }) => <tr key={worker.id} className="border-b border-slate-100 last:border-b-0"><td className="px-5 py-4"><p className="font-extrabold text-slate-800">{worker.name}</p><p className="mt-1 text-[11px] text-slate-400">{worker.id}</p></td><td className="px-5 py-4 text-sm font-semibold text-slate-600">{projectName(worker.currentProjectId, projects)}</td><td className="px-5 py-4 text-sm font-bold text-slate-600">{money(worker.carriedSalary)}</td><td className="px-5 py-4 text-sm font-bold text-emerald-600">{money(increase)}</td><td className="px-5 py-4 text-sm font-bold text-red-600">{money(decrease)}</td><td className={`px-5 py-4 text-sm font-extrabold ${balance >= 0 ? "text-blue-600" : "text-red-600"}`}>{money(Math.abs(balance))} جنيه</td><td className="px-5 py-4"><span className={`rounded-lg px-2.5 py-1.5 text-xs font-bold ${balance > 0 ? "bg-blue-50 text-blue-700" : balance < 0 ? "bg-red-50 text-red-700" : "bg-slate-100 text-slate-600"}`}>{balance > 0 ? "مستحق للعامل" : balance < 0 ? "على العامل" : "متزن"}</span></td></tr>)}</tbody>
+                </table>
+                </div>}
               </>
             );
           })()}
@@ -3093,7 +3139,8 @@ export default function ReportsPage() {
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-white p-4">
                     <p className="text-xs font-bold text-slate-400">المقاولون / المواقع</p>
-                    <p className="mt-2 text-2xl font-extrabold text-slate-900">{uniqueContractors} <span className="text-sm text-slate-400">مقاول</span> · {uniqueSites} <span className="text-sm text-slate-400">موقع</span></p>
+                    <p className="mt-2 text-2xl font-extrabold text-slate-900">{uniqueContractors} <span className="text-sm text-slate-400">مقاول</span> · {uniqueSites} <span className="text-sm text-slate-400">موقع</span>
+                    </p>
                   </div>
                 </div>
 
@@ -3124,7 +3171,9 @@ export default function ReportsPage() {
                               <td className="px-5 py-4 text-sm font-semibold text-blue-700">{custodies.find((custody) => custody.id === expense.custodyId)?.name ?? "عهدة غير موجودة"}</td>
                               <td className="max-w-[320px] px-5 py-4 text-sm font-semibold text-slate-700">{expense.description}</td>
                               <td className="px-5 py-4 text-left text-sm font-extrabold text-red-600">{money(Number(expense.amount || 0))} جنيه</td>
-                              <td className="px-5 py-4"><Link href={expense.contractorId ? `/contractors/${expense.contractorId}` : "/contractors"} className="inline-flex h-9 items-center justify-center rounded-lg bg-slate-900 px-3 text-xs font-bold text-white hover:bg-slate-800">فتح الحساب</Link></td>
+                              <td className="px-5 py-4">
+                              <Link href={expense.contractorId ? `/contractors/${expense.contractorId}` : "/contractors"} className="inline-flex h-9 items-center justify-center rounded-lg bg-slate-900 px-3 text-xs font-bold text-white hover:bg-slate-800">فتح الحساب</Link>
+                              </td>
                             </tr>
                           );
                         })}

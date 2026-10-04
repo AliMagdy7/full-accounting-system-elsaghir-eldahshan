@@ -7,6 +7,7 @@ import { updateCustodyBalance, reverseCustodyBalance } from "@/lib/data/custodie
 import { updateCustodyFinancialAccountBalance, reverseCustodyFinancialAccountBalance } from "@/lib/data/custody-financial-accounts";
 import { addCustodyTransaction, deleteCustodyTransaction } from "@/lib/data/custody-transactions";
 import { getPartnerFinancialAccountById, updatePartnerFinancialAccountBalance, reversePartnerFinancialAccountBalance } from "@/lib/data/partner-financial-accounts";
+import { assertTransactionEditable } from "@/lib/data/system-controls";
 
 const STORAGE_KEY = "elsaghir-eldahshan-company-checks";
 
@@ -145,6 +146,7 @@ function validateCheckInput(input: Omit<CompanyCheck, "id" | "createdAt" | "upda
 
 export function addCompanyCheck(input: Omit<CompanyCheck, "id" | "createdAt" | "updatedAt">) {
   assertCurrentUserPermission("create");
+  assertTransactionEditable(input.issueDate);
   const { number, amount } = validateCheckInput(input);
   const now = new Date().toISOString();
   const row: CompanyCheck = {
@@ -182,6 +184,7 @@ export function addCompanyCheck(input: Omit<CompanyCheck, "id" | "createdAt" | "
 
 export function updateCompanyCheck(id: string, updates: Partial<Omit<CompanyCheck, "id" | "createdAt" | "updatedAt">>) {
   assertCurrentUserPermission("update");
+  assertTransactionEditable(updates.issueDate ?? read().find((item) => item.id === id)?.issueDate ?? new Date().toISOString());
   const items = read();
   const index = items.findIndex((item) => item.id === id);
   if (index < 0) throw new Error("الشيك غير موجود.");

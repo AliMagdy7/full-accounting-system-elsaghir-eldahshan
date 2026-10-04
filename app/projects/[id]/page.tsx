@@ -126,8 +126,6 @@ function getStatusClasses(
 }
 
 
-
-
 function getWorkerMovementTypeLabel(
   type: string,
 ): string {
@@ -1404,7 +1402,8 @@ export default function ProjectDetailsPage() {
           </div>
         </section>
       </div>
-    <Link href={`/projects/${projectId}/sites`} className="fixed bottom-5 left-5 z-20 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white shadow-lg"><MapPin className="h-4 w-4"/>إدارة المواقع</Link>
+    <Link href={`/projects/${projectId}/sites`} className="fixed bottom-5 left-5 z-20 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white shadow-lg">
+    <MapPin className="h-4 w-4"/>إدارة المواقع</Link>
 </AppShell>
   );
 }

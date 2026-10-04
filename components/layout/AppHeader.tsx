@@ -137,7 +137,7 @@ export default function AppHeader({
         id: `project-${project.id}`,
         title: project.name,
         subtitle: "مشروع / موقع",
-        href: `/projects/${project.id}`,
+        href: `/system?section=${encodeURIComponent(`/projects/${project.id}`)}`,
         type: "project",
         icon: FolderKanban,
       }));
@@ -147,7 +147,7 @@ export default function AppHeader({
         id: `worker-${worker.id}`,
         title: worker.name,
         subtitle: "عامل",
-        href: `/workers/${worker.id}`,
+        href: `/system?section=${encodeURIComponent(`/workers/${worker.id}`)}`,
         type: "worker",
         icon: HardHat,
       }));
@@ -165,11 +165,13 @@ export default function AppHeader({
                 ? "عهدة عامل"
                 : "عهدة شخص",
         href:
-          custody.type === "central"
-            ? "/custodies/central"
-            : custody.type === "person"
-              ? `/custodies/person/${custody.id}`
-              : `/custodies`,
+          `/system?section=${encodeURIComponent(
+            custody.type === "central"
+              ? "/custodies/central"
+              : custody.type === "person"
+                ? `/custodies/person/${custody.id}`
+                : `/custodies`,
+          )}`,
         type: "custody",
         icon: Wallet,
       }));
@@ -179,7 +181,7 @@ export default function AppHeader({
         id: `contractor-${contractor.id}`,
         title: contractor.name,
         subtitle: "مقاول",
-        href: `/contractors/${contractor.id}`,
+        href: `/system?section=${encodeURIComponent(`/contractors/${contractor.id}`)}`,
         type: "contractor",
         icon: HardHat,
       }));
@@ -189,7 +191,7 @@ export default function AppHeader({
         id: `site-${site.id}`,
         title: site.name,
         subtitle: `موقع — ${getProjects().find((project) => project.id === site.projectId)?.name ?? "مشروع غير موجود"}`,
-        href: `/projects/${site.projectId}/sites`,
+        href: `/system?section=${encodeURIComponent(`/projects/${site.projectId}/sites`)}`,
         type: "site",
         icon: Building2,
       }));
@@ -201,7 +203,7 @@ export default function AppHeader({
         subtitle: `مصروف — ${expense.amount.toLocaleString(
           "en-US",
         )} ج.م`,
-        href: "/expenses",
+        href: `/system?section=${encodeURIComponent("/expenses")}`,
         type: "expense",
         icon: Receipt,
       }));
@@ -652,7 +654,26 @@ export default function AppHeader({
                           markNotificationAsRead(notification.id);
                           loadNotifications();
                           if (notification.href) {
-                            window.location.href = notification.href;
+                            try {
+                              const target = new URL(
+                                notification.href,
+                                window.location.origin,
+                              );
+
+                              if (target.origin === window.location.origin) {
+                                const targetPath = `${target.pathname}${target.search}${target.hash}`;
+
+                                if (targetPath.startsWith("/system")) {
+                                  router.push(targetPath);
+                                } else if (target.pathname !== "/notifications") {
+                                  router.push(
+                                    `/system?section=${encodeURIComponent(targetPath)}`,
+                                  );
+                                }
+                              }
+                            } catch {
+                              // Ignore malformed notification links.
+                            }
                           }
                         }}
                         className={`w-full rounded-xl p-3 text-right transition-colors hover:bg-slate-50 ${
@@ -687,7 +708,7 @@ export default function AppHeader({
 
                 <div className="border-t border-slate-100 p-2">
                   <Link
-                    href="/audit-log"
+                    href="/system?section=%2Faudit"
                     onClick={() => setNotificationsOpen(false)}
                     className="flex items-center justify-center rounded-xl px-3 py-2.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
                   >
@@ -759,7 +780,7 @@ export default function AppHeader({
 
                 <div className="p-2">
                   <Link
-                    href="/profile"
+                    href="/system?section=%2Fprofile"
                     onClick={() => setUserMenuOpen(false)}
                     className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-slate-900"
                   >
@@ -770,7 +791,7 @@ export default function AppHeader({
                   </Link>
 
                   <Link
-                    href="/settings"
+                    href="/system?section=%2Fsettings"
                     onClick={() =>
                       setUserMenuOpen(false)
                     }

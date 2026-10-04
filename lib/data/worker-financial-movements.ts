@@ -939,4 +939,3 @@ export function deleteWorkerAdvanceWithPayment(movementId: string) {
   deleteCustodyTransaction(transaction.id);
   deleteWorkerFinancialMovement(movementId);
 }
-

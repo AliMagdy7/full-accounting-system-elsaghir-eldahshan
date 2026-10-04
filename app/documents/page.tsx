@@ -1,2 +1,25 @@
-"use client"; import {useEffect,useState} from "react"; import {addDocument,deleteDocument,getDocuments} from "@/lib/data/enterprise"; import EnterpriseShell from "@/components/enterprise/EnterpriseShell";
-export default function Documents(){const [rows,setRows]=useState(getDocuments());const [title,setTitle]=useState("");const [category,setCategory]=useState("عام");const [desc,setDesc]=useState("");const [file,setFile]=useState<{name:string;data:string}|null>(null);const save=()=>{addDocument({title,category,entityType:"general",description:desc,fileName:file?.name,fileDataUrl:file?.data,tags:[]});setTitle("");setDesc("");setFile(null);setRows(getDocuments())};const onFile=(f:File)=>{const r=new FileReader();r.onload=()=>setFile({name:f.name,data:String(r.result)});r.readAsDataURL(f)};useEffect(()=>{const f=()=>setRows(getDocuments());window.addEventListener("elsaghir-data-updated",f);return()=>window.removeEventListener("elsaghir-data-updated",f)},[]);return <EnterpriseShell title="مركز المستندات" description="مستودع موحد للمستندات والمرفقات مع ربطها بكيانات النظام عند الحاجة."><div className="grid gap-5 lg:grid-cols-[380px_1fr]"><section className="rounded-3xl border bg-white p-5 shadow-sm space-y-3"><input value={title} onChange={e=>setTitle(e.target.value)} placeholder="اسم المستند" className="w-full rounded-xl border p-3"/><input value={category} onChange={e=>setCategory(e.target.value)} placeholder="التصنيف" className="w-full rounded-xl border p-3"/><textarea value={desc} onChange={e=>setDesc(e.target.value)} placeholder="ملاحظات" className="min-h-24 w-full rounded-xl border p-3"/><input type="file" onChange={e=>e.target.files?.[0]&&onFile(e.target.files[0])} className="w-full rounded-xl border p-3"/><button onClick={save} className="w-full rounded-xl bg-slate-950 p-3 font-bold text-white">حفظ المستند</button></section><section className="grid gap-3 md:grid-cols-2">{rows.map(r=><article key={r.id} className="rounded-3xl border bg-white p-5 shadow-sm"><div className="flex items-start justify-between"><div><h2 className="font-black">{r.title}</h2><p className="text-xs text-slate-500">{r.category}</p></div><button onClick={()=>{deleteDocument(r.id);setRows(getDocuments())}} className="text-xs font-bold text-red-600">حذف</button></div><p className="mt-3 text-sm text-slate-600">{r.description||"بدون ملاحظات"}</p>{r.fileName&&<a href={r.fileDataUrl} download={r.fileName} className="mt-3 inline-block rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold">فتح المرفق</a>}</article>)}</section></div></EnterpriseShell>}
+"use client";
+import {useState} from "react";
+import {addDocument,getDocuments} from "@/lib/data/finance-extensions";
+import {ExtensionPage,SearchBox} from "@/components/ui/ExtensionPage";
+export default function Documents(){
+const [q,setQ]=useState("");
+const rows=getDocuments().filter(x=>x.title.includes(q)||x.fileName.includes(q));
+return <ExtensionPage title="مركز المستندات" description="مكان مركزي للمرفقات المرتبطة بالشركات والمشاريع والأصول والمستخلصات والشيكات.">
+<div className="rounded-2xl border bg-white p-5">
+<input id="doc" type="file" className="block w-full text-sm" onChange={e=>{
+const f=e.target.files?.[0];
+if(!f)return;
+const r=new FileReader();
+r.onload=()=>{
+try{
+addDocument({title:f.name,category:"مرفق",entityType:"general",entityId:"general",fileName:f.name,dataUrl:String(r.result)});
+alert("تم الحفظ")}catch(err){
+alert(err instanceof Error?err.message:"خطأ")}};
+r.readAsDataURL(f)}}/>
+<div className="mt-4">
+<SearchBox value={q} onChange={setQ}/>
+</div>
+</div>
+<div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{rows.map(x=><a key={x.id} href={x.dataUrl} download={x.fileName} className="rounded-2xl border bg-white p-5 shadow-sm"><b>{x.title}</b><div className="mt-1 text-xs text-slate-500">{x.entityType} • {new Date(x.createdAt).toLocaleString("ar-EG")}</div></a>)}</div>
+</ExtensionPage>}

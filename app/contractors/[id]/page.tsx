@@ -755,7 +755,10 @@ export default function ContractorDetailsPage() {
                 <option value="">كل العهد</option>
                 {custodies.map((custody) => <option key={custody.id} value={custody.id}>{custody.name}</option>)}
               </select>
-              <select value={advanceProjectFilter} onChange={(event) => { setAdvanceProjectFilter(event.target.value); setAdvanceSiteFilter(""); }} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold outline-none focus:border-blue-500">
+              <select value={advanceProjectFilter} onChange={(event) => {
+              setAdvanceProjectFilter(event.target.value);
+              setAdvanceSiteFilter("");
+              }} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold outline-none focus:border-blue-500">
                 <option value="">كل المشاريع</option>
                 {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
               </select>

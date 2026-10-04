@@ -864,7 +864,7 @@ export default function ExpensesPage() {
     expense: Expense,
     currentDraft: ExpenseDraft,
   ) => {
-    
+
     const normalized = normalizeDraft(currentDraft);
 
     validateDraft(normalized, expense);

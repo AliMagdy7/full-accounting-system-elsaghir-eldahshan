@@ -136,7 +136,6 @@ export default function NewCentralCustodyTransactionPage() {
     );
 
 
-
   const selectedProject =
     projects.find(
       (project) =>

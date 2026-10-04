@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Eye, EyeOff, KeyRound, ShieldCheck, UserCog, Users, X } from "lucide-react";
+import { Eye, EyeOff, KeyRound, ShieldCheck, UserCog, Users, X } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
 import { getCurrentSession, getUsers, setCurrentSession, setUserActive, updateUserCredentials, updateUserRole } from "@/lib/data/users";
-import { hasPermission, type Permission } from "@/lib/auth-permissions";
+import { getRolePermissions, hasPermission, setRolePermissions, type Permission } from "@/lib/auth-permissions";
 import type { SystemUser, UserRole } from "@/types/user";
 import { useRouter } from "next/navigation";
 
@@ -36,6 +36,7 @@ export default function UsersPage() {
   const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [credentialsError, setCredentialsError] = useState("");
+  const [permissionsVersion, setPermissionsVersion] = useState(0);
   const router = useRouter();
 
   const loadUsers = () => setUsers(getUsers());
@@ -49,8 +50,13 @@ export default function UsersPage() {
     }
     setAllowed(true);
     loadUsers();
+    const handlePermissionsUpdated = () => setPermissionsVersion((value) => value + 1);
     window.addEventListener("elsaghir-auth-updated", loadUsers);
-    return () => window.removeEventListener("elsaghir-auth-updated", loadUsers);
+    window.addEventListener("elsaghir-data-updated", handlePermissionsUpdated);
+    return () => {
+      window.removeEventListener("elsaghir-auth-updated", loadUsers);
+      window.removeEventListener("elsaghir-data-updated", handlePermissionsUpdated);
+    };
   }, [router]);
 
   const changeRole = (userId: string, role: UserRole) => {
@@ -188,7 +194,7 @@ export default function UsersPage() {
               <ShieldCheck className="h-5 w-5 text-slate-600" />
               <div>
                 <h2 className="text-base font-extrabold text-slate-900">مصفوفة الصلاحيات</h2>
-                <p className="mt-1 text-xs text-slate-400">الصلاحيات المعتمدة حاليًا لكل دور.</p>
+                <p className="mt-1 text-xs leading-5 text-slate-400">عدّل الصلاحيات من هنا مباشرة. أي تغيير ينعكس فورًا على المستخدمين وفحوصات الصلاحيات في النظام.</p>
               </div>
             </div>
           </div>
@@ -203,21 +209,33 @@ export default function UsersPage() {
                   <th className="px-3 py-3 font-bold">Viewer</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody key={permissionsVersion}>
                 {permissionOrder.map((permission) => (
                   <tr key={permission} className="border-b border-slate-50 last:border-0">
                     <td className="px-3 py-3 text-sm font-semibold text-slate-700">{permissionLabels[permission]}</td>
-                    {(["admin", "accountant", "viewer"] as UserRole[]).map((role) => (
-                      <td key={role} className="px-3 py-3">
-                        {hasPermission(role, permission) ? (
-                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-                            <Check className="h-4 w-4" />
-                          </span>
-                        ) : (
-                          <span className="text-slate-300">—</span>
-                        )}
-                      </td>
-                    ))}
+                    {(["admin", "accountant", "viewer"] as UserRole[]).map((role) => {
+                      const rolePermissions = getRolePermissions(role);
+                      const checked = rolePermissions.includes(permission);
+                      return (
+                        <td key={role} className="px-3 py-3 text-center">
+                          <label className="inline-flex cursor-pointer items-center justify-center">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(event) => {
+                                const current = getRolePermissions(role);
+                                const next = event.target.checked
+                                  ? [...current, permission]
+                                  : current.filter((item) => item !== permission);
+                                setRolePermissions(role, next);
+                                setPermissionsVersion((value) => value + 1);
+                              }}
+                              className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+                            />
+                          </label>
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>

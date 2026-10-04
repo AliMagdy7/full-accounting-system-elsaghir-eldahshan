@@ -29,7 +29,14 @@ export type AuditEntity =
   | "settlement"
   | "company_check"
   | "partner_financial_account"
-  | "company_asset";
+  | "company_asset"
+  | "finance_account"
+  | "supplier"
+  | "purchase_invoice"
+  | "accounting_period"
+  | "approval"
+  | "document"
+  | "system_controls";
 
 export type AuditActorRole =
   | "admin"
@@ -41,7 +48,14 @@ export type AuditActorRole =
   | "settlement"
   | "company_check"
   | "partner_financial_account"
-  | "company_asset";
+  | "company_asset"
+  | "finance_account"
+  | "supplier"
+  | "purchase_invoice"
+  | "accounting_period"
+  | "approval"
+  | "document"
+  | "system_controls";
 
 export interface AuditActor {
   userId: string;

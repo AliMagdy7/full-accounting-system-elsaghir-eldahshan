@@ -13,7 +13,11 @@ type Props = Omit<LinkProps, "href"> & {
   onClick?: () => void;
 };
 
-export default function PermissionLink({ permission, children, ...props }: Props) {
+export default function PermissionLink({
+  permission,
+  children,
+  ...props
+}: Props) {
   const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {

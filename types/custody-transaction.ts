@@ -1,7 +1,4 @@
-export type CustodyTransactionType =
-  | "in"
-  | "out"
-  | "transfer";
+export type CustodyTransactionType = "in" | "out" | "transfer";
 
 export interface CustodyTransaction {
   id: string;

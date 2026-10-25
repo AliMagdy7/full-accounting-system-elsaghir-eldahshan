@@ -3,12 +3,7 @@
 import DateInput from "@/lib/date-input";
 
 import { formatDisplayDate } from "@/lib/formatters";
-import {
-  SubmitEvent,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { SubmitEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   CalendarDays,
@@ -25,11 +20,7 @@ import {
 import AppShell from "@/components/layout/AppShell";
 import { canCurrentUser } from "@/lib/permission-check";
 
-import {
-  addWorker,
-  getWorkerByName,
-  getWorkers,
-} from "@/lib/data/workers";
+import { addWorker, getWorkerByName, getWorkers } from "@/lib/data/workers";
 
 import { getProjects } from "@/lib/data/projects";
 import { getProjectSites } from "@/lib/data/project-sites";
@@ -43,10 +34,7 @@ import type {
 
 import type { Project } from "@/types/project";
 
-type WorkerFilter =
-  | "all"
-  | "daily"
-  | "monthly";
+type WorkerFilter = "all" | "daily" | "monthly";
 
 function formatAmount(amount: number) {
   return new Intl.NumberFormat("en-US", {
@@ -60,54 +48,39 @@ function formatDate(date?: string) {
 }
 
 export default function WorkersPage() {
-  const [workers, setWorkers] =
-    useState<Worker[]>([]);
+  const [workers, setWorkers] = useState<Worker[]>([]);
 
-  const [projects, setProjects] =
-    useState<Project[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
 
-  const [sites, setSites] =
-    useState<ProjectSite[]>([]);
+  const [sites, setSites] = useState<ProjectSite[]>([]);
 
-  const [search, setSearch] =
-    useState("");
+  const [search, setSearch] = useState("");
 
-  const [filter, setFilter] =
-    useState<WorkerFilter>("all");
+  const [filter, setFilter] = useState<WorkerFilter>("all");
 
-  const [isModalOpen, setIsModalOpen] =
-    useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [name, setName] = useState("");
-  const [siteId, setSiteId] =
-    useState("");
+  const [siteId, setSiteId] = useState("");
 
-  const [startDate, setStartDate] =
-    useState("");
+  const [startDate, setStartDate] = useState("");
 
-  const [payType, setPayType] =
-    useState<WorkerPayType>("daily");
+  const [payType, setPayType] = useState<WorkerPayType>("daily");
 
-  const [dailyRate, setDailyRate] =
-    useState("");
+  const [dailyRate, setDailyRate] = useState("");
 
-  const [monthlySalary, setMonthlySalary] =
-    useState("");
+  const [monthlySalary, setMonthlySalary] = useState("");
 
   const [monthlyDivision, setMonthlyDivision] =
     useState<WorkerMonthlyDivision>(30);
 
-  const [carriedSalary, setCarriedSalary] =
-    useState("");
+  const [carriedSalary, setCarriedSalary] = useState("");
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
 
-  const [success, setSuccess] =
-    useState("");
+  const [success, setSuccess] = useState("");
 
-  const [isSaving, setIsSaving] =
-    useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const loadData = () => {
     setWorkers(getWorkers());
@@ -118,11 +91,7 @@ export default function WorkersPage() {
   useEffect(() => {
     loadData();
 
-    setStartDate(
-      new Date()
-        .toISOString()
-        .split("T")[0],
-    );
+    setStartDate(new Date().toISOString().split("T")[0]);
   }, []);
 
   const projectsById = useMemo(
@@ -136,32 +105,21 @@ export default function WorkersPage() {
   );
 
   const filteredWorkers = useMemo(() => {
-    const normalizedSearch =
-      search.trim().toLocaleLowerCase();
+    const normalizedSearch = search.trim().toLocaleLowerCase();
 
     return workers.filter((worker) => {
       const matchesSearch =
         !normalizedSearch ||
-        worker.name
-          .toLocaleLowerCase()
-          .includes(normalizedSearch) ||
-        worker.id
-          .toLocaleLowerCase()
-          .includes(normalizedSearch);
+        worker.name.toLocaleLowerCase().includes(normalizedSearch) ||
+        worker.id.toLocaleLowerCase().includes(normalizedSearch);
 
-      const matchesFilter =
-        filter === "all" ||
-        worker.payType === filter;
+      const matchesFilter = filter === "all" || worker.payType === filter;
 
-      return (
-        matchesSearch &&
-        matchesFilter
-      );
+      return matchesSearch && matchesFilter;
     });
   }, [workers, search, filter]);
 
   const statistics = useMemo(() => {
-
     let daily = 0;
     let monthly = 0;
     let balances = 0;
@@ -171,7 +129,7 @@ export default function WorkersPage() {
 
       if (worker.payType === "daily") {
         daily++;
-      } else if(worker.payType === "monthly"){
+      } else if (worker.payType === "monthly") {
         monthly++;
       }
     }
@@ -186,11 +144,7 @@ export default function WorkersPage() {
   const resetForm = () => {
     setName("");
     setSiteId("");
-    setStartDate(
-      new Date()
-        .toISOString()
-        .split("T")[0],
-    );
+    setStartDate(new Date().toISOString().split("T")[0]);
     setPayType("daily");
     setDailyRate("");
     setMonthlySalary("");
@@ -211,21 +165,16 @@ export default function WorkersPage() {
     setError("");
   };
 
-  const handleSubmit = (
-    event: SubmitEvent<HTMLFormElement>,
-  ) => {
+  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     setError("");
     setSuccess("");
 
-    const trimmedName =
-      name.trim();
+    const trimmedName = name.trim();
 
     if (!trimmedName) {
-      setError(
-        "من فضلك أدخل اسم العامل.",
-      );
+      setError("من فضلك أدخل اسم العامل.");
       return;
     }
 
@@ -235,13 +184,10 @@ export default function WorkersPage() {
      * المقارنة تتم داخل data helper
      * بعد تنظيف الاسم وتوحيد حالة الحروف.
      */
-    const existingWorker =
-      getWorkerByName(trimmedName);
+    const existingWorker = getWorkerByName(trimmedName);
 
     if (existingWorker) {
-      setError(
-        `العامل "${existingWorker.name}" موجود بالفعل في النظام.`,
-      );
+      setError(`العامل "${existingWorker.name}" موجود بالفعل في النظام.`);
       return;
     }
 
@@ -259,61 +205,40 @@ export default function WorkersPage() {
     const selectedProjectId = selectedSite.projectId;
 
     if (!startDate) {
-      setError(
-        "من فضلك اختر تاريخ بداية العمل.",
-      );
+      setError("من فضلك اختر تاريخ بداية العمل.");
       return;
     }
 
     if (payType === "daily") {
-      const numericDailyRate =
-        Number(dailyRate);
+      const numericDailyRate = Number(dailyRate);
 
       if (
         !dailyRate ||
-        !Number.isFinite(
-          numericDailyRate,
-        ) ||
+        !Number.isFinite(numericDailyRate) ||
         numericDailyRate <= 0
       ) {
-        setError(
-          "من فضلك أدخل أجر يومي صحيح أكبر من صفر.",
-        );
+        setError("من فضلك أدخل أجر يومي صحيح أكبر من صفر.");
         return;
       }
     }
 
     if (payType === "monthly") {
-      const numericMonthlySalary =
-        Number(monthlySalary);
+      const numericMonthlySalary = Number(monthlySalary);
 
       if (
         !monthlySalary ||
-        !Number.isFinite(
-          numericMonthlySalary,
-        ) ||
+        !Number.isFinite(numericMonthlySalary) ||
         numericMonthlySalary <= 0
       ) {
-        setError(
-          "من فضلك أدخل راتب شهري صحيح أكبر من صفر.",
-        );
+        setError("من فضلك أدخل راتب شهري صحيح أكبر من صفر.");
         return;
       }
     }
 
-    const numericCarriedSalary =
-      carriedSalary
-        ? Number(carriedSalary)
-        : 0;
+    const numericCarriedSalary = carriedSalary ? Number(carriedSalary) : 0;
 
-    if (
-      !Number.isFinite(
-        numericCarriedSalary,
-      )
-    ) {
-      setError(
-        "الرصيد المرحل غير صحيح.",
-      );
+    if (!Number.isFinite(numericCarriedSalary)) {
+      setError("الرصيد المرحل غير صحيح.");
       return;
     }
 
@@ -329,19 +254,14 @@ export default function WorkersPage() {
 
         ...(payType === "daily"
           ? {
-              dailyRate:
-                Number(dailyRate),
+              dailyRate: Number(dailyRate),
             }
           : {
-              monthlySalary:
-                Number(
-                  monthlySalary,
-                ),
+              monthlySalary: Number(monthlySalary),
               monthlyDivision,
             }),
 
-        carriedSalary:
-          numericCarriedSalary,
+        carriedSalary: numericCarriedSalary,
       });
 
       loadData();
@@ -350,9 +270,7 @@ export default function WorkersPage() {
 
       resetForm();
 
-      setSuccess(
-        "تمت إضافة العامل بنجاح.",
-      );
+      setSuccess("تمت إضافة العامل بنجاح.");
 
       window.setTimeout(() => {
         setSuccess("");
@@ -370,10 +288,7 @@ export default function WorkersPage() {
 
   return (
     <AppShell>
-      <div
-        dir="rtl"
-        className="app-page space-y-6"
-      >
+      <div dir="rtl" className="app-page space-y-6">
         {/* Header */}
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -393,8 +308,7 @@ export default function WorkersPage() {
               </h1>
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                إدارة بيانات العمال، الأجور،
-                السلف، المدفوعات، والمواقع الحالية.
+                إدارة بيانات العمال، الأجور، السلف، المدفوعات، والمواقع الحالية.
               </p>
             </div>
 
@@ -402,9 +316,9 @@ export default function WorkersPage() {
               <button
                 type="button"
                 onClick={openModal}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 active:scale-[0.98]"
-            >
-              <Plus className="h-4 w-4" />
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 active:scale-[0.98]"
+              >
+                <Plus className="h-4 w-4" />
                 إضافة عامل
               </button>
             )}
@@ -466,9 +380,7 @@ export default function WorkersPage() {
                 {statistics.daily}
               </p>
 
-              <p className="mt-2 text-xs text-slate-400">
-                بنظام الأجر اليومي
-              </p>
+              <p className="mt-2 text-xs text-slate-400">بنظام الأجر اليومي</p>
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -484,9 +396,7 @@ export default function WorkersPage() {
                 {statistics.monthly}
               </p>
 
-              <p className="mt-2 text-xs text-slate-400">
-                بنظام الأجر الشهري
-              </p>
+              <p className="mt-2 text-xs text-slate-400">بنظام الأجر الشهري</p>
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -500,14 +410,10 @@ export default function WorkersPage() {
 
               <p
                 className={`mt-2 text-2xl font-extrabold ${
-                  statistics.balances >= 0
-                    ? "text-slate-900"
-                    : "text-red-600"
+                  statistics.balances >= 0 ? "text-slate-900" : "text-red-600"
                 }`}
               >
-                {formatAmount(
-                  statistics.balances,
-                )}
+                {formatAmount(statistics.balances)}
               </p>
 
               <p className="mt-2 text-xs text-slate-400">
@@ -521,27 +427,21 @@ export default function WorkersPage() {
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative w-full lg:max-w-md">
-              <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
               <input
                 type="text"
                 value={search}
-                onChange={(event) =>
-                  setSearch(
-                    event.target.value,
-                  )
-                }
+                onChange={(event) => setSearch(event.target.value)}
                 placeholder="ابحث عن اسم العامل أو الكود..."
-                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pr-10 pl-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-900/5"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pr-10 pl-4 text-sm text-slate-900 transition-all outline-none placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-900/5"
               />
             </div>
 
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
-                onClick={() =>
-                  setFilter("all")
-                }
+                onClick={() => setFilter("all")}
                 className={`h-11 rounded-xl border px-4 text-xs font-bold transition-colors ${
                   filter === "all"
                     ? "border-slate-900 bg-slate-900 text-white"
@@ -553,9 +453,7 @@ export default function WorkersPage() {
 
               <button
                 type="button"
-                onClick={() =>
-                  setFilter("daily")
-                }
+                onClick={() => setFilter("daily")}
                 className={`h-11 rounded-xl border px-4 text-xs font-bold transition-colors ${
                   filter === "daily"
                     ? "border-slate-900 bg-slate-900 text-white"
@@ -567,9 +465,7 @@ export default function WorkersPage() {
 
               <button
                 type="button"
-                onClick={() =>
-                  setFilter("monthly")
-                }
+                onClick={() => setFilter("monthly")}
                 className={`h-11 rounded-xl border px-4 text-xs font-bold transition-colors ${
                   filter === "monthly"
                     ? "border-slate-900 bg-slate-900 text-white"
@@ -619,8 +515,7 @@ export default function WorkersPage() {
                     : "جرّب تغيير البحث أو الفلتر للوصول إلى العامل المطلوب."}
                 </p>
 
-                {workers.length ===
-                  0 && (
+                {workers.length === 0 && (
                   <button
                     type="button"
                     onClick={openModal}
@@ -666,220 +561,180 @@ export default function WorkersPage() {
                   </thead>
 
                   <tbody>
-                    {filteredWorkers.map(
-                      (worker) => {
-                        const project =
-                        projectsById.get(worker.currentProjectId);
-                        const site = worker.currentSiteId
-                        ?
-                        sitesById.get(worker.currentSiteId)
+                    {filteredWorkers.map((worker) => {
+                      const project = projectsById.get(worker.currentProjectId);
+                      const site = worker.currentSiteId
+                        ? sitesById.get(worker.currentSiteId)
                         : undefined;
 
-                        return (
-                          <tr
-                            key={worker.id}
-                            className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/60"
-                          >
-                            <td className="px-5 py-4">
-                              <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-                                  <UserRound className="h-5 w-5" />
-                                </div>
-
-                                <div>
-                                  <p className="font-black text-slate-800">
-                                    {worker.name}
-                                  </p>
-
-                                  <p className="mt-1 text-[11px] font-bold text-slate-400">
-                                    {worker.id}
-                                  </p>
-                                </div>
+                      return (
+                        <tr
+                          key={worker.id}
+                          className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/60"
+                        >
+                          <td className="px-5 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                                <UserRound className="h-5 w-5" />
                               </div>
-                            </td>
 
-                            <td className="px-5 py-4 text-sm font-bold text-slate-600">
-                              {site?.name ?? project?.name ?? "غير محدد"}
-                            </td>
+                              <div>
+                                <p className="font-black text-slate-800">
+                                  {worker.name}
+                                </p>
 
-                            <td className="px-5 py-4">
-                              {worker.payType ===
-                              "daily" ? (
-                                <div>
-                                  <span className="inline-flex rounded-lg bg-blue-50 px-2.5 py-1.5 text-[11px] font-black text-blue-700">
-                                    يومي
-                                  </span>
+                                <p className="mt-1 text-[11px] font-bold text-slate-400">
+                                  {worker.id}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
 
-                                  <p className="mt-1 text-xs font-bold text-slate-500">
-                                    {formatAmount(
-                                      worker.dailyRate ??
-                                        0,
-                                    )}{" "}
-                                    جنيه / يوم
-                                  </p>
-                                </div>
-                              ) : (
-                                <div>
-                                  <span className="inline-flex rounded-lg bg-emerald-50 px-2.5 py-1.5 text-[11px] font-black text-emerald-700">
-                                    شهري
-                                  </span>
+                          <td className="px-5 py-4 text-sm font-bold text-slate-600">
+                            {site?.name ?? project?.name ?? "غير محدد"}
+                          </td>
 
-                                  <p className="mt-1 text-xs font-bold text-slate-500">
-                                    {formatAmount(
-                                      worker.monthlySalary ??
-                                        0,
-                                    )}{" "}
-                                    جنيه /{" "}
-                                    {
-                                      worker.monthlyDivision
-                                    }
-                                  </p>
-                                </div>
-                              )}
-                            </td>
+                          <td className="px-5 py-4">
+                            {worker.payType === "daily" ? (
+                              <div>
+                                <span className="inline-flex rounded-lg bg-blue-50 px-2.5 py-1.5 text-[11px] font-black text-blue-700">
+                                  يومي
+                                </span>
 
-                            <td className="px-5 py-4 text-xs font-bold text-slate-500">
-                              {formatDate(
-                                worker.startDate,
-                              )}
-                            </td>
+                                <p className="mt-1 text-xs font-bold text-slate-500">
+                                  {formatAmount(worker.dailyRate ?? 0)} جنيه /
+                                  يوم
+                                </p>
+                              </div>
+                            ) : (
+                              <div>
+                                <span className="inline-flex rounded-lg bg-emerald-50 px-2.5 py-1.5 text-[11px] font-black text-emerald-700">
+                                  شهري
+                                </span>
 
-                            <td
-                              className={`px-5 py-4 text-sm font-black ${
-                                worker.carriedSalary <
-                                0
-                                  ? "text-red-600"
-                                  : worker.carriedSalary >
-                                      0
-                                    ? "text-emerald-600"
-                                    : "text-slate-600"
-                              }`}
+                                <p className="mt-1 text-xs font-bold text-slate-500">
+                                  {formatAmount(worker.monthlySalary ?? 0)} جنيه
+                                  / {worker.monthlyDivision}
+                                </p>
+                              </div>
+                            )}
+                          </td>
+
+                          <td className="px-5 py-4 text-xs font-bold text-slate-500">
+                            {formatDate(worker.startDate)}
+                          </td>
+
+                          <td
+                            className={`px-5 py-4 text-sm font-black ${
+                              worker.carriedSalary < 0
+                                ? "text-red-600"
+                                : worker.carriedSalary > 0
+                                  ? "text-emerald-600"
+                                  : "text-slate-600"
+                            }`}
+                          >
+                            {formatAmount(worker.carriedSalary)} جنيه
+                          </td>
+
+                          <td className="px-5 py-4">
+                            <Link
+                              href={`/workers/${worker.id}`}
+                              className="inline-flex h-9 items-center justify-center rounded-lg bg-slate-900 px-3 text-xs font-bold text-white transition hover:bg-slate-800"
                             >
-                              {formatAmount(
-                                worker.carriedSalary,
-                              )}{" "}
-                              جنيه
-                            </td>
-
-                            <td className="px-5 py-4">
-                              <Link
-                                href={`/workers/${worker.id}`}
-                                className="inline-flex h-9 items-center justify-center rounded-lg bg-slate-900 px-3 text-xs font-bold text-white transition hover:bg-slate-800"
-                              >
-                                فتح الحساب
-                              </Link>
-                            </td>
-                          </tr>
-                        );
-                      },
-                    )}
+                              فتح الحساب
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
 
               {/* Mobile */}
               <div className="divide-y divide-slate-100 md:hidden">
-                {filteredWorkers.map(
-                  (worker) => {
-                    const project =
-                    projectsById.get(worker.currentProjectId);
-                   const site = worker.currentSiteId
-                   ?
-                   sitesById.get(worker.currentSiteId)
-                   : undefined;
+                {filteredWorkers.map((worker) => {
+                  const project = projectsById.get(worker.currentProjectId);
+                  const site = worker.currentSiteId
+                    ? sitesById.get(worker.currentSiteId)
+                    : undefined;
 
-                    return (
-                      <Link
-                        key={worker.id}
-                        href={`/workers/${worker.id}`}
-                        className="block p-4 transition hover:bg-slate-50"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex min-w-0 items-center gap-3">
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-                              <UserRound className="h-5 w-5" />
-                            </div>
-
-                            <div className="min-w-0">
-                              <h3 className="truncate text-sm font-black text-slate-800">
-                                {worker.name}
-                              </h3>
-
-                              <p className="mt-1 text-[11px] font-bold text-slate-400">
-                                {worker.id}
-                              </p>
-                            </div>
+                  return (
+                    <Link
+                      key={worker.id}
+                      href={`/workers/${worker.id}`}
+                      className="block p-4 transition hover:bg-slate-50"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                            <UserRound className="h-5 w-5" />
                           </div>
 
-                          <span className="shrink-0 rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-500">
-                            {worker.payType ===
-                            "daily"
-                              ? "يومي"
-                              : "شهري"}
-                          </span>
-                        </div>
+                          <div className="min-w-0">
+                            <h3 className="truncate text-sm font-black text-slate-800">
+                              {worker.name}
+                            </h3>
 
-                        <div className="mt-4 grid grid-cols-2 gap-2">
-                          <div className="rounded-xl bg-slate-50 p-3">
-                            <p className="text-[10px] font-bold text-slate-400">
-                              الموقع
-                            </p>
-
-                            <p className="mt-1 truncate text-xs font-black text-slate-700">
-                              {site?.name ?? project?.name ?? "غير محدد"}
-                            </p>
-                          </div>
-
-                          <div className="rounded-xl bg-slate-50 p-3">
-                            <p className="text-[10px] font-bold text-slate-400">
-                              الأجر
-                            </p>
-
-                            <p className="mt-1 text-xs font-black text-slate-700">
-                              {worker.payType ===
-                              "daily"
-                                ? `${formatAmount(
-                                    worker.dailyRate ??
-                                      0,
-                                  )} جنيه/يوم`
-                                : `${formatAmount(
-                                    worker.monthlySalary ??
-                                      0,
-                                  )} جنيه/شهر`}
+                            <p className="mt-1 text-[11px] font-bold text-slate-400">
+                              {worker.id}
                             </p>
                           </div>
                         </div>
 
-                        <div className="mt-2 flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-slate-400">
-                            بداية العمل:{" "}
-                            {formatDate(
-                              worker.startDate,
-                            )}
-                          </span>
+                        <span className="shrink-0 rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-500">
+                          {worker.payType === "daily" ? "يومي" : "شهري"}
+                        </span>
+                      </div>
 
-                          <span
-                            className={`text-xs font-black ${
-                              worker.carriedSalary <
-                              0
-                                ? "text-red-600"
-                                : worker.carriedSalary >
-                                    0
-                                  ? "text-emerald-600"
-                                  : "text-slate-500"
-                            }`}
-                          >
-                            مرحل:{" "}
-                            {formatAmount(
-                              worker.carriedSalary,
-                            )}{" "}
-                            جنيه
-                          </span>
+                      <div className="mt-4 grid grid-cols-2 gap-2">
+                        <div className="rounded-xl bg-slate-50 p-3">
+                          <p className="text-[10px] font-bold text-slate-400">
+                            الموقع
+                          </p>
+
+                          <p className="mt-1 truncate text-xs font-black text-slate-700">
+                            {site?.name ?? project?.name ?? "غير محدد"}
+                          </p>
                         </div>
-                      </Link>
-                    );
-                  },
-                )}
+
+                        <div className="rounded-xl bg-slate-50 p-3">
+                          <p className="text-[10px] font-bold text-slate-400">
+                            الأجر
+                          </p>
+
+                          <p className="mt-1 text-xs font-black text-slate-700">
+                            {worker.payType === "daily"
+                              ? `${formatAmount(
+                                  worker.dailyRate ?? 0,
+                                )} جنيه/يوم`
+                              : `${formatAmount(
+                                  worker.monthlySalary ?? 0,
+                                )} جنيه/شهر`}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-2 flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-slate-400">
+                          بداية العمل: {formatDate(worker.startDate)}
+                        </span>
+
+                        <span
+                          className={`text-xs font-black ${
+                            worker.carriedSalary < 0
+                              ? "text-red-600"
+                              : worker.carriedSalary > 0
+                                ? "text-emerald-600"
+                                : "text-slate-500"
+                          }`}
+                        >
+                          مرحل: {formatAmount(worker.carriedSalary)} جنيه
+                        </span>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             </>
           )}
@@ -908,7 +763,8 @@ export default function WorkersPage() {
               </h3>
 
               <p className="mt-2 text-xs leading-5 text-slate-400">
-                تسجيل حضور وغياب العامل يوميًا، مع دعم اليوم الكامل ونصف اليوم والإضافي.
+                تسجيل حضور وغياب العامل يوميًا، مع دعم اليوم الكامل ونصف اليوم
+                والإضافي.
               </p>
             </div>
 
@@ -922,7 +778,8 @@ export default function WorkersPage() {
               </h3>
 
               <p className="mt-2 text-xs leading-5 text-slate-400">
-                دعم الأجر اليومي والأجر الشهري، مع الاحتفاظ بتاريخ تغييرات الأجر.
+                دعم الأجر اليومي والأجر الشهري، مع الاحتفاظ بتاريخ تغييرات
+                الأجر.
               </p>
             </div>
 
@@ -950,7 +807,8 @@ export default function WorkersPage() {
               </h3>
 
               <p className="mt-2 text-xs leading-5 text-slate-400">
-                الاحتفاظ بتاريخ انتقال العامل بين المواقع، مع إمكانية الرجوع لموقع سابق.
+                الاحتفاظ بتاريخ انتقال العامل بين المواقع، مع إمكانية الرجوع
+                لموقع سابق.
               </p>
             </div>
           </div>
@@ -962,10 +820,7 @@ export default function WorkersPage() {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm"
           onMouseDown={(event) => {
-            if (
-              event.target ===
-              event.currentTarget
-            ) {
+            if (event.target === event.currentTarget) {
               closeModal();
             }
           }}
@@ -995,10 +850,7 @@ export default function WorkersPage() {
               </button>
             </div>
 
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-5 p-5 sm:p-6"
-            >
+            <form onSubmit={handleSubmit} className="space-y-5 p-5 sm:p-6">
               {error && (
                 <div
                   role="alert"
@@ -1018,13 +870,11 @@ export default function WorkersPage() {
                   type="text"
                   value={name}
                   onChange={(event) => {
-                    setName(
-                      event.target.value,
-                    );
+                    setName(event.target.value);
                     setError("");
                   }}
                   placeholder="مثال: محمد يرغوت"
-                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-900/5"
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-900/5"
                 />
               </div>
 
@@ -1042,14 +892,18 @@ export default function WorkersPage() {
                     className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-slate-400"
                   >
                     <option value="">اختر الموقع</option>
-                    {sites.filter((site) => site.active).map((site) => {
-                      const project = projectsById.get(site.projectId);
-                      return (
-                        <option key={site.id} value={site.id}>
-                          {project?.name ? `${project.name} — ${site.name}` : site.name}
-                        </option>
-                      );
-                    })}
+                    {sites
+                      .filter((site) => site.active)
+                      .map((site) => {
+                        const project = projectsById.get(site.projectId);
+                        return (
+                          <option key={site.id} value={site.id}>
+                            {project?.name
+                              ? `${project.name} — ${site.name}`
+                              : site.name}
+                          </option>
+                        );
+                      })}
                   </select>
                 </div>
 
@@ -1060,11 +914,7 @@ export default function WorkersPage() {
 
                   <DateInput
                     value={startDate}
-                    onChange={(value) =>
-                      setStartDate(
-                        value,
-                      )
-                    }
+                    onChange={(value) => setStartDate(value)}
                     className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-slate-400"
                   />
                 </div>
@@ -1078,18 +928,14 @@ export default function WorkersPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() =>
-                      setPayType("daily")
-                    }
+                    onClick={() => setPayType("daily")}
                     className={`rounded-xl border p-4 text-right transition ${
                       payType === "daily"
                         ? "border-slate-900 bg-slate-900 text-white"
                         : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                     }`}
                   >
-                    <p className="text-sm font-black">
-                      أجر يومي
-                    </p>
+                    <p className="text-sm font-black">أجر يومي</p>
 
                     <p
                       className={`mt-1 text-xs ${
@@ -1104,18 +950,14 @@ export default function WorkersPage() {
 
                   <button
                     type="button"
-                    onClick={() =>
-                      setPayType("monthly")
-                    }
+                    onClick={() => setPayType("monthly")}
                     className={`rounded-xl border p-4 text-right transition ${
                       payType === "monthly"
                         ? "border-slate-900 bg-slate-900 text-white"
                         : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                     }`}
                   >
-                    <p className="text-sm font-black">
-                      راتب شهري
-                    </p>
+                    <p className="text-sm font-black">راتب شهري</p>
 
                     <p
                       className={`mt-1 text-xs ${
@@ -1141,11 +983,7 @@ export default function WorkersPage() {
                     min="0"
                     step="0.01"
                     value={dailyRate}
-                    onChange={(event) =>
-                      setDailyRate(
-                        event.target.value,
-                      )
-                    }
+                    onChange={(event) => setDailyRate(event.target.value)}
                     placeholder="400"
                     className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-slate-400"
                   />
@@ -1162,11 +1000,7 @@ export default function WorkersPage() {
                       min="0"
                       step="0.01"
                       value={monthlySalary}
-                      onChange={(event) =>
-                        setMonthlySalary(
-                          event.target.value,
-                        )
-                      }
+                      onChange={(event) => setMonthlySalary(event.target.value)}
                       placeholder="12000"
                       className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-slate-400"
                     />
@@ -1178,30 +1012,19 @@ export default function WorkersPage() {
                     </label>
 
                     <select
-                      value={
-                        monthlyDivision
-                      }
+                      value={monthlyDivision}
                       onChange={(event) =>
                         setMonthlyDivision(
-                          Number(
-                            event.target
-                              .value,
-                          ) as WorkerMonthlyDivision,
+                          Number(event.target.value) as WorkerMonthlyDivision,
                         )
                       }
                       className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-slate-400"
                     >
-                      <option value={30}>
-                        30 يوم
-                      </option>
+                      <option value={30}>30 يوم</option>
 
-                      <option value={26}>
-                        26 يوم
-                      </option>
+                      <option value={26}>26 يوم</option>
 
-                      <option value={24}>
-                        24 يوم
-                      </option>
+                      <option value={24}>24 يوم</option>
                     </select>
                   </div>
                 </div>
@@ -1216,11 +1039,7 @@ export default function WorkersPage() {
                   type="number"
                   step="0.01"
                   value={carriedSalary}
-                  onChange={(event) =>
-                    setCarriedSalary(
-                      event.target.value,
-                    )
-                  }
+                  onChange={(event) => setCarriedSalary(event.target.value)}
                   placeholder="0"
                   className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-slate-400"
                 />
@@ -1247,9 +1066,7 @@ export default function WorkersPage() {
                 >
                   <Plus className="h-4 w-4" />
 
-                  {isSaving
-                    ? "جارٍ الحفظ..."
-                    : "حفظ العامل"}
+                  {isSaving ? "جارٍ الحفظ..." : "حفظ العامل"}
                 </button>
               </div>
             </form>

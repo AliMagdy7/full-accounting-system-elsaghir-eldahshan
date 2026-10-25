@@ -7,7 +7,8 @@ import { assertTransactionEditable } from "@/lib/data/system-controls";
 const STORAGE_KEY = "elsaghir-eldahshan-expenses";
 
 function notifyDataUpdated() {
-  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
+  if (typeof window !== "undefined")
+    window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
 }
 
 function canUseStorage() {
@@ -43,49 +44,33 @@ function saveExpenses(expenses: Expense[]) {
     return;
   }
 
-  window.localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(expenses),
-  );
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses));
   notifyDataUpdated();
-
 }
 
 export function getExpenses(): Expense[] {
   return readExpenses();
 }
 
-export function getExpenseById(
-  id: string,
-): Expense | undefined {
-  return readExpenses().find(
-    (expense) => expense.id === id,
-  );
+export function getExpenseById(id: string): Expense | undefined {
+  return readExpenses().find((expense) => expense.id === id);
 }
 
-export function getExpensesByCustodyId(
-  custodyId: string,
-): Expense[] {
-  return readExpenses().filter(
-    (expense) => expense.custodyId === custodyId,
-  );
+export function getExpensesByCustodyId(custodyId: string): Expense[] {
+  return readExpenses().filter((expense) => expense.custodyId === custodyId);
 }
 
-export function getExpensesByProjectId(
-  projectId: string,
-): Expense[] {
-  return readExpenses().filter(
-    (expense) => expense.projectId === projectId,
-  );
+export function getExpensesByProjectId(projectId: string): Expense[] {
+  return readExpenses().filter((expense) => expense.projectId === projectId);
 }
 
-export function addExpense(
-  expense: Expense,
-): Expense {
+export function addExpense(expense: Expense): Expense {
   assertCurrentUserPermission("create");
   assertTransactionEditable(expense.date);
   if (expense.movementType === "worker_advance") {
-    throw new Error("سلفة العامل يجب أن تسجل من حركة العامل المرتبطة بالعهدة، وليس كمصروف وهمي.");
+    throw new Error(
+      "سلفة العامل يجب أن تسجل من حركة العامل المرتبطة بالعهدة، وليس كمصروف وهمي.",
+    );
   }
 
   if (expense.movementType === "contractor_advance") {
@@ -95,7 +80,10 @@ export function addExpense(
     if (!expense.siteId) {
       throw new Error("سلفة المقاول تحتاج إلى موقع.");
     }
-    if (!expense.custodyTransactionId || !getCustodyTransactionById(expense.custodyTransactionId)) {
+    if (
+      !expense.custodyTransactionId ||
+      !getCustodyTransactionById(expense.custodyTransactionId)
+    ) {
       throw new Error("سلفة المقاول يجب أن تكون مرتبطة بحركة عهدة فعلية.");
     }
   }
@@ -129,9 +117,7 @@ export function updateExpense(
   if (updates.date) assertTransactionEditable(updates.date);
   const expenses = readExpenses();
 
-  const index = expenses.findIndex(
-    (expense) => expense.id === id,
-  );
+  const index = expenses.findIndex((expense) => expense.id === id);
 
   if (index === -1) {
     return undefined;
@@ -163,16 +149,12 @@ export function updateExpense(
   return updatedExpense;
 }
 
-export function deleteExpense(
-  id: string,
-): boolean {
+export function deleteExpense(id: string): boolean {
   assertCurrentUserPermission("delete");
   const current = readExpenses().find((expense) => expense.id === id);
   if (current) assertTransactionEditable(current.date);
   const expenses = readExpenses();
-  const nextExpenses = expenses.filter(
-    (expense) => expense.id !== id,
-  );
+  const nextExpenses = expenses.filter((expense) => expense.id !== id);
 
   if (nextExpenses.length === expenses.length) {
     return false;

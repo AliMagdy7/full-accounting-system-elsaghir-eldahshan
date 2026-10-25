@@ -27,9 +27,7 @@ export default function NewPersonCustodyPage() {
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSubmit = (
-    event: SubmitEvent<HTMLFormElement>,
-  ) => {
+  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const trimmedName = name.trim();
@@ -106,8 +104,8 @@ export default function NewPersonCustodyPage() {
               </h1>
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                إنشاء عهدة شخصية جديدة لشخص أو موزع لمتابعة
-                رصيده وحركته المالية بشكل مستقل.
+                إنشاء عهدة شخصية جديدة لشخص أو موزع لمتابعة رصيده وحركته المالية
+                بشكل مستقل.
               </p>
             </div>
           </div>
@@ -148,7 +146,7 @@ export default function NewPersonCustodyPage() {
               </label>
 
               <div className="relative">
-                <UserRound className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <UserRound className="pointer-events-none absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2 text-slate-400" />
 
                 <input
                   id="custody-name"
@@ -159,13 +157,12 @@ export default function NewPersonCustodyPage() {
                     setError("");
                   }}
                   placeholder="مثال: أحمد زكريا"
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm text-slate-800 outline-none transition-all placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm text-slate-800 transition-all outline-none placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                 />
               </div>
 
               <p className="mt-2 text-[11px] leading-5 text-slate-400">
-                الاسم سيظهر في قوائم العهد والتحويلات وكشوف
-                الحساب.
+                الاسم سيظهر في قوائم العهد والتحويلات وكشوف الحساب.
               </p>
             </div>
 
@@ -180,7 +177,7 @@ export default function NewPersonCustodyPage() {
               </label>
 
               <div className="relative">
-                <CalendarDays className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <CalendarDays className="pointer-events-none absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2 text-slate-400" />
 
                 <DateInput
                   id="custody-start-date"
@@ -189,13 +186,12 @@ export default function NewPersonCustodyPage() {
                     setStartDate(value);
                     setError("");
                   }}
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm text-slate-800 outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm text-slate-800 transition-all outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                 />
               </div>
 
               <p className="mt-2 text-[11px] leading-5 text-slate-400">
-                التاريخ يحدد بداية تسجيل العهدة، ولا يغير الرصيد
-                الافتتاحي.
+                التاريخ يحدد بداية تسجيل العهدة، ولا يغير الرصيد الافتتاحي.
               </p>
             </div>
 
@@ -212,17 +208,15 @@ export default function NewPersonCustodyPage() {
               </label>
 
               <div className="relative">
-                <FileText className="pointer-events-none absolute right-4 top-4 h-5 w-5 text-slate-400" />
+                <FileText className="pointer-events-none absolute top-4 right-4 h-5 w-5 text-slate-400" />
 
                 <textarea
                   id="custody-notes"
                   value={notes}
-                  onChange={(event) =>
-                    setNotes(event.target.value)
-                  }
+                  onChange={(event) => setNotes(event.target.value)}
                   rows={4}
                   placeholder="أي ملاحظات إضافية عن صاحب العهدة..."
-                  className="w-full resize-y rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm leading-6 text-slate-800 outline-none transition-all placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                  className="w-full resize-y rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm leading-6 text-slate-800 transition-all outline-none placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                 />
               </div>
             </div>
@@ -240,9 +234,8 @@ export default function NewPersonCustodyPage() {
                   </h3>
 
                   <p className="mt-1 text-xs leading-6 text-slate-500">
-                    العهدة الجديدة ستبدأ برصيد <strong>0</strong>.
-                    أي مبلغ سيتم تسليمه للشخص سيتم تسجيله كحركة
-                    وارد مستقلة بتاريخها ومصدرها.
+                    العهدة الجديدة ستبدأ برصيد <strong>0</strong>. أي مبلغ سيتم
+                    تسليمه للشخص سيتم تسجيله كحركة وارد مستقلة بتاريخها ومصدرها.
                   </p>
                 </div>
               </div>
@@ -250,7 +243,7 @@ export default function NewPersonCustodyPage() {
 
             {/* Error */}
             {error && (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold leading-6 text-red-700">
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 font-semibold text-red-700">
                 {error}
               </div>
             )}
@@ -272,9 +265,7 @@ export default function NewPersonCustodyPage() {
             >
               <UserRound className="h-4 w-4" />
 
-              {isSaving
-                ? "جاري الحفظ..."
-                : "حفظ العهدة"}
+              {isSaving ? "جاري الحفظ..." : "حفظ العهدة"}
             </button>
           </div>
         </form>

@@ -1,6 +1,7 @@
 import type { CompanyNoteImage } from "@/types/company-note";
 
-export type SettlementStatus = "draft" | "review" | "approved" | "paid" | "rejected";
+export type SettlementStatus =
+  "draft" | "review" | "approved" | "paid" | "rejected";
 
 export interface Settlement {
   id: string;

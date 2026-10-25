@@ -4,26 +4,13 @@ import DateInput from "@/lib/date-input";
 
 import { formatDisplayDate } from "@/lib/formatters";
 import { useEffect, useMemo, useState } from "react";
-import {
-  Check,
-  Pencil,
-  Plus,
-  RotateCcw,
-  Save,
-  Trash2,
-  X,
-} from "lucide-react";
+import { Check, Pencil, Plus, RotateCcw, Save, Trash2, X } from "lucide-react";
 
 import AppShell from "@/components/layout/AppShell";
 import { useConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { canCurrentUser } from "@/lib/permission-check";
-import {
-  getCustodies,
-  getCustodyById,
-} from "@/lib/data/custodies";
-import {
-  getCustodyTransactions,
-} from "@/lib/data/custody-transactions";
+import { getCustodies, getCustodyById } from "@/lib/data/custodies";
+import { getCustodyTransactions } from "@/lib/data/custody-transactions";
 import {
   getCustodyFinancialAccountById,
   getCustodyFinancialAccounts,
@@ -45,7 +32,10 @@ import {
 import { getWorkers } from "@/lib/data/workers";
 import { getWorkerFinancialMovementsByType } from "@/lib/data/worker-financial-movements";
 import { getContractorById, getContractors } from "@/lib/data/contractors";
-import { getContractorSiteAssignments, isContractorAssignedToSiteOnDate } from "@/lib/data/contractor-site-assignments";
+import {
+  getContractorSiteAssignments,
+  isContractorAssignedToSiteOnDate,
+} from "@/lib/data/contractor-site-assignments";
 import { getProjectSites } from "@/lib/data/project-sites";
 import type { Custody } from "@/types/custody";
 import type { CustodyFinancialAccount } from "@/types/custody-financial-account";
@@ -118,8 +108,7 @@ function getExpenseTransaction(
 
   if (expense.custodyTransactionId) {
     const linked = transactions.find(
-      (transaction) =>
-        transaction.id === expense.custodyTransactionId,
+      (transaction) => transaction.id === expense.custodyTransactionId,
     );
 
     if (linked) {
@@ -138,35 +127,28 @@ function getExpenseTransaction(
         transaction.description === expense.description &&
         (transaction.siteId ?? "") === (expense.siteId ?? ""),
     )
-    .sort((a, b) =>
-      b.createdAt.localeCompare(a.createdAt),
-    )[0];
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
 }
 
-function normalizeDraft(
-  draft: ExpenseDraft,
-  ): ExpenseDraft {
-    return {
-        ...draft,
-        description: draft.description.trim(),
-        category:
-          draft.movementType === "contractor_advance"
-            ? CONTRACTOR_CATEGORY
-            : draft.movementType === "worker_advance"
-              ? "سلف العمال"
-              : draft.category.trim(),
-        amount: Number(draft.amount),
-        financialAccountId: draft.financialAccountId || undefined,
-        projectId: draft.projectId || undefined,
-        workerId: draft.workerId || undefined,
-        contractorId: draft.contractorId || undefined,
-    };
+function normalizeDraft(draft: ExpenseDraft): ExpenseDraft {
+  return {
+    ...draft,
+    description: draft.description.trim(),
+    category:
+      draft.movementType === "contractor_advance"
+        ? CONTRACTOR_CATEGORY
+        : draft.movementType === "worker_advance"
+          ? "سلف العمال"
+          : draft.category.trim(),
+    amount: Number(draft.amount),
+    financialAccountId: draft.financialAccountId || undefined,
+    projectId: draft.projectId || undefined,
+    workerId: draft.workerId || undefined,
+    contractorId: draft.contractorId || undefined,
+  };
 }
 
-function validateDraft(
-  draft: ExpenseDraft,
-  oldExpense?: Expense,
-) {
+function validateDraft(draft: ExpenseDraft, oldExpense?: Expense) {
   if (!draft.date) {
     throw new Error("تاريخ المصروف مطلوب.");
   }
@@ -183,7 +165,10 @@ function validateDraft(
     throw new Error("اختر العامل صاحب السلفة.");
   }
 
-  if (draft.movementType === "worker_advance" && draft.category !== "سلف العمال") {
+  if (
+    draft.movementType === "worker_advance" &&
+    draft.category !== "سلف العمال"
+  ) {
     throw new Error("تصنيف سلفة العامل يجب أن يكون سلف العمال.");
   }
 
@@ -191,7 +176,11 @@ function validateDraft(
     throw new Error("اختر المقاول صاحب السلفة.");
   }
 
-  if (draft.movementType === "contractor_advance" && draft.contractorId && !getContractorById(draft.contractorId)) {
+  if (
+    draft.movementType === "contractor_advance" &&
+    draft.contractorId &&
+    !getContractorById(draft.contractorId)
+  ) {
     throw new Error("المقاول المحدد غير موجود.");
   }
 
@@ -199,23 +188,30 @@ function validateDraft(
     if (!draft.siteId) {
       throw new Error("اختر الموقع المرتبط بسلفة المقاول.");
     }
-    const siteExists = getProjectSites().some((site) => site.id === draft.siteId);
+    const siteExists = getProjectSites().some(
+      (site) => site.id === draft.siteId,
+    );
     if (!siteExists) {
       throw new Error("الموقع المحدد غير موجود.");
     }
-    const assignmentExists = getContractorSiteAssignments(draft.contractorId!).some((assignment) => assignment.siteId === draft.siteId);
+    const assignmentExists = getContractorSiteAssignments(
+      draft.contractorId!,
+    ).some((assignment) => assignment.siteId === draft.siteId);
     if (!assignmentExists) {
       throw new Error("المقاول غير مرتبط بالموقع المحدد.");
     }
-    if (!isContractorAssignedToSiteOnDate(draft.contractorId!, draft.siteId, draft.date)) {
+    if (
+      !isContractorAssignedToSiteOnDate(
+        draft.contractorId!,
+        draft.siteId,
+        draft.date,
+      )
+    ) {
       throw new Error("تاريخ السلفة خارج فترة ارتباط المقاول بالموقع المحدد.");
     }
   }
 
-  if (
-    !Number.isFinite(draft.amount) ||
-    draft.amount <= 0
-  ) {
+  if (!Number.isFinite(draft.amount) || draft.amount <= 0) {
     throw new Error("المبلغ يجب أن يكون أكبر من صفر.");
   }
 
@@ -231,20 +227,12 @@ function validateDraft(
 
   if (custody.id === "central") {
     if (!draft.financialAccountId) {
-      throw new Error(
-        "اختر وسيلة الدفع من العهدة المركزية.",
-      );
+      throw new Error("اختر وسيلة الدفع من العهدة المركزية.");
     }
 
-    const account =
-      getCustodyFinancialAccountById(
-        draft.financialAccountId,
-      );
+    const account = getCustodyFinancialAccountById(draft.financialAccountId);
 
-    if (
-      !account ||
-      account.custodyId !== "central"
-    ) {
+    if (!account || account.custodyId !== "central") {
       throw new Error("وسيلة الدفع غير صحيحة.");
     }
 
@@ -252,40 +240,26 @@ function validateDraft(
     let availableAccount = account.balance;
 
     if (oldExpense) {
-      const oldTransaction =
-        getExpenseTransaction(oldExpense);
+      const oldTransaction = getExpenseTransaction(oldExpense);
 
-      if (
-        oldTransaction &&
-        oldTransaction.custodyId === "central"
-      ) {
+      if (oldTransaction && oldTransaction.custodyId === "central") {
         availableCustody += oldTransaction.amount;
 
-        if (
-          oldTransaction.financialAccountId ===
-          draft.financialAccountId
-        ) {
-          availableAccount +=
-            oldTransaction.amount;
+        if (oldTransaction.financialAccountId === draft.financialAccountId) {
+          availableAccount += oldTransaction.amount;
         }
       }
     }
 
     if (availableCustody < draft.amount) {
-      throw new Error(
-        "رصيد العهدة المركزية غير كافٍ.",
-      );
+      throw new Error("رصيد العهدة المركزية غير كافٍ.");
     }
 
     if (availableAccount < draft.amount) {
-      throw new Error(
-        "رصيد وسيلة الدفع غير كافٍ.",
-      );
+      throw new Error("رصيد وسيلة الدفع غير كافٍ.");
     }
   } else if (draft.financialAccountId) {
-    throw new Error(
-      "وسيلة الدفع متاحة مع العهدة المركزية فقط.",
-    );
+    throw new Error("وسيلة الدفع متاحة مع العهدة المركزية فقط.");
   }
 }
 
@@ -314,36 +288,26 @@ export default function ExpensesPage() {
   const [custodies, setCustodies] = useState<Custody[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [workers, setWorkers] = useState<Worker[]>([]);
-  const [contractors, setContractors] = useState<import("@/types/contractor").Contractor[]>([]);
-  const [accounts, setAccounts] = useState<
-    CustodyFinancialAccount[]
+  const [contractors, setContractors] = useState<
+    import("@/types/contractor").Contractor[]
   >([]);
+  const [accounts, setAccounts] = useState<CustodyFinancialAccount[]>([]);
 
-  const [categories, setCategories] = useState<string[]>(
-    [],
-  );
+  const [categories, setCategories] = useState<string[]>([]);
 
-  const [editingId, setEditingId] = useState<
-    string | null
-  >(null);
-  const [draft, setDraft] =
-    useState<ExpenseDraft | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draft, setDraft] = useState<ExpenseDraft | null>(null);
   const [saving, setSaving] = useState(false);
   const { confirm, dialog } = useConfirmDialog();
   const [error, setError] = useState("");
 
-  const [movementFilter, setMovementFilter] =
-    useState<MovementFilter>("all");
+  const [movementFilter, setMovementFilter] = useState<MovementFilter>("all");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const [descriptionFilter, setDescriptionFilter] =
-    useState("");
-  const [categoryFilter, setCategoryFilter] =
-    useState("");
-  const [projectFilter, setProjectFilter] =
-    useState("");
-  const [custodyFilter, setCustodyFilter] =
-    useState("");
+  const [descriptionFilter, setDescriptionFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [projectFilter, setProjectFilter] = useState("");
+  const [custodyFilter, setCustodyFilter] = useState("");
   const [amountMin, setAmountMin] = useState("");
 
   const load = () => {
@@ -357,34 +321,39 @@ export default function ExpensesPage() {
 
     const custodyTransactions = getCustodyTransactions();
 
-    const linkedWorkerAdvances = workerAdvanceMovements.reduce<Expense[]>((rows, movement) => {
-      const transaction = custodyTransactions.find(
-        (item) => item.workerFinancialMovementId === movement.id,
-      );
-      if (!transaction) return rows;
-      rows.push({
-        id: `worker-advance:${movement.id}`,
-        date: movement.date,
-        amount: movement.amount,
-        category: "سلف العمال",
-        description: movement.description,
-        custodyId: transaction.custodyId,
-        projectId: movement.projectId,
-        financialAccountId: transaction.financialAccountId,
-        movementType: "worker_advance",
-        custodyTransactionId: transaction.id,
-        workerId: movement.workerId,
-        createdAt: movement.createdAt,
-        updatedAt: movement.updatedAt,
-      });
-      return rows;
-    }, []);
+    const linkedWorkerAdvances = workerAdvanceMovements.reduce<Expense[]>(
+      (rows, movement) => {
+        const transaction = custodyTransactions.find(
+          (item) => item.workerFinancialMovementId === movement.id,
+        );
+        if (!transaction) return rows;
+        rows.push({
+          id: `worker-advance:${movement.id}`,
+          date: movement.date,
+          amount: movement.amount,
+          category: "سلف العمال",
+          description: movement.description,
+          custodyId: transaction.custodyId,
+          projectId: movement.projectId,
+          financialAccountId: transaction.financialAccountId,
+          movementType: "worker_advance",
+          custodyTransactionId: transaction.id,
+          workerId: movement.workerId,
+          createdAt: movement.createdAt,
+          updatedAt: movement.updatedAt,
+        });
+        return rows;
+      },
+      [],
+    );
     const storedExpenses = getExpenses().filter(
       (expense) => expense.movementType !== "worker_advance",
     );
     setExpenses(
-      [...storedExpenses, ...linkedWorkerAdvances].sort((a, b) =>
-        b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt),
+      [...storedExpenses, ...linkedWorkerAdvances].sort(
+        (a, b) =>
+          b.date.localeCompare(a.date) ||
+          b.createdAt.localeCompare(a.createdAt),
       ),
     );
     setCustodies(getCustodies());
@@ -392,10 +361,7 @@ export default function ExpensesPage() {
     setWorkers(getWorkers());
     setContractors(getContractors());
     setCategories([
-      ...new Set([
-        ...getExpenseCategories(),
-        CONTRACTOR_CATEGORY,
-      ]),
+      ...new Set([...getExpenseCategories(), CONTRACTOR_CATEGORY]),
     ]);
   };
 
@@ -404,24 +370,12 @@ export default function ExpensesPage() {
   }, []);
 
   const custodyMap = useMemo(
-    () =>
-      new Map(
-        custodies.map((custody) => [
-          custody.id,
-          custody.name,
-        ]),
-      ),
+    () => new Map(custodies.map((custody) => [custody.id, custody.name])),
     [custodies],
   );
 
   const projectMap = useMemo(
-    () =>
-      new Map(
-        projects.map((project) => [
-          project.id,
-          project.name,
-        ]),
-      ),
+    () => new Map(projects.map((project) => [project.id, project.name])),
     [projects],
   );
 
@@ -434,11 +388,7 @@ export default function ExpensesPage() {
       }
     });
 
-    return [...values]
-      .filter(Boolean)
-      .sort((a, b) =>
-        a.localeCompare(b, "ar"),
-      );
+    return [...values].filter(Boolean).sort((a, b) => a.localeCompare(b, "ar"));
   }, [categories, expenses]);
 
   const applyFilters = (
@@ -450,18 +400,12 @@ export default function ExpensesPage() {
       ignoreCustody?: boolean;
     },
   ) => {
-    const normalizedSearch =
-      descriptionFilter.trim().toLocaleLowerCase("ar");
+    const normalizedSearch = descriptionFilter.trim().toLocaleLowerCase("ar");
 
-    const minAmount =
-      amountMin === ""
-        ? undefined
-        : Number(amountMin);
+    const minAmount = amountMin === "" ? undefined : Number(amountMin);
 
     return source.filter((expense) => {
-      const type = normalizedMovementType(
-        expense.movementType,
-      );
+      const type = normalizedMovementType(expense.movementType);
 
       if (
         !options?.ignoreMovement &&
@@ -471,17 +415,11 @@ export default function ExpensesPage() {
         return false;
       }
 
-      if (
-        fromDate &&
-        expense.date < fromDate
-      ) {
+      if (fromDate && expense.date < fromDate) {
         return false;
       }
 
-      if (
-        toDate &&
-        expense.date > toDate
-      ) {
+      if (toDate && expense.date > toDate) {
         return false;
       }
 
@@ -490,9 +428,7 @@ export default function ExpensesPage() {
         !expense.description
           .toLocaleLowerCase("ar")
           .includes(normalizedSearch) &&
-        !expense.category
-          .toLocaleLowerCase("ar")
-          .includes(normalizedSearch)
+        !expense.category.toLocaleLowerCase("ar").includes(normalizedSearch)
       ) {
         return false;
       }
@@ -508,8 +444,7 @@ export default function ExpensesPage() {
       if (
         !options?.ignoreProject &&
         projectFilter &&
-        (expense.projectId ?? "") !==
-          projectFilter
+        (expense.projectId ?? "") !== projectFilter
       ) {
         return false;
       }
@@ -524,8 +459,7 @@ export default function ExpensesPage() {
 
       if (
         minAmount !== undefined &&
-        (!Number.isFinite(minAmount) ||
-          expense.amount < minAmount)
+        (!Number.isFinite(minAmount) || expense.amount < minAmount)
       ) {
         return false;
       }
@@ -559,9 +493,7 @@ export default function ExpensesPage() {
         ),
       ]
         .filter(Boolean)
-        .sort((a, b) =>
-          a.localeCompare(b, "ar"),
-        ),
+        .sort((a, b) => a.localeCompare(b, "ar")),
     [
       expenses,
       movementFilter,
@@ -581,22 +513,15 @@ export default function ExpensesPage() {
           applyFilters(expenses, {
             ignoreProject: true,
           })
-            .map(
-              (expense) =>
-                expense.projectId,
-            )
+            .map((expense) => expense.projectId)
             .filter(Boolean),
         ),
       ]
         .map((id) => ({
           id: id as string,
-          name:
-            projectMap.get(id as string) ??
-            "مشروع غير معروف",
+          name: projectMap.get(id as string) ?? "مشروع غير معروف",
         }))
-        .sort((a, b) =>
-          a.name.localeCompare(b.name, "ar"),
-        ),
+        .sort((a, b) => a.name.localeCompare(b.name, "ar")),
     [
       expenses,
       projectMap,
@@ -616,20 +541,14 @@ export default function ExpensesPage() {
         ...new Set(
           applyFilters(expenses, {
             ignoreCustody: true,
-          }).map(
-            (expense) => expense.custodyId,
-          ),
+          }).map((expense) => expense.custodyId),
         ),
       ]
         .map((id) => ({
           id,
-          name:
-            custodyMap.get(id) ??
-            "عهدة غير معروفة",
+          name: custodyMap.get(id) ?? "عهدة غير معروفة",
         }))
-        .sort((a, b) =>
-          a.name.localeCompare(b.name, "ar"),
-        ),
+        .sort((a, b) => a.name.localeCompare(b.name, "ar")),
     [
       expenses,
       custodyMap,
@@ -645,11 +564,7 @@ export default function ExpensesPage() {
 
   const totalAmount = useMemo(
     () =>
-      filteredExpenses.reduce(
-        (total, expense) =>
-          total + expense.amount,
-        0,
-      ),
+      filteredExpenses.reduce((total, expense) => total + expense.amount, 0),
     [filteredExpenses],
   );
 
@@ -658,20 +573,14 @@ export default function ExpensesPage() {
       filteredExpenses
         .filter(
           (expense) =>
-            normalizedMovementType(
-              expense.movementType,
-            ) === "contractor_advance",
+            normalizedMovementType(expense.movementType) ===
+            "contractor_advance",
         )
-        .reduce(
-          (total, expense) =>
-            total + expense.amount,
-          0,
-        ),
+        .reduce((total, expense) => total + expense.amount, 0),
     [filteredExpenses],
   );
 
-  const ordinaryTotal =
-    totalAmount - contractorTotal;
+  const ordinaryTotal = totalAmount - contractorTotal;
 
   const resetFilters = () => {
     setMovementFilter("all");
@@ -695,34 +604,25 @@ export default function ExpensesPage() {
     setError("");
     setEditingId(expense.id);
 
-    const type = normalizedMovementType(
-      expense.movementType,
-    );
+    const type = normalizedMovementType(expense.movementType);
 
     setDraft({
       date: expense.date,
       description: expense.description,
       movementType: type,
       category:
-        type === "contractor_advance"
-          ? CONTRACTOR_CATEGORY
-          : expense.category,
+        type === "contractor_advance" ? CONTRACTOR_CATEGORY : expense.category,
       projectId: expense.projectId,
       workerId: expense.workerId,
       contractorId: expense.contractorId,
       siteId: expense.siteId,
       custodyId: expense.custodyId,
       amount: expense.amount,
-      financialAccountId:
-        expense.financialAccountId,
+      financialAccountId: expense.financialAccountId,
     });
 
     if (expense.custodyId === "central") {
-      setAccounts(
-        getCustodyFinancialAccounts(
-          "central",
-        ),
-      );
+      setAccounts(getCustodyFinancialAccounts("central"));
     } else {
       setAccounts([]);
     }
@@ -735,9 +635,7 @@ export default function ExpensesPage() {
     setError("");
   };
 
-  const updateDraft = <
-    K extends keyof ExpenseDraft,
-  >(
+  const updateDraft = <K extends keyof ExpenseDraft>(
     key: K,
     value: ExpenseDraft[K],
   ) => {
@@ -751,9 +649,7 @@ export default function ExpensesPage() {
     );
   };
 
-  const changeMovementType = (
-    movementType: ProjectExpenseMovementType,
-  ) => {
+  const changeMovementType = (movementType: ProjectExpenseMovementType) => {
     setDraft((current) => {
       if (!current) {
         return current;
@@ -788,54 +684,44 @@ export default function ExpensesPage() {
         contractorId: undefined,
         siteId: undefined,
         category:
-          current.category === CONTRACTOR_CATEGORY || current.category === "سلف العمال"
+          current.category === CONTRACTOR_CATEGORY ||
+          current.category === "سلف العمال"
             ? ""
             : current.category,
       };
     });
   };
 
-  const changeProject = (
-    projectId: string,
-  ) => {
+  const changeProject = (projectId: string) => {
     setDraft((current) =>
       current
         ? {
             ...current,
-            projectId:
-              projectId || undefined,
+            projectId: projectId || undefined,
           }
         : current,
     );
   };
 
-  const changeCustody = (
-    custodyId: string,
-  ) => {
+  const changeCustody = (custodyId: string) => {
     setDraft((current) =>
       current
         ? {
             ...current,
             custodyId,
-            financialAccountId:
-              undefined,
+            financialAccountId: undefined,
           }
         : current,
     );
 
     if (custodyId === "central") {
-      setAccounts(
-        getCustodyFinancialAccounts(
-          "central",
-        ),
-      );
+      setAccounts(getCustodyFinancialAccounts("central"));
     } else {
       setAccounts([]);
     }
   };
 
   const saveNew = (currentDraft: ExpenseDraft) => {
-
     const normalized = normalizeDraft(currentDraft);
 
     validateDraft(normalized);
@@ -860,11 +746,7 @@ export default function ExpensesPage() {
     return createExpenseWithPayment(normalized);
   };
 
-  const updateExisting = (
-    expense: Expense,
-    currentDraft: ExpenseDraft,
-  ) => {
-
+  const updateExisting = (expense: Expense, currentDraft: ExpenseDraft) => {
     const normalized = normalizeDraft(currentDraft);
 
     validateDraft(normalized, expense);
@@ -875,7 +757,9 @@ export default function ExpensesPage() {
 
     if (expense.movementType === "worker_advance") {
       if (normalized.movementType !== "worker_advance") {
-        throw new Error("لا يمكن تحويل سلفة العامل إلى نوع حركة آخر من شاشة المصروفات. عدّلها من حساب العامل.");
+        throw new Error(
+          "لا يمكن تحويل سلفة العامل إلى نوع حركة آخر من شاشة المصروفات. عدّلها من حساب العامل.",
+        );
       }
 
       return updateWorkerAdvanceWithPayment(expense.workerId!, {
@@ -890,7 +774,9 @@ export default function ExpensesPage() {
     }
 
     if (normalized.movementType === "worker_advance") {
-      throw new Error("لا يمكن تحويل مصروف موجود إلى سلفة عامل من شاشة المصروفات. أنشئ سلفة جديدة من نوع سلف العمال.");
+      throw new Error(
+        "لا يمكن تحويل مصروف موجود إلى سلفة عامل من شاشة المصروفات. أنشئ سلفة جديدة من نوع سلف العمال.",
+      );
     }
 
     return updateExpenseWithPayment(expense.id, normalized);
@@ -908,21 +794,13 @@ export default function ExpensesPage() {
       if (editingId === "new") {
         saveNew(draft);
       } else {
-        const expense = expenses.find(
-          (item) =>
-            item.id === editingId,
-        );
+        const expense = expenses.find((item) => item.id === editingId);
 
         if (!expense) {
-          throw new Error(
-            "المصروف المطلوب تعديله غير موجود.",
-          );
+          throw new Error("المصروف المطلوب تعديله غير موجود.");
         }
 
-        updateExisting(
-          expense,
-          draft,
-        );
+        updateExisting(expense, draft);
       }
 
       load();
@@ -942,7 +820,8 @@ export default function ExpensesPage() {
     confirm(
       {
         title: "تأكيد حذف المصروف",
-        description: "هل أنت متأكد من حذف هذا المصروف؟ سيتم عكس أثره على العهدة ووسيلة الدفع المرتبطة به، ولا يمكن التراجع عن الإجراء.",
+        description:
+          "هل أنت متأكد من حذف هذا المصروف؟ سيتم عكس أثره على العهدة ووسيلة الدفع المرتبطة به، ولا يمكن التراجع عن الإجراء.",
         confirmText: "حذف المصروف",
         cancelText: "إلغاء",
         variant: "danger",
@@ -952,7 +831,8 @@ export default function ExpensesPage() {
         setError("");
         try {
           if (expense.movementType === "worker_advance") {
-            if (!expense.workerId) throw new Error("العامل المرتبط بالسلفة غير موجود.");
+            if (!expense.workerId)
+              throw new Error("العامل المرتبط بالسلفة غير موجود.");
             deleteWorkerAdvanceWithPayment(
               expense.id.startsWith("worker-advance:")
                 ? expense.id.replace("worker-advance:", "")
@@ -976,9 +856,7 @@ export default function ExpensesPage() {
     );
   };
 
-  const renderEditor = (
-    isNew: boolean,
-  ) => {
+  const renderEditor = (isNew: boolean) => {
     if (!draft) {
       return null;
     }
@@ -987,28 +865,18 @@ export default function ExpensesPage() {
       draft.custodyId === "central"
         ? accounts.length > 0
           ? accounts
-          : getCustodyFinancialAccounts(
-              "central",
-            )
+          : getCustodyFinancialAccounts("central")
         : [];
 
     return (
       <tr
-        key={
-          editingId ??
-          "expense-editor"
-        }
+        key={editingId ?? "expense-editor"}
         className="border-b border-blue-100 bg-blue-50/40"
       >
         <td className="px-3 py-3 align-top">
           <DateInput
             value={draft.date}
-            onChange={(value) =>
-              updateDraft(
-                "date",
-                value,
-              )
-            }
+            onChange={(value) => updateDraft("date", value)}
             className="h-9 w-full min-w-[135px] rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold outline-none focus:border-blue-500"
           />
         </td>
@@ -1016,12 +884,7 @@ export default function ExpensesPage() {
         <td className="px-3 py-3 align-top">
           <input
             value={draft.description}
-            onChange={(event) =>
-              updateDraft(
-                "description",
-                event.target.value,
-              )
-            }
+            onChange={(event) => updateDraft("description", event.target.value)}
             placeholder="البيان"
             className="h-9 w-full min-w-[190px] rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold outline-none focus:border-blue-500"
           />
@@ -1037,15 +900,9 @@ export default function ExpensesPage() {
             }
             className="h-9 w-full min-w-[140px] rounded-lg border border-slate-200 bg-white px-2 text-xs font-bold outline-none focus:border-blue-500"
           >
-            <option value="expense">
-              مصروف
-            </option>
-            <option value="worker_advance">
-              سلف العمال
-            </option>
-            <option value="contractor_advance">
-              سلف المقاولين
-            </option>
+            <option value="expense">مصروف</option>
+            <option value="worker_advance">سلف العمال</option>
+            <option value="contractor_advance">سلف المقاولين</option>
           </select>
         </td>
 
@@ -1053,24 +910,33 @@ export default function ExpensesPage() {
           {draft.movementType === "worker_advance" ? (
             <select
               value={draft.workerId ?? ""}
-              onChange={(event) => updateDraft("workerId", event.target.value || undefined)}
+              onChange={(event) =>
+                updateDraft("workerId", event.target.value || undefined)
+              }
               className="h-9 w-full min-w-[150px] rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold outline-none focus:border-blue-500"
             >
               <option value="">اختر العامل</option>
               {workers.map((worker) => (
-                <option key={worker.id} value={worker.id}>{worker.name}</option>
+                <option key={worker.id} value={worker.id}>
+                  {worker.name}
+                </option>
               ))}
             </select>
           ) : draft.movementType === "contractor_advance" ? (
             <div className="space-y-2">
               <select
                 value={draft.contractorId ?? ""}
-                onChange={(event) => { updateDraft("contractorId", event.target.value || undefined); updateDraft("siteId", undefined); }}
+                onChange={(event) => {
+                  updateDraft("contractorId", event.target.value || undefined);
+                  updateDraft("siteId", undefined);
+                }}
                 className="h-9 w-full min-w-[150px] rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold outline-none focus:border-blue-500"
               >
                 <option value="">اختر المقاول</option>
                 {contractors.map((contractor) => (
-                  <option key={contractor.id} value={contractor.id}>{contractor.name}</option>
+                  <option key={contractor.id} value={contractor.id}>
+                    {contractor.name}
+                  </option>
                 ))}
               </select>
               {draft.contractorId && (
@@ -1079,18 +945,32 @@ export default function ExpensesPage() {
                   onChange={(event) => {
                     const nextSiteId = event.target.value || undefined;
                     updateDraft("siteId", nextSiteId);
-                    const site = nextSiteId ? getProjectSites().find((item) => item.id === nextSiteId) : undefined;
+                    const site = nextSiteId
+                      ? getProjectSites().find((item) => item.id === nextSiteId)
+                      : undefined;
                     updateDraft("projectId", site?.projectId);
                   }}
                   className="h-9 w-full min-w-[150px] rounded-lg border border-violet-200 bg-violet-50/40 px-2 text-xs font-semibold outline-none focus:border-violet-500"
                 >
                   <option value="">اختر موقع المقاول</option>
-                  {getContractorSiteAssignments(draft.contractorId).map((assignment) => {
-                    const site = getProjectSites().find((item) => item.id === assignment.siteId);
-                    const project = site ? projects.find((item) => item.id === site.projectId) : undefined;
-                    if (!site) return null;
-                    return <option key={assignment.id} value={site.id}>{project ? `${project.name} — ` : ""}{site.name}{assignment.endDate ? " (منتهية)" : " (مستمرة)"}</option>;
-                  })}
+                  {getContractorSiteAssignments(draft.contractorId).map(
+                    (assignment) => {
+                      const site = getProjectSites().find(
+                        (item) => item.id === assignment.siteId,
+                      );
+                      const project = site
+                        ? projects.find((item) => item.id === site.projectId)
+                        : undefined;
+                      if (!site) return null;
+                      return (
+                        <option key={assignment.id} value={site.id}>
+                          {project ? `${project.name} — ` : ""}
+                          {site.name}
+                          {assignment.endDate ? " (منتهية)" : " (مستمرة)"}
+                        </option>
+                      );
+                    },
+                  )}
                 </select>
               )}
             </div>
@@ -1108,21 +988,12 @@ export default function ExpensesPage() {
         <td className="px-3 py-3 align-top">
           <select
             value={draft.projectId ?? ""}
-            onChange={(event) =>
-              changeProject(
-                event.target.value,
-              )
-            }
+            onChange={(event) => changeProject(event.target.value)}
             className="h-9 w-full min-w-[160px] rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold outline-none focus:border-blue-500"
           >
-            <option value="">
-              مصروف عام
-            </option>
+            <option value="">مصروف عام</option>
             {projects.map((project) => (
-              <option
-                key={project.id}
-                value={project.id}
-              >
+              <option key={project.id} value={project.id}>
                 {project.name}
               </option>
             ))}
@@ -1133,60 +1004,34 @@ export default function ExpensesPage() {
           <div className="space-y-2">
             <select
               value={draft.custodyId}
-              onChange={(event) =>
-                changeCustody(
-                  event.target.value,
-                )
-              }
+              onChange={(event) => changeCustody(event.target.value)}
               className="h-9 w-full min-w-[160px] rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold outline-none focus:border-blue-500"
             >
-              <option value="">
-                اختر العهدة
-              </option>
-              {custodies.map(
-                (custody) => (
-                  <option
-                    key={custody.id}
-                    value={custody.id}
-                  >
-                    {custody.name}
-                  </option>
-                ),
-              )}
+              <option value="">اختر العهدة</option>
+              {custodies.map((custody) => (
+                <option key={custody.id} value={custody.id}>
+                  {custody.name}
+                </option>
+              ))}
             </select>
 
-            {draft.custodyId ===
-              "central" && (
+            {draft.custodyId === "central" && (
               <select
-                value={
-                  draft.financialAccountId ??
-                  ""
-                }
+                value={draft.financialAccountId ?? ""}
                 onChange={(event) =>
                   updateDraft(
                     "financialAccountId",
-                    event.target.value ||
-                      undefined,
+                    event.target.value || undefined,
                   )
                 }
                 className="h-9 w-full min-w-[160px] rounded-lg border border-blue-200 bg-white px-2 text-[11px] font-semibold outline-none focus:border-blue-500"
               >
-                <option value="">
-                  وسيلة الدفع
-                </option>
-                {centralAccounts.map(
-                  (account) => (
-                    <option
-                      key={account.id}
-                      value={account.id}
-                    >
-                      {account.name} —{" "}
-                      {money(
-                        account.balance,
-                      )}
-                    </option>
-                  ),
-                )}
+                <option value="">وسيلة الدفع</option>
+                {centralAccounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.name} — {money(account.balance)}
+                  </option>
+                ))}
               </select>
             )}
           </div>
@@ -1197,16 +1042,9 @@ export default function ExpensesPage() {
             type="number"
             min="0.01"
             step="0.01"
-            value={
-              draft.amount || ""
-            }
+            value={draft.amount || ""}
             onChange={(event) =>
-              updateDraft(
-                "amount",
-                Number(
-                  event.target.value,
-                ),
-              )
+              updateDraft("amount", Number(event.target.value))
             }
             placeholder="0.00"
             className="h-9 w-full min-w-[120px] rounded-lg border border-slate-200 bg-white px-3 text-left text-xs font-extrabold outline-none focus:border-blue-500"
@@ -1246,44 +1084,24 @@ export default function ExpensesPage() {
 
   return (
     <AppShell>
-      <div
-        dir="rtl"
-        className="mx-auto w-full space-y-6"
-      >
+      <div dir="rtl" className="mx-auto w-full space-y-6">
         <datalist id="expense-categories-new">
           {allCategories
-            .filter(
-              (category) =>
-                category !==
-                CONTRACTOR_CATEGORY,
-            )
+            .filter((category) => category !== CONTRACTOR_CATEGORY)
             .map((category) => (
-              <option
-                key={category}
-                value={category}
-              />
+              <option key={category} value={category} />
             ))}
         </datalist>
 
-        {editingId &&
-          editingId !== "new" && (
-            <datalist
-              id={`expense-categories-${editingId}`}
-            >
-              {allCategories
-                .filter(
-                  (category) =>
-                    category !==
-                    CONTRACTOR_CATEGORY,
-                )
-                .map((category) => (
-                  <option
-                    key={category}
-                    value={category}
-                  />
-                ))}
-            </datalist>
-          )}
+        {editingId && editingId !== "new" && (
+          <datalist id={`expense-categories-${editingId}`}>
+            {allCategories
+              .filter((category) => category !== CONTRACTOR_CATEGORY)
+              .map((category) => (
+                <option key={category} value={category} />
+              ))}
+          </datalist>
+        )}
 
         {/* Add only */}
         <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -1294,9 +1112,8 @@ export default function ExpensesPage() {
                   إضافة مصروف
                 </h1>
                 <p className="mt-1 text-xs text-slate-400">
-                  إضافة مصروف أو سلفة مقاول
-                  مباشرة، مع ربطها بالعهدة
-                  والمشروع ووسيلة الدفع.
+                  إضافة مصروف أو سلفة مقاول مباشرة، مع ربطها بالعهدة والمشروع
+                  ووسيلة الدفع.
                 </p>
               </div>
 
@@ -1304,9 +1121,7 @@ export default function ExpensesPage() {
                 <button
                   type="button"
                   onClick={beginNew}
-                  disabled={
-                    editingId !== null
-                  }
+                  disabled={editingId !== null}
                   className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 text-xs font-bold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Plus className="h-3.5 w-3.5" />
@@ -1316,51 +1131,47 @@ export default function ExpensesPage() {
             </div>
           </div>
 
-          {error &&
-            editingId === "new" && (
-              <div className="mx-5 mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-bold leading-5 text-red-700 sm:mx-6">
-                {error}
-              </div>
-            )}
+          {error && editingId === "new" && (
+            <div className="mx-5 mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs leading-5 font-bold text-red-700 sm:mx-6">
+              {error}
+            </div>
+          )}
 
-          {editingId === "new" &&
-            draft && (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[1450px] text-right">
-                  <thead>
-                    <tr className="border-b border-slate-100 bg-slate-50/80">
-                      <th className="px-3 py-3 text-xs font-extrabold text-slate-500">
-                        التاريخ
-                      </th>
-                      <th className="px-3 py-3 text-xs font-extrabold text-slate-500">
-                        البيان
-                      </th>
-                      <th className="px-3 py-3 text-xs font-extrabold text-slate-500">
-                        نوع البيان
-                      </th>
-                      <th className="px-3 py-3 text-xs font-extrabold text-slate-500">
-                        التصنيف
-                      </th>
-                      <th className="px-3 py-3 text-xs font-extrabold text-slate-500">
-                        المشروع / الموقع
-                      </th>
-                      <th className="px-3 py-3 text-xs font-extrabold text-slate-500">
-                        العهدة الدافعة
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-extrabold text-slate-500">
-                        المبلغ
-                      </th>
-                      <th className="px-3 py-3 text-xs font-extrabold text-slate-500">
-                        الإجراء
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {renderEditor(true)}
-                  </tbody>
-                </table>
-              </div>
-            )}
+          {editingId === "new" && draft && (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[1450px] text-right">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50/80">
+                    <th className="px-3 py-3 text-xs font-extrabold text-slate-500">
+                      التاريخ
+                    </th>
+                    <th className="px-3 py-3 text-xs font-extrabold text-slate-500">
+                      البيان
+                    </th>
+                    <th className="px-3 py-3 text-xs font-extrabold text-slate-500">
+                      نوع البيان
+                    </th>
+                    <th className="px-3 py-3 text-xs font-extrabold text-slate-500">
+                      التصنيف
+                    </th>
+                    <th className="px-3 py-3 text-xs font-extrabold text-slate-500">
+                      المشروع / الموقع
+                    </th>
+                    <th className="px-3 py-3 text-xs font-extrabold text-slate-500">
+                      العهدة الدافعة
+                    </th>
+                    <th className="px-3 py-3 text-left text-xs font-extrabold text-slate-500">
+                      المبلغ
+                    </th>
+                    <th className="px-3 py-3 text-xs font-extrabold text-slate-500">
+                      الإجراء
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>{renderEditor(true)}</tbody>
+              </table>
+            </div>
+          )}
         </section>
 
         {/* History */}
@@ -1372,8 +1183,7 @@ export default function ExpensesPage() {
                   حركة المصروفات
                 </h2>
                 <p className="mt-1 text-xs text-slate-400">
-                  كل المصروفات المسجلة بالفعل
-                  مع الفلاتر والتعديل والحذف.
+                  كل المصروفات المسجلة بالفعل مع الفلاتر والتعديل والحذف.
                 </p>
               </div>
 
@@ -1393,18 +1203,14 @@ export default function ExpensesPage() {
                   الإجمالي بعد الفلترة
                 </p>
                 <p className="mt-1 text-sm font-extrabold text-red-600">
-                  {money(totalAmount)}{" "}
-                  جنيه
+                  {money(totalAmount)} جنيه
                 </p>
               </div>
 
               <div className="rounded-xl bg-blue-50 px-3 py-2">
-                <p className="text-[10px] font-bold text-blue-500">
-                  المصروفات
-                </p>
+                <p className="text-[10px] font-bold text-blue-500">المصروفات</p>
                 <p className="mt-1 text-sm font-extrabold text-blue-700">
-                  {money(ordinaryTotal)}{" "}
-                  جنيه
+                  {money(ordinaryTotal)} جنيه
                 </p>
               </div>
 
@@ -1413,8 +1219,7 @@ export default function ExpensesPage() {
                   سلف المقاولين
                 </p>
                 <p className="mt-1 text-sm font-extrabold text-violet-700">
-                  {money(contractorTotal)}{" "}
-                  جنيه
+                  {money(contractorTotal)} جنيه
                 </p>
               </div>
 
@@ -1423,18 +1228,16 @@ export default function ExpensesPage() {
                   سلف العمال
                 </p>
                 <p className="mt-1 text-sm font-extrabold text-amber-700">
-                  {money(workerAdvances)}{" "}
-                  جنيه
+                  {money(workerAdvances)} جنيه
                 </p>
               </div>
             </div>
 
-            {error &&
-              editingId !== "new" && (
-                <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-bold leading-5 text-red-700">
-                  {error}
-                </div>
-              )}
+            {error && editingId !== "new" && (
+              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs leading-5 font-bold text-red-700">
+                {error}
+              </div>
+            )}
           </div>
 
           <div className="overflow-x-auto">
@@ -1472,21 +1275,13 @@ export default function ExpensesPage() {
                     <div className="flex gap-1">
                       <DateInput
                         value={fromDate}
-                        onChange={(value) =>
-                          setFromDate(
-                            value,
-                          )
-                        }
+                        onChange={(value) => setFromDate(value)}
                         className="h-8 w-full rounded-md border border-slate-200 px-1 text-[10px]"
                         title="من تاريخ"
                       />
                       <DateInput
                         value={toDate}
-                        onChange={(value) =>
-                          setToDate(
-                            value,
-                          )
-                        }
+                        onChange={(value) => setToDate(value)}
                         className="h-8 w-full rounded-md border border-slate-200 px-1 text-[10px]"
                         title="إلى تاريخ"
                       />
@@ -1495,13 +1290,9 @@ export default function ExpensesPage() {
 
                   <th className="px-2 py-2">
                     <input
-                      value={
-                        descriptionFilter
-                      }
+                      value={descriptionFilter}
                       onChange={(event) =>
-                        setDescriptionFilter(
-                          event.target.value,
-                        )
+                        setDescriptionFilter(event.target.value)
                       }
                       placeholder="بحث في البيان"
                       className="h-8 w-full rounded-md border border-slate-200 px-2 text-[11px] outline-none focus:border-blue-500"
@@ -1510,112 +1301,63 @@ export default function ExpensesPage() {
 
                   <th className="px-2 py-2">
                     <select
-                      value={
-                        movementFilter
-                      }
+                      value={movementFilter}
                       onChange={(event) =>
-                        setMovementFilter(
-                          event.target.value as MovementFilter,
-                        )
+                        setMovementFilter(event.target.value as MovementFilter)
                       }
                       className="h-8 w-full rounded-md border border-slate-200 px-1 text-[11px] outline-none focus:border-blue-500"
                     >
-                      <option value="all">
-                        الكل
-                      </option>
-                      <option value="expense">
-                        مصروف
-                      </option>
-                      <option value="worker_advance">
-                        سلف العمال
-                      </option>
-                      <option value="contractor_advance">
-                        سلف المقاولين
-                      </option>
+                      <option value="all">الكل</option>
+                      <option value="expense">مصروف</option>
+                      <option value="worker_advance">سلف العمال</option>
+                      <option value="contractor_advance">سلف المقاولين</option>
                     </select>
                   </th>
 
                   <th className="px-2 py-2">
                     <select
-                      value={
-                        categoryFilter
-                      }
+                      value={categoryFilter}
                       onChange={(event) =>
-                        setCategoryFilter(
-                          event.target.value,
-                        )
+                        setCategoryFilter(event.target.value)
                       }
                       className="h-8 w-full rounded-md border border-slate-200 px-1 text-[11px] outline-none focus:border-blue-500"
                     >
-                      <option value="">
-                        كل التصنيفات
-                      </option>
-                      {categoryOptions.map(
-                        (category) => (
-                          <option
-                            key={category}
-                            value={category}
-                          >
-                            {category}
-                          </option>
-                        ),
-                      )}
+                      <option value="">كل التصنيفات</option>
+                      {categoryOptions.map((category) => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
                     </select>
                   </th>
 
                   <th className="px-2 py-2">
                     <select
-                      value={
-                        projectFilter
-                      }
-                      onChange={(event) =>
-                        setProjectFilter(
-                          event.target.value,
-                        )
-                      }
+                      value={projectFilter}
+                      onChange={(event) => setProjectFilter(event.target.value)}
                       className="h-8 w-full rounded-md border border-slate-200 px-1 text-[11px] outline-none focus:border-blue-500"
                     >
-                      <option value="">
-                        كل المشاريع
-                      </option>
-                      {projectOptions.map(
-                        (project) => (
-                          <option
-                            key={project.id}
-                            value={project.id}
-                          >
-                            {project.name}
-                          </option>
-                        ),
-                      )}
+                      <option value="">كل المشاريع</option>
+                      {projectOptions.map((project) => (
+                        <option key={project.id} value={project.id}>
+                          {project.name}
+                        </option>
+                      ))}
                     </select>
                   </th>
 
                   <th className="px-2 py-2">
                     <select
-                      value={
-                        custodyFilter
-                      }
-                      onChange={(event) =>
-                        setCustodyFilter(
-                          event.target.value,
-                        )
-                      }
+                      value={custodyFilter}
+                      onChange={(event) => setCustodyFilter(event.target.value)}
                       className="h-8 w-full rounded-md border border-slate-200 px-1 text-[11px] outline-none focus:border-blue-500"
                     >
-                      <option value="">
-                        كل العهد
-                      </option>
-                      {custodyOptions.map(
-                        (custody) => (
-                          <option
-                            key={custody.id}
-                            value={custody.id}
-                          >
-                            {custody.name}
-                          </option>
-                        ),
-                      )}
+                      <option value="">كل العهد</option>
+                      {custodyOptions.map((custody) => (
+                        <option key={custody.id} value={custody.id}>
+                          {custody.name}
+                        </option>
+                      ))}
                     </select>
                   </th>
 
@@ -1624,13 +1366,9 @@ export default function ExpensesPage() {
                       type="number"
                       min="0"
                       value={amountMin}
-                      onChange={(event) =>
-                        setAmountMin(
-                          event.target.value,
-                        )
-                      }
+                      onChange={(event) => setAmountMin(event.target.value)}
                       placeholder="من مبلغ"
-                      className="h-8 w-full rounded-md border border-slate-200 px-2 text-[11px] text-left outline-none focus:border-blue-500"
+                      className="h-8 w-full rounded-md border border-slate-200 px-2 text-left text-[11px] outline-none focus:border-blue-500"
                     />
                   </th>
 
@@ -1641,158 +1379,133 @@ export default function ExpensesPage() {
               </thead>
 
               <tbody className="divide-y divide-slate-100">
-                {filteredExpenses.map(
-                  (expense) => {
-                    if (
-                      editingId ===
-                      expense.id
-                    ) {
-                      return renderEditor(
-                        false,
-                      );
-                    }
+                {filteredExpenses.map((expense) => {
+                  if (editingId === expense.id) {
+                    return renderEditor(false);
+                  }
 
-                    const type =
-                      normalizedMovementType(
-                        expense.movementType,
-                      );
+                  const type = normalizedMovementType(expense.movementType);
 
-                    return (
-                      <tr
-                        key={expense.id}
-                        className="transition-colors hover:bg-slate-50/70"
-                      >
-                        <td className="whitespace-nowrap px-3 py-4 text-xs font-semibold text-slate-500">
-                          {dateLabel(
-                            expense.date,
-                          )}
-                        </td>
+                  return (
+                    <tr
+                      key={expense.id}
+                      className="transition-colors hover:bg-slate-50/70"
+                    >
+                      <td className="px-3 py-4 text-xs font-semibold whitespace-nowrap text-slate-500">
+                        {dateLabel(expense.date)}
+                      </td>
 
-                        <td className="max-w-[280px] px-3 py-4">
-                          <p className="truncate text-sm font-bold text-slate-800">
-                            {expense.description}
-                          </p>
-                          {expense.movementType === "worker_advance" && expense.workerId && (
+                      <td className="max-w-[280px] px-3 py-4">
+                        <p className="truncate text-sm font-bold text-slate-800">
+                          {expense.description}
+                        </p>
+                        {expense.movementType === "worker_advance" &&
+                          expense.workerId && (
                             <p className="mt-1 text-[11px] font-semibold text-amber-600">
-                              العامل: {workers.find((worker) => worker.id === expense.workerId)?.name ?? "عامل غير معروف"}
+                              العامل:{" "}
+                              {workers.find(
+                                (worker) => worker.id === expense.workerId,
+                              )?.name ?? "عامل غير معروف"}
                             </p>
                           )}
-                          {expense.movementType === "contractor_advance" && expense.contractorId && (
+                        {expense.movementType === "contractor_advance" &&
+                          expense.contractorId && (
                             <p className="mt-1 text-[11px] font-semibold text-violet-600">
-                              المقاول: {contractors.find((contractor) => contractor.id === expense.contractorId)?.name ?? "مقاول غير معروف"}
+                              المقاول:{" "}
+                              {contractors.find(
+                                (contractor) =>
+                                  contractor.id === expense.contractorId,
+                              )?.name ?? "مقاول غير معروف"}
                             </p>
                           )}
-                          {expense.movementType === "contractor_advance" && expense.siteId && (
+                        {expense.movementType === "contractor_advance" &&
+                          expense.siteId && (
                             <p className="mt-1 text-[11px] font-semibold text-slate-500">
-                              الموقع: {getProjectSites().find((site) => site.id === expense.siteId)?.name ?? "موقع غير معروف"}
+                              الموقع:{" "}
+                              {getProjectSites().find(
+                                (site) => site.id === expense.siteId,
+                              )?.name ?? "موقع غير معروف"}
                             </p>
                           )}
-                        </td>
+                      </td>
 
-                        <td className="px-3 py-4">
-                          <span
-                            className={`inline-flex rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold ${movementClasses(
-                              type,
-                            )}`}
-                          >
-                            {movementLabel(
-                              type,
-                            )}
-                          </span>
-                        </td>
+                      <td className="px-3 py-4">
+                        <span
+                          className={`inline-flex rounded-lg px-2.5 py-1.5 text-[11px] font-extrabold ${movementClasses(
+                            type,
+                          )}`}
+                        >
+                          {movementLabel(type)}
+                        </span>
+                      </td>
 
-                        <td className="px-3 py-4">
-                          <span className="inline-flex rounded-lg bg-slate-100 px-2.5 py-1.5 text-[11px] font-bold text-slate-700">
-                            {
-                              expense.category
-                            }
-                          </span>
-                        </td>
+                      <td className="px-3 py-4">
+                        <span className="inline-flex rounded-lg bg-slate-100 px-2.5 py-1.5 text-[11px] font-bold text-slate-700">
+                          {expense.category}
+                        </span>
+                      </td>
 
-                        <td className="px-3 py-4 text-xs font-semibold text-slate-600">
-                          {expense.projectId
-                            ? projectMap.get(
-                                expense.projectId,
-                              ) ??
-                              "مشروع غير معروف"
-                            : "مصروف عام"}
-                        </td>
+                      <td className="px-3 py-4 text-xs font-semibold text-slate-600">
+                        {expense.projectId
+                          ? (projectMap.get(expense.projectId) ??
+                            "مشروع غير معروف")
+                          : "مصروف عام"}
+                      </td>
 
-                        <td className="px-3 py-4 text-xs font-semibold text-slate-600">
-                          {custodyMap.get(
-                            expense.custodyId,
-                          ) ??
-                            "عهدة غير معروفة"}
-                        </td>
+                      <td className="px-3 py-4 text-xs font-semibold text-slate-600">
+                        {custodyMap.get(expense.custodyId) ?? "عهدة غير معروفة"}
+                      </td>
 
-                        <td className="whitespace-nowrap px-3 py-4 text-left text-sm font-extrabold text-red-600">
-                          -
-                          {money(
-                            expense.amount,
-                          )}{" "}
-                          جنيه
-                        </td>
+                      <td className="px-3 py-4 text-left text-sm font-extrabold whitespace-nowrap text-red-600">
+                        -{money(expense.amount)} جنيه
+                      </td>
 
-                        <td className="px-3 py-4">
-                          <div className="flex items-center justify-center gap-1.5">
-                            {canCurrentUser("update") && (
-                              <button
-                                type="button"
-                                disabled={editingId !== null || saving}
-                                onClick={() => beginEdit(expense)}
-                                className="inline-flex h-8 items-center justify-center rounded-lg border border-slate-200 bg-white px-2.5 text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-                                title="تعديل"
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                              </button>
-                            )}
-
+                      <td className="px-3 py-4">
+                        <div className="flex items-center justify-center gap-1.5">
+                          {canCurrentUser("update") && (
                             <button
                               type="button"
-                              disabled={
-                                editingId !==
-                                  null ||
-                                saving
-                              }
-                              onClick={() =>
-                                removeExpense(
-                                  expense,
-                                )
-                              }
-                              className="inline-flex h-8 items-center justify-center rounded-lg border border-red-100 bg-red-50 px-2.5 text-red-600 hover:bg-red-100 disabled:opacity-50"
-                              title="حذف"
+                              disabled={editingId !== null || saving}
+                              onClick={() => beginEdit(expense)}
+                              className="inline-flex h-8 items-center justify-center rounded-lg border border-slate-200 bg-white px-2.5 text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                              title="تعديل"
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
+                              <Pencil className="h-3.5 w-3.5" />
                             </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  },
-                )}
+                          )}
 
-                {filteredExpenses.length ===
-                  0 &&
-                  editingId !== "new" && (
-                    <tr>
-                      <td
-                        colSpan={8}
-                        className="px-5 py-12 text-center"
-                      >
-                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
-                          <Check className="h-5 w-5" />
+                          <button
+                            type="button"
+                            disabled={editingId !== null || saving}
+                            onClick={() => removeExpense(expense)}
+                            className="inline-flex h-8 items-center justify-center rounded-lg border border-red-100 bg-red-50 px-2.5 text-red-600 hover:bg-red-100 disabled:opacity-50"
+                            title="حذف"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
                         </div>
-
-                        <p className="mt-3 text-sm font-bold text-slate-700">
-                          لا توجد مصروفات مطابقة للفلاتر
-                        </p>
-
-                        <p className="mt-1 text-xs text-slate-400">
-                          جرّب تغيير الفلاتر أو أضف مصروفًا جديدًا.
-                        </p>
                       </td>
                     </tr>
-                  )}
+                  );
+                })}
+
+                {filteredExpenses.length === 0 && editingId !== "new" && (
+                  <tr>
+                    <td colSpan={8} className="px-5 py-12 text-center">
+                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
+                        <Check className="h-5 w-5" />
+                      </div>
+
+                      <p className="mt-3 text-sm font-bold text-slate-700">
+                        لا توجد مصروفات مطابقة للفلاتر
+                      </p>
+
+                      <p className="mt-1 text-xs text-slate-400">
+                        جرّب تغيير الفلاتر أو أضف مصروفًا جديدًا.
+                      </p>
+                    </td>
+                  </tr>
+                )}
               </tbody>
 
               <tfoot>
@@ -1805,11 +1518,7 @@ export default function ExpensesPage() {
                   </td>
 
                   <td className="px-3 py-4 text-left text-sm font-extrabold text-red-600">
-                    -
-                    {money(
-                      totalAmount,
-                    )}{" "}
-                    جنيه
+                    -{money(totalAmount)} جنيه
                   </td>
 
                   <td className="px-3 py-4" />

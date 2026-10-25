@@ -27,7 +27,11 @@ import {
   deleteProjectMovement,
   getProjectMovementRecords,
 } from "@/lib/data/project-movements";
-export type { ProjectMovementDraft, ProjectMovementRecord, ProjectMovementType } from "@/lib/data/project-movements";
+export type {
+  ProjectMovementDraft,
+  ProjectMovementRecord,
+  ProjectMovementType,
+} from "@/lib/data/project-movements";
 import {
   addWorkerFinancialMovement,
   deleteWorkerFinancialMovement,
@@ -38,9 +42,7 @@ import {
   deleteWorkerAdvanceWithPayment,
 } from "@/lib/data/worker-financial-movements";
 import { getContractorById } from "@/lib/data/contractors";
-import {
-  isContractorAssignedToSiteOnDate,
-} from "@/lib/data/contractor-site-assignments";
+import { isContractorAssignedToSiteOnDate } from "@/lib/data/contractor-site-assignments";
 import { getProjectSiteById } from "@/lib/data/project-sites";
 import type { Expense, ProjectExpenseMovementType } from "@/types/expense";
 import type { CustodyTransaction } from "@/types/custody-transaction";
@@ -68,7 +70,9 @@ export interface FinancialExpenseDraft {
   siteId?: string;
 }
 
-function normalizeExpenseDraft(input: FinancialExpenseDraft): FinancialExpenseDraft {
+function normalizeExpenseDraft(
+  input: FinancialExpenseDraft,
+): FinancialExpenseDraft {
   return {
     ...input,
     date: input.date,
@@ -105,14 +109,23 @@ function validateExpenseDraft(input: FinancialExpenseDraft) {
 
   if (draft.movementType === "contractor_advance") {
     if (!draft.contractorId) throw new Error("المقاول مطلوب للسلفة.");
-    if (!getContractorById(draft.contractorId)) throw new Error("المقاول المحدد غير موجود.");
+    if (!getContractorById(draft.contractorId))
+      throw new Error("المقاول المحدد غير موجود.");
     if (!draft.siteId) throw new Error("الموقع مطلوب لسلفة المقاول.");
     const contractorSite = getProjectSiteById(draft.siteId);
     if (!contractorSite) throw new Error("الموقع المحدد غير موجود.");
     if (!draft.projectId || contractorSite.projectId !== draft.projectId) {
-      throw new Error("سلفة المقاول يجب أن تكون مرتبطة بالمشروع التابع للموقع المحدد.");
+      throw new Error(
+        "سلفة المقاول يجب أن تكون مرتبطة بالمشروع التابع للموقع المحدد.",
+      );
     }
-    if (!isContractorAssignedToSiteOnDate(draft.contractorId, draft.siteId, draft.date)) {
+    if (
+      !isContractorAssignedToSiteOnDate(
+        draft.contractorId,
+        draft.siteId,
+        draft.date,
+      )
+    ) {
       throw new Error("تاريخ السلفة خارج فترة ارتباط المقاول بالموقع المحدد.");
     }
     if (draft.category !== "سلف المقاولين") {
@@ -121,10 +134,13 @@ function validateExpenseDraft(input: FinancialExpenseDraft) {
   }
 
   if (custody.id === "central") {
-    if (!draft.financialAccountId) throw new Error("اختر وسيلة الدفع من العهدة المركزية.");
+    if (!draft.financialAccountId)
+      throw new Error("اختر وسيلة الدفع من العهدة المركزية.");
     const account = getCustodyFinancialAccountById(draft.financialAccountId);
-    if (!account || account.custodyId !== custody.id) throw new Error("وسيلة الدفع غير صحيحة.");
-    if (account.balance < draft.amount) throw new Error("رصيد وسيلة الدفع غير كافٍ.");
+    if (!account || account.custodyId !== custody.id)
+      throw new Error("وسيلة الدفع غير صحيحة.");
+    if (account.balance < draft.amount)
+      throw new Error("رصيد وسيلة الدفع غير كافٍ.");
   } else if (draft.financialAccountId) {
     throw new Error("وسيلة الدفع متاحة مع العهدة المركزية فقط.");
   }
@@ -172,7 +188,11 @@ function applyOutflow(draft: FinancialExpenseDraft, source: string) {
     return transaction;
   } catch (error) {
     if (transaction) {
-      try { deleteCustodyTransaction(transaction.id); } catch { /* preserve original */ }
+      try {
+        deleteCustodyTransaction(transaction.id);
+      } catch {
+        /* preserve original */
+      }
     }
     if (accountChanged && normalized.financialAccountId) {
       try {
@@ -181,10 +201,16 @@ function applyOutflow(draft: FinancialExpenseDraft, source: string) {
           normalized.amount,
           "out",
         );
-      } catch { /* preserve original */ }
+      } catch {
+        /* preserve original */
+      }
     }
     if (custodyChanged) {
-      try { reverseCustodyBalance(custody.id, normalized.amount, "out"); } catch { /* preserve original */ }
+      try {
+        reverseCustodyBalance(custody.id, normalized.amount, "out");
+      } catch {
+        /* preserve original */
+      }
     }
     throw error;
   }
@@ -224,10 +250,26 @@ export function createExpenseWithPayment(input: FinancialExpenseDraft) {
 
     return { expense, transaction };
   } catch (error) {
-    try { deleteCustodyTransaction(transaction.id); } catch { /* preserve original */ }
-    try { reverseCustodyBalance(draft.custodyId, draft.amount, "out"); } catch { /* preserve original */ }
+    try {
+      deleteCustodyTransaction(transaction.id);
+    } catch {
+      /* preserve original */
+    }
+    try {
+      reverseCustodyBalance(draft.custodyId, draft.amount, "out");
+    } catch {
+      /* preserve original */
+    }
     if (draft.financialAccountId) {
-      try { reverseCustodyFinancialAccountBalance(draft.financialAccountId, draft.amount, "out"); } catch { /* preserve original */ }
+      try {
+        reverseCustodyFinancialAccountBalance(
+          draft.financialAccountId,
+          draft.amount,
+          "out",
+        );
+      } catch {
+        /* preserve original */
+      }
     }
     throw error;
   }
@@ -235,7 +277,9 @@ export function createExpenseWithPayment(input: FinancialExpenseDraft) {
 
 function findExpenseTransaction(expense: Expense) {
   if (expense.custodyTransactionId) {
-    return getCustodyTransactions().find((item) => item.id === expense.custodyTransactionId);
+    return getCustodyTransactions().find(
+      (item) => item.id === expense.custodyTransactionId,
+    );
   }
   return getCustodyTransactions()
     .filter(
@@ -263,16 +307,24 @@ export function updateExpenseWithPayment(
 
   const draft = validateExpenseDraft(input);
   const oldTransaction = findExpenseTransaction(expense);
-  if (!oldTransaction) throw new Error("حركة العهدة المرتبطة بالمصروف غير موجودة.");
+  if (!oldTransaction)
+    throw new Error("حركة العهدة المرتبطة بالمصروف غير موجودة.");
 
   reverseCustodyBalance(oldTransaction.custodyId, oldTransaction.amount, "out");
   if (oldTransaction.financialAccountId) {
-    reverseCustodyFinancialAccountBalance(oldTransaction.financialAccountId, oldTransaction.amount, "out");
+    reverseCustodyFinancialAccountBalance(
+      oldTransaction.financialAccountId,
+      oldTransaction.amount,
+      "out",
+    );
   }
 
   let newTransaction: CustodyTransaction | undefined;
   try {
-    newTransaction = applyOutflow(draft, draft.movementType === "contractor_advance" ? "سلفة مقاول" : "مصروف");
+    newTransaction = applyOutflow(
+      draft,
+      draft.movementType === "contractor_advance" ? "سلفة مقاول" : "مصروف",
+    );
     const updated = updateExpense(expenseId, {
       date: draft.date,
       amount: draft.amount,
@@ -291,25 +343,44 @@ export function updateExpenseWithPayment(
     return { expense: updated, transaction: newTransaction };
   } catch (error) {
     if (newTransaction) {
-      try { deleteCustodyTransaction(newTransaction.id); } catch { /* preserve original */ }
-      try { reverseCustodyBalance(draft.custodyId, draft.amount, "out"); } catch { /* preserve original */ }
+      try {
+        deleteCustodyTransaction(newTransaction.id);
+      } catch {
+        /* preserve original */
+      }
+      try {
+        reverseCustodyBalance(draft.custodyId, draft.amount, "out");
+      } catch {
+        /* preserve original */
+      }
       if (draft.financialAccountId) {
-        try { reverseCustodyFinancialAccountBalance(draft.financialAccountId, draft.amount, "out"); } catch { /* preserve original */ }
+        try {
+          reverseCustodyFinancialAccountBalance(
+            draft.financialAccountId,
+            draft.amount,
+            "out",
+          );
+        } catch {
+          /* preserve original */
+        }
       }
     }
     try {
-      const restored = applyOutflow({
-        date: oldTransaction.date,
-        amount: oldTransaction.amount,
-        category: expense.category,
-        description: oldTransaction.description,
-        custodyId: oldTransaction.custodyId,
-        projectId: expense.projectId,
-        financialAccountId: oldTransaction.financialAccountId,
-        movementType: expense.movementType,
-        contractorId: expense.contractorId,
-        siteId: expense.siteId,
-      }, expense.movementType === "contractor_advance" ? "سلفة مقاول" : "مصروف");
+      const restored = applyOutflow(
+        {
+          date: oldTransaction.date,
+          amount: oldTransaction.amount,
+          category: expense.category,
+          description: oldTransaction.description,
+          custodyId: oldTransaction.custodyId,
+          projectId: expense.projectId,
+          financialAccountId: oldTransaction.financialAccountId,
+          movementType: expense.movementType,
+          contractorId: expense.contractorId,
+          siteId: expense.siteId,
+        },
+        expense.movementType === "contractor_advance" ? "سلفة مقاول" : "مصروف",
+      );
       updateExpense(expenseId, {
         date: expense.date,
         amount: expense.amount,
@@ -323,7 +394,9 @@ export function updateExpenseWithPayment(
         contractorId: expense.contractorId,
         siteId: expense.siteId,
       });
-    } catch { /* preserve original */ }
+    } catch {
+      /* preserve original */
+    }
     throw error;
   }
 }
@@ -336,11 +409,16 @@ export function deleteExpenseWithPayment(expenseId: string) {
     throw new Error("سلفة العامل يجب حذفها من خدمة حركات العامل.");
   }
   const transaction = findExpenseTransaction(expense);
-  if (!transaction) throw new Error("حركة العهدة المرتبطة بالمصروف غير موجودة.");
+  if (!transaction)
+    throw new Error("حركة العهدة المرتبطة بالمصروف غير موجودة.");
 
   reverseCustodyBalance(transaction.custodyId, transaction.amount, "out");
   if (transaction.financialAccountId) {
-    reverseCustodyFinancialAccountBalance(transaction.financialAccountId, transaction.amount, "out");
+    reverseCustodyFinancialAccountBalance(
+      transaction.financialAccountId,
+      transaction.amount,
+      "out",
+    );
   }
   deleteCustodyTransaction(transaction.id);
   deleteExpense(expenseId);
@@ -369,22 +447,26 @@ export function createCustodyTransfer(input: CustodyTransferInput) {
   if (from.id === to.id) throw new Error("لا يمكن التحويل إلى نفس العهدة.");
   if (!input.date) throw new Error("تاريخ التحويل مطلوب.");
   if (!description) throw new Error("بيان التحويل مطلوب.");
-  if (!Number.isFinite(amount) || amount <= 0) throw new Error("مبلغ التحويل يجب أن يكون أكبر من صفر.");
+  if (!Number.isFinite(amount) || amount <= 0)
+    throw new Error("مبلغ التحويل يجب أن يكون أكبر من صفر.");
 
   const external = Boolean(input.externalFunding);
   if (external && from.id !== "central") {
     throw new Error("التمويل الخارجي يبدأ من عهدتي أنا فقط.");
   }
-  if (external && !externalSource) throw new Error("مصدر الأموال الخارجي مطلوب.");
+  if (external && !externalSource)
+    throw new Error("مصدر الأموال الخارجي مطلوب.");
 
   if (external && input.financialAccountId) {
     throw new Error("التمويل الخارجي لا يستخدم وسيلة دفع من عهدتي أنا.");
   }
 
   if (from.id === "central" && !external) {
-    if (!input.financialAccountId) throw new Error("اختر وسيلة الدفع من العهدة المركزية.");
+    if (!input.financialAccountId)
+      throw new Error("اختر وسيلة الدفع من العهدة المركزية.");
     const account = getCustodyFinancialAccountById(input.financialAccountId);
-    if (!account || account.custodyId !== "central") throw new Error("وسيلة الدفع غير صحيحة.");
+    if (!account || account.custodyId !== "central")
+      throw new Error("وسيلة الدفع غير صحيحة.");
     if (account.balance < amount) throw new Error("رصيد وسيلة الدفع غير كافٍ.");
   } else if (input.financialAccountId) {
     throw new Error("وسيلة الدفع متاحة مع التحويل من عهدتي أنا فقط.");
@@ -495,27 +577,58 @@ export function createCustodyTransfer(input: CustodyTransferInput) {
       updateCustodyBalance(to.id, amount, "in");
       toBalance = true;
       if (input.financialAccountId) {
-        updateCustodyFinancialAccountBalance(input.financialAccountId, amount, "out");
+        updateCustodyFinancialAccountBalance(
+          input.financialAccountId,
+          amount,
+          "out",
+        );
         accountChanged = true;
       }
     }
 
-    return { transferTransactionId: transferId, incomingTransactionId: destinationInId };
+    return {
+      transferTransactionId: transferId,
+      incomingTransactionId: destinationInId,
+    };
   } catch (error) {
     for (const id of created.reverse()) {
-      try { deleteCustodyTransaction(id); } catch { /* preserve original */ }
+      try {
+        deleteCustodyTransaction(id);
+      } catch {
+        /* preserve original */
+      }
     }
     if (accountChanged && input.financialAccountId) {
-      try { reverseCustodyFinancialAccountBalance(input.financialAccountId, amount, "out"); } catch { /* preserve original */ }
+      try {
+        reverseCustodyFinancialAccountBalance(
+          input.financialAccountId,
+          amount,
+          "out",
+        );
+      } catch {
+        /* preserve original */
+      }
     }
     if (toBalance) {
-      try { reverseCustodyBalance(to.id, amount, "in"); } catch { /* preserve original */ }
+      try {
+        reverseCustodyBalance(to.id, amount, "in");
+      } catch {
+        /* preserve original */
+      }
     }
     if (fromBalance) {
-      try { reverseCustodyBalance(from.id, amount, "out"); } catch { /* preserve original */ }
+      try {
+        reverseCustodyBalance(from.id, amount, "out");
+      } catch {
+        /* preserve original */
+      }
     }
     if (centralExternalIn) {
-      try { reverseCustodyBalance(from.id, amount, "in"); } catch { /* preserve original */ }
+      try {
+        reverseCustodyBalance(from.id, amount, "in");
+      } catch {
+        /* preserve original */
+      }
     }
     throw error;
   }
@@ -546,16 +659,20 @@ export function createWorkerMovementWithPayment(input: {
   if (!custody) throw new Error("العهدة المختارة غير موجودة.");
   if (!input.date) throw new Error("تاريخ الحركة مطلوب.");
   if (!input.description.trim()) throw new Error("بيان الحركة مطلوب.");
-  if (!Number.isFinite(amount) || amount <= 0) throw new Error("مبلغ الحركة غير صحيح.");
+  if (!Number.isFinite(amount) || amount <= 0)
+    throw new Error("مبلغ الحركة غير صحيح.");
 
   if (cashOut && custody.id === "central") {
-    if (!input.financialAccountId) throw new Error("اختر وسيلة الدفع من العهدة المركزية.");
+    if (!input.financialAccountId)
+      throw new Error("اختر وسيلة الدفع من العهدة المركزية.");
     const account = getCustodyFinancialAccountById(input.financialAccountId);
-    if (!account || account.custodyId !== custody.id) throw new Error("وسيلة الدفع غير صحيحة.");
+    if (!account || account.custodyId !== custody.id)
+      throw new Error("وسيلة الدفع غير صحيحة.");
     if (account.balance < amount) throw new Error("رصيد وسيلة الدفع غير كافٍ.");
   } else if (input.financialAccountId) {
     const account = getCustodyFinancialAccountById(input.financialAccountId);
-    if (!account || account.custodyId !== custody.id) throw new Error("وسيلة الدفع غير صحيحة.");
+    if (!account || account.custodyId !== custody.id)
+      throw new Error("وسيلة الدفع غير صحيحة.");
     if (!cashOut) throw new Error("وسيلة الدفع لا ترتبط بحركة غير نقدية.");
   }
 
@@ -569,7 +686,7 @@ export function createWorkerMovementWithPayment(input: {
     custodyId: input.custodyId,
     financialAccountId: cashOut ? input.financialAccountId : undefined,
     projectId: input.projectId,
-    allocation: input.projectId ? input.allocation ?? "project" : "general",
+    allocation: input.projectId ? (input.allocation ?? "project") : "general",
   });
 
   let custodyChanged = false;
@@ -580,7 +697,11 @@ export function createWorkerMovementWithPayment(input: {
       updateCustodyBalance(custody.id, amount, "out");
       custodyChanged = true;
       if (input.financialAccountId) {
-        updateCustodyFinancialAccountBalance(input.financialAccountId, amount, "out");
+        updateCustodyFinancialAccountBalance(
+          input.financialAccountId,
+          amount,
+          "out",
+        );
         accountChanged = true;
       }
       const now = new Date().toISOString();
@@ -602,19 +723,38 @@ export function createWorkerMovementWithPayment(input: {
     return { movement, transaction };
   } catch (error) {
     if (transaction) {
-      try { deleteCustodyTransaction(transaction.id); } catch { /* preserve original */ }
+      try {
+        deleteCustodyTransaction(transaction.id);
+      } catch {
+        /* preserve original */
+      }
     }
     if (accountChanged && input.financialAccountId) {
-      try { reverseCustodyFinancialAccountBalance(input.financialAccountId, amount, "out"); } catch { /* preserve original */ }
+      try {
+        reverseCustodyFinancialAccountBalance(
+          input.financialAccountId,
+          amount,
+          "out",
+        );
+      } catch {
+        /* preserve original */
+      }
     }
     if (custodyChanged) {
-      try { reverseCustodyBalance(custody.id, amount, "out"); } catch { /* preserve original */ }
+      try {
+        reverseCustodyBalance(custody.id, amount, "out");
+      } catch {
+        /* preserve original */
+      }
     }
-    try { deleteWorkerFinancialMovement(movement.id); } catch { /* preserve original */ }
+    try {
+      deleteWorkerFinancialMovement(movement.id);
+    } catch {
+      /* preserve original */
+    }
     throw error;
   }
 }
-
 
 export function updateWorkerMovementWithPayment(
   movementId: string,
@@ -635,34 +775,52 @@ export function updateWorkerMovementWithPayment(
   if (!current) throw new Error("حركة العامل غير موجودة.");
 
   const amount = Number(updates.amount);
-  if (!Number.isFinite(amount) || amount <= 0) throw new Error("مبلغ الحركة غير صحيح.");
+  if (!Number.isFinite(amount) || amount <= 0)
+    throw new Error("مبلغ الحركة غير صحيح.");
   if (!updates.date) throw new Error("تاريخ الحركة مطلوب.");
   if (!updates.description.trim()) throw new Error("بيان الحركة مطلوب.");
 
-  const oldTransaction = getCustodyTransactionByWorkerFinancialMovementId(movementId);
+  const oldTransaction =
+    getCustodyTransactionByWorkerFinancialMovementId(movementId);
   const oldCashOut = isWorkerCashOutMovement(current.type);
   const nextCashOut = isWorkerCashOutMovement(updates.type);
   const targetCustody = getCustodyById(updates.custodyId);
   if (!targetCustody) throw new Error("العهدة المختارة غير موجودة.");
 
   if (nextCashOut && targetCustody.id === "central") {
-    if (!updates.financialAccountId) throw new Error("اختر وسيلة الدفع من العهدة المركزية.");
+    if (!updates.financialAccountId)
+      throw new Error("اختر وسيلة الدفع من العهدة المركزية.");
     const account = getCustodyFinancialAccountById(updates.financialAccountId);
-    if (!account || account.custodyId !== "central") throw new Error("وسيلة الدفع غير صحيحة.");
-    const available = account.balance + (oldTransaction?.financialAccountId === updates.financialAccountId ? oldTransaction.amount : 0);
+    if (!account || account.custodyId !== "central")
+      throw new Error("وسيلة الدفع غير صحيحة.");
+    const available =
+      account.balance +
+      (oldTransaction?.financialAccountId === updates.financialAccountId
+        ? oldTransaction.amount
+        : 0);
     if (available < amount) throw new Error("رصيد وسيلة الدفع غير كافٍ.");
   } else if (updates.financialAccountId) {
     const account = getCustodyFinancialAccountById(updates.financialAccountId);
-    if (!account || account.custodyId !== targetCustody.id) throw new Error("وسيلة الدفع غير صحيحة.");
+    if (!account || account.custodyId !== targetCustody.id)
+      throw new Error("وسيلة الدفع غير صحيحة.");
     if (!nextCashOut) throw new Error("وسيلة الدفع لا ترتبط بحركة غير نقدية.");
   }
 
-  if (oldCashOut && !oldTransaction) throw new Error("حركة العهدة المرتبطة بالحركة القديمة غير موجودة.");
+  if (oldCashOut && !oldTransaction)
+    throw new Error("حركة العهدة المرتبطة بالحركة القديمة غير موجودة.");
 
   if (oldCashOut && oldTransaction) {
-    reverseCustodyBalance(oldTransaction.custodyId, oldTransaction.amount, "out");
+    reverseCustodyBalance(
+      oldTransaction.custodyId,
+      oldTransaction.amount,
+      "out",
+    );
     if (oldTransaction.financialAccountId) {
-      reverseCustodyFinancialAccountBalance(oldTransaction.financialAccountId, oldTransaction.amount, "out");
+      reverseCustodyFinancialAccountBalance(
+        oldTransaction.financialAccountId,
+        oldTransaction.amount,
+        "out",
+      );
     }
     deleteCustodyTransaction(oldTransaction.id);
   }
@@ -678,13 +836,19 @@ export function updateWorkerMovementWithPayment(
       custodyId: updates.custodyId,
       financialAccountId: nextCashOut ? updates.financialAccountId : undefined,
       projectId: updates.projectId,
-      allocation: updates.projectId ? updates.allocation ?? "project" : "general",
+      allocation: updates.projectId
+        ? (updates.allocation ?? "project")
+        : "general",
     });
 
     if (nextCashOut) {
       updateCustodyBalance(targetCustody.id, amount, "out");
       if (updates.financialAccountId) {
-        updateCustodyFinancialAccountBalance(updates.financialAccountId, amount, "out");
+        updateCustodyFinancialAccountBalance(
+          updates.financialAccountId,
+          amount,
+          "out",
+        );
       }
       const now = new Date().toISOString();
       newTransaction = addCustodyTransaction({
@@ -706,10 +870,26 @@ export function updateWorkerMovementWithPayment(
     return { movement: updatedMovement, transaction: newTransaction };
   } catch (error) {
     if (newTransaction) {
-      try { deleteCustodyTransaction(newTransaction.id); } catch { /* preserve original */ }
-      try { reverseCustodyBalance(targetCustody.id, amount, "out"); } catch { /* preserve original */ }
+      try {
+        deleteCustodyTransaction(newTransaction.id);
+      } catch {
+        /* preserve original */
+      }
+      try {
+        reverseCustodyBalance(targetCustody.id, amount, "out");
+      } catch {
+        /* preserve original */
+      }
       if (updates.financialAccountId) {
-        try { reverseCustodyFinancialAccountBalance(updates.financialAccountId, amount, "out"); } catch { /* preserve original */ }
+        try {
+          reverseCustodyFinancialAccountBalance(
+            updates.financialAccountId,
+            amount,
+            "out",
+          );
+        } catch {
+          /* preserve original */
+        }
       }
     }
 
@@ -726,13 +906,23 @@ export function updateWorkerMovementWithPayment(
         allocation: current.allocation,
       });
       if (oldCashOut && oldTransaction) {
-        updateCustodyBalance(oldTransaction.custodyId, oldTransaction.amount, "out");
+        updateCustodyBalance(
+          oldTransaction.custodyId,
+          oldTransaction.amount,
+          "out",
+        );
         if (oldTransaction.financialAccountId) {
-          updateCustodyFinancialAccountBalance(oldTransaction.financialAccountId, oldTransaction.amount, "out");
+          updateCustodyFinancialAccountBalance(
+            oldTransaction.financialAccountId,
+            oldTransaction.amount,
+            "out",
+          );
         }
         addCustodyTransaction(oldTransaction);
       }
-    } catch { /* preserve original */ }
+    } catch {
+      /* preserve original */
+    }
     throw error;
   }
 }
@@ -741,13 +931,19 @@ export function deleteWorkerMovementWithPayment(movementId: string) {
   assertCurrentUserPermission("delete");
   const movement = getWorkerFinancialMovementById(movementId);
   if (!movement) throw new Error("حركة العامل غير موجودة.");
-  const transaction = getCustodyTransactionByWorkerFinancialMovementId(movementId);
+  const transaction =
+    getCustodyTransactionByWorkerFinancialMovementId(movementId);
 
   if (isWorkerCashOutMovement(movement.type)) {
-    if (!transaction) throw new Error("حركة العهدة المرتبطة بالحركة غير موجودة.");
+    if (!transaction)
+      throw new Error("حركة العهدة المرتبطة بالحركة غير موجودة.");
     reverseCustodyBalance(transaction.custodyId, transaction.amount, "out");
     if (transaction.financialAccountId) {
-      reverseCustodyFinancialAccountBalance(transaction.financialAccountId, transaction.amount, "out");
+      reverseCustodyFinancialAccountBalance(
+        transaction.financialAccountId,
+        transaction.amount,
+        "out",
+      );
     }
     deleteCustodyTransaction(transaction.id);
   } else if (transaction) {

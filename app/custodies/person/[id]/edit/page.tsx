@@ -11,10 +11,7 @@ import {
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import AppShell from "@/components/layout/AppShell";
-import {
-  getCustodyById,
-  updateCustody,
-} from "@/lib/data/custodies";
+import { getCustodyById, updateCustody } from "@/lib/data/custodies";
 import type { Custody } from "@/types/custody";
 
 export default function EditPersonCustodyPage() {
@@ -23,17 +20,14 @@ export default function EditPersonCustodyPage() {
 
   const custodyId = params.id as string;
 
-  const [custody, setCustody] = useState<
-    Custody | undefined
-  >();
+  const [custody, setCustody] = useState<Custody | undefined>();
 
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const currentCustody =
-      getCustodyById(custodyId);
+    const currentCustody = getCustodyById(custodyId);
 
     setCustody(currentCustody);
 
@@ -42,9 +36,7 @@ export default function EditPersonCustodyPage() {
     }
   }, [custodyId]);
 
-  const handleSubmit = (
-    event: SubmitEvent<HTMLFormElement>,
-  ) => {
+  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!custody) {
@@ -133,8 +125,8 @@ export default function EditPersonCustodyPage() {
               </h1>
 
               <p className="mt-2 text-sm leading-6 text-slate-500">
-                تعديل بيانات {custody.name} مع الحفاظ على جميع
-                الحركات والرصيد كما هي.
+                تعديل بيانات {custody.name} مع الحفاظ على جميع الحركات والرصيد
+                كما هي.
               </p>
             </div>
           </div>
@@ -175,7 +167,7 @@ export default function EditPersonCustodyPage() {
               </label>
 
               <div className="relative">
-                <UserRound className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <UserRound className="pointer-events-none absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2 text-slate-400" />
 
                 <input
                   id="custody-name"
@@ -185,13 +177,12 @@ export default function EditPersonCustodyPage() {
                     setName(event.target.value);
                     setError("");
                   }}
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm text-slate-800 outline-none transition-all placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm text-slate-800 transition-all outline-none placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                 />
               </div>
 
               <p className="mt-2 text-[11px] leading-5 text-slate-400">
-                تغيير الاسم هنا لا يؤثر على الرصيد أو الحركات
-                السابقة للعهدة.
+                تغيير الاسم هنا لا يؤثر على الرصيد أو الحركات السابقة للعهدة.
               </p>
             </div>
 
@@ -208,21 +199,18 @@ export default function EditPersonCustodyPage() {
                   </h3>
 
                   <p className="mt-1 text-xl font-extrabold text-slate-900">
-                    {custody.balance.toLocaleString(
-                      "en-US",
-                      {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 2,
-                      },
-                    )}{" "}
+                    {custody.balance.toLocaleString("en-US", {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                    })}{" "}
                     <span className="text-xs font-medium text-slate-400">
                       جنيه
                     </span>
                   </p>
 
                   <p className="mt-2 text-xs leading-5 text-slate-500">
-                    الرصيد لا يتم تعديله من شاشة التعديل. أي تغيير
-                    مالي يتم من خلال تسجيل حركة جديدة.
+                    الرصيد لا يتم تعديله من شاشة التعديل. أي تغيير مالي يتم من
+                    خلال تسجيل حركة جديدة.
                   </p>
                 </div>
               </div>
@@ -236,13 +224,10 @@ export default function EditPersonCustodyPage() {
                 </p>
 
                 <p className="mt-2 text-lg font-extrabold text-emerald-600">
-                  {custody.totalIn.toLocaleString(
-                    "en-US",
-                    {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 2,
-                    },
-                  )}{" "}
+                  {custody.totalIn.toLocaleString("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                  })}{" "}
                   جنيه
                 </p>
               </div>
@@ -253,13 +238,10 @@ export default function EditPersonCustodyPage() {
                 </p>
 
                 <p className="mt-2 text-lg font-extrabold text-red-600">
-                  {custody.totalOut.toLocaleString(
-                    "en-US",
-                    {
-                      minimumFractionDigits: 0,
-                      maximumFractionDigits: 2,
-                    },
-                  )}{" "}
+                  {custody.totalOut.toLocaleString("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2,
+                  })}{" "}
                   جنيه
                 </p>
               </div>
@@ -278,8 +260,8 @@ export default function EditPersonCustodyPage() {
                   </h3>
 
                   <p className="mt-1 text-xs leading-6 text-slate-500">
-                    تعديل بيانات العهدة لا يحذف ولا يعدل أي حركة
-                    مالية سابقة، ولا يغير الرصيد الحالي.
+                    تعديل بيانات العهدة لا يحذف ولا يعدل أي حركة مالية سابقة،
+                    ولا يغير الرصيد الحالي.
                   </p>
                 </div>
               </div>
@@ -287,7 +269,7 @@ export default function EditPersonCustodyPage() {
 
             {/* Error */}
             {error && (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold leading-6 text-red-700">
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 font-semibold text-red-700">
                 {error}
               </div>
             )}
@@ -309,9 +291,7 @@ export default function EditPersonCustodyPage() {
             >
               <Save className="h-4 w-4" />
 
-              {isSaving
-                ? "جاري الحفظ..."
-                : "حفظ التعديلات"}
+              {isSaving ? "جاري الحفظ..." : "حفظ التعديلات"}
             </button>
           </div>
         </form>

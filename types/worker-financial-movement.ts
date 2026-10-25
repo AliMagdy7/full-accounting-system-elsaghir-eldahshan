@@ -1,18 +1,9 @@
 export type WorkerFinancialMovementType =
-  | "salary"
-  | "advance"
-  | "bonus"
-  | "transport"
-  | "deduction"
-  | "payment";
+  "salary" | "advance" | "bonus" | "transport" | "deduction" | "payment";
 
-export type WorkerFinancialMovementEffect =
-  | "increase"
-  | "decrease";
+export type WorkerFinancialMovementEffect = "increase" | "decrease";
 
-export type WorkerFinancialAllocation =
-  | "general"
-  | "project";
+export type WorkerFinancialAllocation = "general" | "project";
 
 export interface WorkerFinancialMovement {
   id: string;

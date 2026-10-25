@@ -87,7 +87,11 @@ export default function ProfilePage() {
       }
       setMessage("تم حفظ بيانات الحساب بنجاح.");
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "تعذر حفظ بيانات الحساب.");
+      setError(
+        saveError instanceof Error
+          ? saveError.message
+          : "تعذر حفظ بيانات الحساب.",
+      );
     }
   };
 
@@ -174,7 +178,9 @@ export default function ProfilePage() {
                   <UserRound className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-extrabold text-slate-900">بيانات الحساب</h2>
+                  <h2 className="text-base font-extrabold text-slate-900">
+                    بيانات الحساب
+                  </h2>
                   <p className="mt-1 text-xs text-slate-400">
                     البيانات التي تظهر داخل النظام.
                   </p>
@@ -239,7 +245,9 @@ export default function ProfilePage() {
               />
 
               <div>
-                <label className="mb-2 block text-xs font-extrabold text-slate-700">الدور</label>
+                <label className="mb-2 block text-xs font-extrabold text-slate-700">
+                  الدور
+                </label>
                 <div className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-600">
                   <ShieldCheck className="h-4 w-4 text-blue-600" />
                   {roleLabels[user.role]}
@@ -266,8 +274,12 @@ export default function ProfilePage() {
                   <KeyRound className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-extrabold text-slate-900">الأمان</h2>
-                  <p className="mt-1 text-xs text-slate-400">إدارة كلمة المرور المحلية.</p>
+                  <h2 className="text-base font-extrabold text-slate-900">
+                    الأمان
+                  </h2>
+                  <p className="mt-1 text-xs text-slate-400">
+                    إدارة كلمة المرور المحلية.
+                  </p>
                 </div>
               </div>
             </div>
@@ -307,8 +319,9 @@ export default function ProfilePage() {
                       <p className="text-sm font-extrabold text-blue-900">
                         بيانات الدخول تحت إدارة المدير
                       </p>
-                      <p className="mt-1 text-xs font-semibold leading-6 text-blue-700">
-                        لا يمكن تغيير اسم المستخدم أو كلمة المرور من هذا الحساب. المدير فقط هو من يحدد بيانات دخول المستخدمين.
+                      <p className="mt-1 text-xs leading-6 font-semibold text-blue-700">
+                        لا يمكن تغيير اسم المستخدم أو كلمة المرور من هذا الحساب.
+                        المدير فقط هو من يحدد بيانات دخول المستخدمين.
                       </p>
                     </div>
                   </div>
@@ -337,7 +350,9 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-xs font-extrabold text-slate-700">{label}</label>
+      <label className="mb-2 block text-xs font-extrabold text-slate-700">
+        {label}
+      </label>
       <div className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10">
         <span className="text-slate-400">{icon}</span>
         <input
@@ -362,7 +377,9 @@ function PasswordField({
 }) {
   return (
     <div>
-      <label className="mb-2 block text-xs font-extrabold text-slate-700">{label}</label>
+      <label className="mb-2 block text-xs font-extrabold text-slate-700">
+        {label}
+      </label>
       <input
         type="password"
         value={value}

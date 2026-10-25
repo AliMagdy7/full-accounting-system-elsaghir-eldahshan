@@ -1,5 +1,7 @@
-export type CompanyAssetStatus = "active" | "partially_sold" | "sold" | "disposed";
-export type CompanyAssetTransactionType = "purchase" | "additional_purchase" | "sale";
+export type CompanyAssetStatus =
+  "active" | "partially_sold" | "sold" | "disposed";
+export type CompanyAssetTransactionType =
+  "purchase" | "additional_purchase" | "sale";
 
 export interface CompanyAssetTransaction {
   id: string;

@@ -2,11 +2,7 @@
 
 import DateInput from "@/lib/date-input";
 
-import {
-  SubmitEvent,
-  useEffect,
-  useState,
-} from "react";
+import { SubmitEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -20,32 +16,21 @@ import {
 import { useRouter } from "next/navigation";
 
 import AppShell from "@/components/layout/AppShell";
-import {
-  getCustodies,
-  getProjectCustody,
-} from "@/lib/data/custodies";
+import { getCustodies, getProjectCustody } from "@/lib/data/custodies";
 import { createExpenseWithPayment } from "@/lib/data/financial-transactions";
-import {
-  getProjects,
-} from "@/lib/data/projects";
+import { getProjects } from "@/lib/data/projects";
 
 import type { Custody } from "@/types/custody";
 import type { Project } from "@/types/project";
-import {
-  getCustodyFinancialAccounts,
-} from "@/lib/data/custody-financial-accounts";
+import { getCustodyFinancialAccounts } from "@/lib/data/custody-financial-accounts";
 import type { CustodyFinancialAccount } from "@/types/custody-financial-account";
 
 function getLocalDate(): string {
   const now = new Date();
 
   const year = now.getFullYear();
-  const month = String(
-    now.getMonth() + 1,
-  ).padStart(2, "0");
-  const day = String(
-    now.getDate(),
-  ).padStart(2, "0");
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
 }
@@ -53,55 +38,42 @@ function getLocalDate(): string {
 export default function NewExpensePage() {
   const router = useRouter();
 
-  const [custodies, setCustodies] =
-    useState<Custody[]>([]);
+  const [custodies, setCustodies] = useState<Custody[]>([]);
 
-  const [projects, setProjects] =
-    useState<Project[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
 
-  const [isLoaded, setIsLoaded] =
-    useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  const [date, setDate] =
-    useState("");
+  const [date, setDate] = useState("");
 
-  const [custodyId, setCustodyId] =
-    useState("");
+  const [custodyId, setCustodyId] = useState("");
 
-  const [category, setCategory] =
-    useState("");
+  const [category, setCategory] = useState("");
 
-  const [projectId, setProjectId] =
-    useState("");
+  const [projectId, setProjectId] = useState("");
 
-  const [amount, setAmount] =
-    useState("");
+  const [amount, setAmount] = useState("");
 
-  const [description, setDescription] =
-    useState("");
+  const [description, setDescription] = useState("");
 
-  const [financialAccountId, setFinancialAccountId] =
-    useState("");
+  const [financialAccountId, setFinancialAccountId] = useState("");
 
-  const [financialAccounts, setFinancialAccounts] =
-    useState<CustodyFinancialAccount[]>([]);
+  const [financialAccounts, setFinancialAccounts] = useState<
+    CustodyFinancialAccount[]
+  >([]);
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
 
-  const [isSaving, setIsSaving] =
-    useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   /*
    * تحميل البيانات وتحديد المشروع القادم
    * من صفحة تفاصيل المشروع تلقائيًا.
    */
   useEffect(() => {
-    const loadedCustodies =
-      getCustodies();
+    const loadedCustodies = getCustodies();
 
-    const loadedProjects =
-      getProjects();
+    const loadedProjects = getProjects();
 
     setCustodies(loadedCustodies);
     setProjects(loadedProjects);
@@ -111,36 +83,26 @@ export default function NewExpensePage() {
      * قراءة المشروع من الرابط بدون useSearchParams
      * حتى لا نحتاج إلى hook إضافي أثناء بناء الصفحة.
      */
-    const projectFromUrl =
-      new URLSearchParams(
-        window.location.search,
-      ).get("project");
+    const projectFromUrl = new URLSearchParams(window.location.search).get(
+      "project",
+    );
 
     if (projectFromUrl) {
-      const projectExists =
-        loadedProjects.some(
-          (project) =>
-            project.id === projectFromUrl,
-        );
+      const projectExists = loadedProjects.some(
+        (project) => project.id === projectFromUrl,
+      );
 
       if (projectExists) {
-        setProjectId(
-          projectFromUrl,
-        );
+        setProjectId(projectFromUrl);
 
         /*
          * بما أن المصروف بدأ من داخل مشروع،
          * نحدد عهدة المشروع تلقائيًا.
          */
-        const projectCustody =
-          getProjectCustody(
-            projectFromUrl,
-          );
+        const projectCustody = getProjectCustody(projectFromUrl);
 
         if (projectCustody) {
-          setCustodyId(
-            projectCustody.id,
-          );
+          setCustodyId(projectCustody.id);
         }
       }
     }
@@ -148,17 +110,9 @@ export default function NewExpensePage() {
     setIsLoaded(true);
   }, []);
 
-  const selectedCustody =
-    custodies.find(
-      (custody) =>
-        custody.id === custodyId,
-    );
+  const selectedCustody = custodies.find((custody) => custody.id === custodyId);
 
-  const selectedProject =
-    projects.find(
-      (project) =>
-        project.id === projectId,
-    );
+  const selectedProject = projects.find((project) => project.id === projectId);
 
   /*
    * ==================================================
@@ -171,8 +125,7 @@ export default function NewExpensePage() {
    * - central  => تظهر وسائل الدفع
    * - أي عهدة أخرى => تختفي وسائل الدفع تمامًا
    */
-  const isCentralCustody =
-    selectedCustody?.id === "central";
+  const isCentralCustody = selectedCustody?.id === "central";
 
   /*
    * تحميل وسائل الدفع لعهدتي أنا فقط.
@@ -194,10 +147,7 @@ export default function NewExpensePage() {
       return;
     }
 
-    const accounts =
-      getCustodyFinancialAccounts(
-        "central",
-      );
+    const accounts = getCustodyFinancialAccounts("central");
 
     setFinancialAccounts(accounts);
   }, [custodyId]);
@@ -221,26 +171,17 @@ export default function NewExpensePage() {
   useEffect(() => {
     if (
       financialAccountId &&
-      !financialAccounts.some(
-        (account) =>
-          account.id ===
-          financialAccountId,
-      )
+      !financialAccounts.some((account) => account.id === financialAccountId)
     ) {
       setFinancialAccountId("");
     }
-  }, [
-    financialAccountId,
-    financialAccounts,
-  ]);
+  }, [financialAccountId, financialAccounts]);
 
   /*
    * تغيير المشروع يغير العهدة تلقائيًا
    * إذا كان المشروع له عهدة مشروع.
    */
-  const handleProjectChange = (
-    value: string,
-  ) => {
+  const handleProjectChange = (value: string) => {
     setProjectId(value);
     setError("");
 
@@ -253,46 +194,31 @@ export default function NewExpensePage() {
       return;
     }
 
-    const projectCustody =
-      getProjectCustody(value);
+    const projectCustody = getProjectCustody(value);
 
     if (projectCustody) {
-      setCustodyId(
-        projectCustody.id,
-      );
+      setCustodyId(projectCustody.id);
     } else {
       setCustodyId("");
     }
   };
 
-  const handleSubmit = (
-    event: SubmitEvent<HTMLFormElement>,
-  ) => {
+  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const numericAmount =
-      Number(amount);
+    const numericAmount = Number(amount);
 
-    const trimmedCategory =
-      category.trim();
+    const trimmedCategory = category.trim();
 
-    const trimmedDescription =
-      description.trim();
+    const trimmedDescription = description.trim();
 
     if (!date) {
-      setError(
-        "من فضلك اختر تاريخ المصروف.",
-      );
+      setError("من فضلك اختر تاريخ المصروف.");
       return;
     }
 
-    if (
-      !projectId &&
-      !custodyId
-    ) {
-      setError(
-        "من فضلك اختر العهدة التي دفعت المصروف.",
-      );
+    if (!projectId && !custodyId) {
+      setError("من فضلك اختر العهدة التي دفعت المصروف.");
       return;
     }
 
@@ -309,46 +235,28 @@ export default function NewExpensePage() {
      * العهد الأخرى لا تحتوي على وسائل دفع
      * وبالتالي لا يتم طلبها منها.
      */
-    if (
-      isCentralCustody &&
-      !financialAccountId
-    ) {
-      setError(
-        "من فضلك اختر وسيلة الدفع التي دفعت المصروف.",
-      );
+    if (isCentralCustody && !financialAccountId) {
+      setError("من فضلك اختر وسيلة الدفع التي دفعت المصروف.");
       return;
     }
 
     if (!trimmedCategory) {
-      setError(
-        "من فضلك اكتب تصنيف المصروف.",
-      );
+      setError("من فضلك اكتب تصنيف المصروف.");
       return;
     }
 
-    if (
-      !Number.isFinite(
-        numericAmount,
-      ) ||
-      numericAmount <= 0
-    ) {
-      setError(
-        "من فضلك أدخل مبلغًا صحيحًا.",
-      );
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      setError("من فضلك أدخل مبلغًا صحيحًا.");
       return;
     }
 
     if (!trimmedDescription) {
-      setError(
-        "من فضلك اكتب بيان المصروف.",
-      );
+      setError("من فضلك اكتب بيان المصروف.");
       return;
     }
 
     if (!selectedCustody) {
-      setError(
-        "العهدة المختارة غير موجودة.",
-      );
+      setError("العهدة المختارة غير موجودة.");
       return;
     }
 
@@ -356,13 +264,8 @@ export default function NewExpensePage() {
      * حماية إضافية:
      * لا يمكن استخدام وسيلة دفع مع عهدة غير عهدتي أنا.
      */
-    if (
-      !isCentralCustody &&
-      financialAccountId
-    ) {
-      setError(
-        "وسيلة الدفع متاحة لعهدتي أنا فقط.",
-      );
+    if (!isCentralCustody && financialAccountId) {
+      setError("وسيلة الدفع متاحة لعهدتي أنا فقط.");
       return;
     }
 
@@ -376,7 +279,9 @@ export default function NewExpensePage() {
         category: trimmedCategory,
         description: trimmedDescription,
         custodyId,
-        financialAccountId: isCentralCustody ? financialAccountId || undefined : undefined,
+        financialAccountId: isCentralCustody
+          ? financialAccountId || undefined
+          : undefined,
         projectId: projectId || undefined,
         movementType: "expense",
       });
@@ -395,9 +300,7 @@ export default function NewExpensePage() {
      * نرجع لتفاصيل المشروع.
      */
     if (selectedProject) {
-      router.push(
-        `/projects/${selectedProject.id}`,
-      );
+      router.push(`/projects/${selectedProject.id}`);
       return;
     }
 
@@ -405,11 +308,9 @@ export default function NewExpensePage() {
      * المصروف العام يرجع لتفاصيل العهدة.
      */
     router.push(
-      selectedCustody.type ===
-        "person"
+      selectedCustody.type === "person"
         ? `/custodies/person/${selectedCustody.id}`
-        : selectedCustody.id ===
-            "central"
+        : selectedCustody.id === "central"
           ? "/custodies/central"
           : "/expenses",
     );
@@ -429,10 +330,7 @@ export default function NewExpensePage() {
 
   return (
     <AppShell>
-      <div
-        dir="rtl"
-        className="mx-auto w-full max-w-4xl space-y-6"
-      >
+      <div dir="rtl" className="mx-auto w-full max-w-4xl space-y-6">
         {/* Header */}
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
@@ -447,9 +345,7 @@ export default function NewExpensePage() {
             >
               <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
 
-              {selectedProject
-                ? "العودة إلى المشروع"
-                : "العودة إلى المصروفات"}
+              {selectedProject ? "العودة إلى المشروع" : "العودة إلى المصروفات"}
             </Link>
 
             <div className="flex items-start gap-3">
@@ -469,8 +365,7 @@ export default function NewExpensePage() {
                 </h1>
 
                 <p className="mt-1.5 text-sm leading-6 text-slate-500">
-                  تسجيل المصروف وربطه بالعهدة
-                  والمشروع مع الاحتفاظ بالتصنيف
+                  تسجيل المصروف وربطه بالعهدة والمشروع مع الاحتفاظ بالتصنيف
                   والبيان الأصلي.
                 </p>
               </div>
@@ -490,8 +385,7 @@ export default function NewExpensePage() {
             </h2>
 
             <p className="mt-1 text-xs leading-5 text-slate-500">
-              أدخل بيانات العملية كما تريد أن تظهر
-              في السجلات والتقارير.
+              أدخل بيانات العملية كما تريد أن تظهر في السجلات والتقارير.
             </p>
           </div>
 
@@ -508,18 +402,16 @@ export default function NewExpensePage() {
                 </label>
 
                 <div className="relative">
-                  <CalendarDays className="pointer-events-none absolute right-4 top-3.5 h-5 w-5 text-slate-400" />
+                  <CalendarDays className="pointer-events-none absolute top-3.5 right-4 h-5 w-5 text-slate-400" />
 
                   <DateInput
                     id="expense-date"
                     value={date}
                     onChange={(value) => {
-                      setDate(
-                        value,
-                      );
+                      setDate(value);
                       setError("");
                     }}
-                    className="h-12 w-full cursor-pointer rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-right text-sm text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                    className="h-12 w-full cursor-pointer rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-right text-sm text-slate-800 transition-all duration-200 outline-none hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                   />
                 </div>
               </div>
@@ -535,41 +427,31 @@ export default function NewExpensePage() {
                 </label>
 
                 <div className="relative">
-                  <FolderKanban className="pointer-events-none absolute right-4 top-3.5 z-10 h-5 w-5 text-slate-400" />
+                  <FolderKanban className="pointer-events-none absolute top-3.5 right-4 z-10 h-5 w-5 text-slate-400" />
 
                   <select
                     id="expense-project"
                     value={projectId}
                     onChange={(event) =>
-                      handleProjectChange(
-                        event.target.value,
-                      )
+                      handleProjectChange(event.target.value)
                     }
-                    className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-12 text-right text-sm text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                    className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-11 text-right text-sm text-slate-800 transition-all duration-200 outline-none hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                   >
-                    <option value="">
-                      مصروف عام
-                    </option>
+                    <option value="">مصروف عام</option>
 
-                    {projects.map(
-                      (project) => (
-                        <option
-                          key={project.id}
-                          value={project.id}
-                        >
-                          {project.name}
-                        </option>
-                      ),
-                    )}
+                    {projects.map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.name}
+                      </option>
+                    ))}
                   </select>
 
-                  <ChevronDown className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <ChevronDown className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 </div>
 
                 {selectedProject && (
                   <p className="mt-2 text-xs leading-5 text-blue-600">
-                    تم تحديد المشروع تلقائيًا لأنك
-                    أضفت المصروف من داخل المشروع.
+                    تم تحديد المشروع تلقائيًا لأنك أضفت المصروف من داخل المشروع.
                   </p>
                 )}
               </div>
@@ -585,47 +467,37 @@ export default function NewExpensePage() {
                 </label>
 
                 <div className="relative">
-                  <WalletCards className="pointer-events-none absolute right-4 top-3.5 z-10 h-5 w-5 text-slate-400" />
+                  <WalletCards className="pointer-events-none absolute top-3.5 right-4 z-10 h-5 w-5 text-slate-400" />
 
                   <select
                     id="expense-custody"
                     value={custodyId}
                     onChange={(event) => {
-                      setCustodyId(
-                        event.target.value,
-                      );
+                      setCustodyId(event.target.value);
                       setError("");
                     }}
-                    className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-12 text-right text-sm text-slate-800 outline-none transition-all duration-200 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                    className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-11 text-right text-sm text-slate-800 transition-all duration-200 outline-none hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                   >
-                    <option value="">
-                      اختر العهدة
-                    </option>
+                    <option value="">اختر العهدة</option>
 
-                    {custodies.map(
-                      (custody) => (
-                        <option
-                          key={custody.id}
-                          value={custody.id}
-                        >
-                          {custody.name}
-                        </option>
-                      ),
-                    )}
+                    {custodies.map((custody) => (
+                      <option key={custody.id} value={custody.id}>
+                        {custody.name}
+                      </option>
+                    ))}
                   </select>
 
-                  <ChevronDown className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <ChevronDown className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 </div>
 
                 {selectedProject ? (
                   <p className="mt-2 text-xs leading-5 text-slate-400">
-                    يتم اختيار عهدة المشروع تلقائيًا،
-                    ويمكن تغييرها إذا كان هناك استثناء.
+                    يتم اختيار عهدة المشروع تلقائيًا، ويمكن تغييرها إذا كان هناك
+                    استثناء.
                   </p>
                 ) : (
                   <p className="mt-2 text-xs leading-5 text-slate-400">
-                    اختر العهدة التي خرج منها المبلغ
-                    فعليًا.
+                    اختر العهدة التي خرج منها المبلغ فعليًا.
                   </p>
                 )}
               </div>
@@ -640,9 +512,7 @@ export default function NewExpensePage() {
                       className="block text-sm font-bold text-slate-700"
                     >
                       وسيلة الدفع / الحساب
-                      <span className="mr-1 text-red-500">
-                        *
-                      </span>
+                      <span className="mr-1 text-red-500">*</span>
                     </label>
 
                     <Link
@@ -658,40 +528,28 @@ export default function NewExpensePage() {
                       id="expense-financial-account"
                       value={financialAccountId}
                       onChange={(event) => {
-                        setFinancialAccountId(
-                          event.target.value,
-                        );
+                        setFinancialAccountId(event.target.value);
                         setError("");
                       }}
                       className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white px-4 text-right text-sm font-semibold text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                     >
-                      <option value="">
-                        اختر وسيلة الدفع
-                      </option>
+                      <option value="">اختر وسيلة الدفع</option>
 
-                      {financialAccounts.map(
-                        (account) => (
-                          <option
-                            key={account.id}
-                            value={account.id}
-                          >
-                            {account.name} — الرصيد{" "}
-                            {account.balance.toLocaleString(
-                              "en-US",
-                            )}{" "}
-                            جنيه
-                          </option>
-                        ),
-                      )}
+                      {financialAccounts.map((account) => (
+                        <option key={account.id} value={account.id}>
+                          {account.name} — الرصيد{" "}
+                          {account.balance.toLocaleString("en-US")} جنيه
+                        </option>
+                      ))}
                     </select>
 
-                    <ChevronDown className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <ChevronDown className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   </div>
 
                   {!financialAccounts.length && (
                     <p className="mt-2 text-xs font-semibold text-amber-600">
-                      لا توجد وسيلة دفع داخل عهدتك أنا.
-                      أنشئ واحدة أولًا من إدارة الوسائل.
+                      لا توجد وسيلة دفع داخل عهدتك أنا. أنشئ واحدة أولًا من
+                      إدارة الوسائل.
                     </p>
                   )}
                 </div>
@@ -708,26 +566,23 @@ export default function NewExpensePage() {
                 </label>
 
                 <div className="relative">
-                  <Tag className="pointer-events-none absolute right-4 top-3.5 h-5 w-5 text-slate-400" />
+                  <Tag className="pointer-events-none absolute top-3.5 right-4 h-5 w-5 text-slate-400" />
 
                   <input
                     id="expense-category"
                     type="text"
                     value={category}
                     onChange={(event) => {
-                      setCategory(
-                        event.target.value,
-                      );
+                      setCategory(event.target.value);
                       setError("");
                     }}
                     placeholder="مثال: معدات، كهرباء، سباكة، زيوت..."
-                    className="h-12 w-full cursor-text rounded-xl border border-slate-200 bg-white py-3 pl-4 pr-12 text-right text-sm text-slate-800 outline-none transition-all duration-200 placeholder:text-slate-300 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                    className="h-12 w-full cursor-text rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-right text-sm text-slate-800 transition-all duration-200 outline-none placeholder:text-slate-300 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                   />
                 </div>
 
                 <p className="mt-2 text-xs leading-5 text-slate-400">
-                  اكتب التصنيف كما تريد، وسيظهر تلقائيًا
-                  ضمن فلاتر المصروفات.
+                  اكتب التصنيف كما تريد، وسيظهر تلقائيًا ضمن فلاتر المصروفات.
                 </p>
               </div>
 
@@ -748,13 +603,11 @@ export default function NewExpensePage() {
                   step="0.01"
                   value={amount}
                   onChange={(event) => {
-                    setAmount(
-                      event.target.value,
-                    );
+                    setAmount(event.target.value);
                     setError("");
                   }}
                   placeholder="مثال: 3500"
-                  className="h-12 w-full cursor-text rounded-xl border border-slate-200 bg-white px-4 text-right text-sm font-semibold text-slate-800 outline-none transition-all duration-200 placeholder:font-normal placeholder:text-slate-300 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                  className="h-12 w-full cursor-text rounded-xl border border-slate-200 bg-white px-4 text-right text-sm font-semibold text-slate-800 transition-all duration-200 outline-none placeholder:font-normal placeholder:text-slate-300 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                 />
               </div>
 
@@ -772,19 +625,17 @@ export default function NewExpensePage() {
                   id="expense-description"
                   value={description}
                   onChange={(event) => {
-                    setDescription(
-                      event.target.value,
-                    );
+                    setDescription(event.target.value);
                     setError("");
                   }}
                   rows={4}
                   placeholder="اكتب البيان كما تريد أن يظهر في السجلات والتقارير..."
-                  className="w-full cursor-text resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-right text-sm leading-6 text-slate-800 outline-none transition-all duration-200 placeholder:text-slate-300 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                  className="w-full cursor-text resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-right text-sm leading-6 text-slate-800 transition-all duration-200 outline-none placeholder:text-slate-300 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                 />
 
                 <p className="mt-2 text-xs leading-5 text-slate-400">
-                  البيان محفوظ كما تكتبه، والتصنيف منفصل
-                  عنه ويستخدم للفلترة والتجميع.
+                  البيان محفوظ كما تكتبه، والتصنيف منفصل عنه ويستخدم للفلترة
+                  والتجميع.
                 </p>
               </div>
             </div>
@@ -792,7 +643,7 @@ export default function NewExpensePage() {
             {error && (
               <div
                 role="alert"
-                className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-right text-sm font-semibold leading-6 text-red-700"
+                className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-right text-sm leading-6 font-semibold text-red-700"
               >
                 {error}
               </div>
@@ -816,11 +667,9 @@ export default function NewExpensePage() {
             <button
               type="submit"
               disabled={isSaving}
-              className="inline-flex h-11 cursor-pointer items-center justify-center rounded-xl bg-slate-900 px-7 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.98]"
+              className="inline-flex h-11 cursor-pointer items-center justify-center rounded-xl bg-slate-900 px-7 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSaving
-                ? "جاري الحفظ..."
-                : "حفظ المصروف"}
+              {isSaving ? "جاري الحفظ..." : "حفظ المصروف"}
             </button>
           </div>
         </form>

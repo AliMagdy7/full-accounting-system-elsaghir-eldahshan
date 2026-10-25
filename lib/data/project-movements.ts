@@ -30,15 +30,16 @@ import {
 } from "@/lib/data/worker-financial-movements";
 import { getWorkerById } from "@/lib/data/workers";
 import { getContractorById } from "@/lib/data/contractors";
-import { getContractorSiteAssignments, isContractorAssignedToSiteOnDate } from "@/lib/data/contractor-site-assignments";
+import {
+  getContractorSiteAssignments,
+  isContractorAssignedToSiteOnDate,
+} from "@/lib/data/contractor-site-assignments";
 import { getProjectSiteById } from "@/lib/data/project-sites";
 import type { Expense } from "@/types/expense";
 import type { CustodyTransaction } from "@/types/custody-transaction";
 
 export type ProjectMovementType =
-  | "expense"
-  | "worker_advance"
-  | "contractor_advance";
+  "expense" | "worker_advance" | "contractor_advance";
 
 export interface ProjectMovementDraft {
   date: string;
@@ -64,10 +65,7 @@ function now() {
   return new Date().toISOString();
 }
 
-function validateDraft(
-  projectId: string,
-  draft: ProjectMovementDraft,
-) {
+function validateDraft(projectId: string, draft: ProjectMovementDraft) {
   if (!projectId) {
     throw new Error("المشروع مطلوب.");
   }
@@ -84,10 +82,7 @@ function validateDraft(
     throw new Error("التصنيف مطلوب.");
   }
 
-  if (
-    !Number.isFinite(draft.amount) ||
-    draft.amount <= 0
-  ) {
+  if (!Number.isFinite(draft.amount) || draft.amount <= 0) {
     throw new Error("المبلغ يجب أن يكون أكبر من صفر.");
   }
 
@@ -116,15 +111,29 @@ function validateDraft(
 
   if (draft.movementType === "contractor_advance") {
     if (!draft.contractorId) throw new Error("المقاول مطلوب للسلفة.");
-    if (!getContractorById(draft.contractorId)) throw new Error("المقاول المحدد غير موجود.");
+    if (!getContractorById(draft.contractorId))
+      throw new Error("المقاول المحدد غير موجود.");
     if (!draft.siteId) throw new Error("الموقع مطلوب لسلفة المقاول.");
     const site = getProjectSiteById(draft.siteId);
-    if (!site || site.projectId !== projectId) throw new Error("الموقع المحدد غير تابع لهذا المشروع.");
-    if (!getContractorSiteAssignments(draft.contractorId).some((assignment) => assignment.siteId === draft.siteId)) throw new Error("المقاول غير مرتبط بالموقع المحدد.");
-    if (!isContractorAssignedToSiteOnDate(draft.contractorId, draft.siteId, draft.date)) {
+    if (!site || site.projectId !== projectId)
+      throw new Error("الموقع المحدد غير تابع لهذا المشروع.");
+    if (
+      !getContractorSiteAssignments(draft.contractorId).some(
+        (assignment) => assignment.siteId === draft.siteId,
+      )
+    )
+      throw new Error("المقاول غير مرتبط بالموقع المحدد.");
+    if (
+      !isContractorAssignedToSiteOnDate(
+        draft.contractorId,
+        draft.siteId,
+        draft.date,
+      )
+    ) {
       throw new Error("تاريخ السلفة خارج فترة ارتباط المقاول بالموقع المحدد.");
     }
-    if (draft.category !== "سلف المقاولين") throw new Error("تصنيف سلفة المقاول يجب أن يكون سلف المقاولين.");
+    if (draft.category !== "سلف المقاولين")
+      throw new Error("تصنيف سلفة المقاول يجب أن يكون سلف المقاولين.");
   }
 
   if (custody.id === "central") {
@@ -132,9 +141,7 @@ function validateDraft(
       throw new Error("اختر وسيلة الدفع من العهدة المركزية.");
     }
 
-    const account = getCustodyFinancialAccountById(
-      draft.financialAccountId,
-    );
+    const account = getCustodyFinancialAccountById(draft.financialAccountId);
 
     if (!account || account.custodyId !== custody.id) {
       throw new Error("وسيلة الدفع غير صحيحة.");
@@ -160,17 +167,10 @@ function applyPayment(
     throw new Error("العهدة الدافعة غير موجودة.");
   }
 
-  updateCustodyBalance(
-    custody.id,
-    draft.amount,
-    "out",
-  );
+  updateCustodyBalance(custody.id, draft.amount, "out");
 
   try {
-    if (
-      custody.id === "central" &&
-      draft.financialAccountId
-    ) {
+    if (custody.id === "central" && draft.financialAccountId) {
       updateCustodyFinancialAccountBalance(
         draft.financialAccountId,
         draft.amount,
@@ -178,11 +178,7 @@ function applyPayment(
       );
     }
   } catch (error) {
-    reverseCustodyBalance(
-      custody.id,
-      draft.amount,
-      "out",
-    );
+    reverseCustodyBalance(custody.id, draft.amount, "out");
     throw error;
   }
 
@@ -212,10 +208,7 @@ function applyPayment(
       updatedAt: timestamp,
     });
   } catch (error) {
-    if (
-      custody.id === "central" &&
-      draft.financialAccountId
-    ) {
+    if (custody.id === "central" && draft.financialAccountId) {
       reverseCustodyFinancialAccountBalance(
         draft.financialAccountId,
         draft.amount,
@@ -223,11 +216,7 @@ function applyPayment(
       );
     }
 
-    reverseCustodyBalance(
-      custody.id,
-      draft.amount,
-      "out",
-    );
+    reverseCustodyBalance(custody.id, draft.amount, "out");
 
     throw error;
   }
@@ -241,18 +230,10 @@ function reversePayment(
   financialAccountId?: string,
 ) {
   if (financialAccountId) {
-    reverseCustodyFinancialAccountBalance(
-      financialAccountId,
-      amount,
-      "out",
-    );
+    reverseCustodyFinancialAccountBalance(financialAccountId, amount, "out");
   }
 
-  reverseCustodyBalance(
-    custodyId,
-    amount,
-    "out",
-  );
+  reverseCustodyBalance(custodyId, amount, "out");
 }
 
 function findLegacyExpenseTransaction(
@@ -268,9 +249,7 @@ function findLegacyExpenseTransaction(
         transaction.amount === expense.amount &&
         transaction.description === expense.description,
     )
-    .sort((a, b) =>
-      b.createdAt.localeCompare(a.createdAt),
-    )[0];
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
 }
 
 function getExpenseTransaction(
@@ -278,8 +257,7 @@ function getExpenseTransaction(
 ): CustodyTransaction | undefined {
   if (expense.custodyTransactionId) {
     return getCustodyTransactions().find(
-      (transaction) =>
-        transaction.id === expense.custodyTransactionId,
+      (transaction) => transaction.id === expense.custodyTransactionId,
     );
   }
 
@@ -293,27 +271,26 @@ export function getProjectMovementRecords(
 
   const workerAdvances = getCustodyTransactions();
 
-  const expenseRows: ProjectMovementRecord[] =
-    expenses
-      .filter((expense) => expense.projectId === projectId)
-      .map((expense) => ({
-        id: `expense:${expense.id}`,
-        sourceId: expense.id,
-        date: expense.date,
-        description: expense.description,
-        movementType:
-          expense.movementType === "contractor_advance"
-            ? "contractor_advance"
-            : "expense",
-        category: expense.category,
-        custodyId: expense.custodyId,
-        amount: expense.amount,
-        financialAccountId: expense.financialAccountId,
-        contractorId: expense.contractorId,
-        siteId: expense.siteId,
-        createdAt: expense.createdAt,
-        updatedAt: expense.updatedAt,
-      }));
+  const expenseRows: ProjectMovementRecord[] = expenses
+    .filter((expense) => expense.projectId === projectId)
+    .map((expense) => ({
+      id: `expense:${expense.id}`,
+      sourceId: expense.id,
+      date: expense.date,
+      description: expense.description,
+      movementType:
+        expense.movementType === "contractor_advance"
+          ? "contractor_advance"
+          : "expense",
+      category: expense.category,
+      custodyId: expense.custodyId,
+      amount: expense.amount,
+      financialAccountId: expense.financialAccountId,
+      contractorId: expense.contractorId,
+      siteId: expense.siteId,
+      createdAt: expense.createdAt,
+      updatedAt: expense.updatedAt,
+    }));
 
   const workerRows: ProjectMovementRecord[] = [];
 
@@ -326,9 +303,7 @@ export function getProjectMovementRecords(
 
   for (const transaction of transactions) {
     const movement = transaction.workerFinancialMovementId
-      ? getWorkerFinancialMovementById(
-          transaction.workerFinancialMovementId,
-        )
+      ? getWorkerFinancialMovementById(transaction.workerFinancialMovementId)
       : undefined;
 
     if (!movement || movement.type !== "advance") {
@@ -349,13 +324,11 @@ export function getProjectMovementRecords(
       createdAt: movement.createdAt,
       updatedAt: movement.updatedAt,
     });
-
   }
 
   return [...expenseRows, ...workerRows].sort(
     (a, b) =>
-      b.date.localeCompare(a.date) ||
-      b.createdAt.localeCompare(a.createdAt),
+      b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt),
   );
 }
 
@@ -372,8 +345,7 @@ export function createProjectMovement(
     workerId: draft.workerId || undefined,
     contractorId: draft.contractorId || undefined,
     siteId: draft.siteId || undefined,
-    financialAccountId:
-      draft.financialAccountId || undefined,
+    financialAccountId: draft.financialAccountId || undefined,
   };
 
   validateDraft(projectId, normalizedDraft);
@@ -390,18 +362,13 @@ export function createProjectMovement(
         date: normalizedDraft.date,
         description: normalizedDraft.description,
         custodyId: normalizedDraft.custodyId,
-        financialAccountId:
-          normalizedDraft.financialAccountId,
+        financialAccountId: normalizedDraft.financialAccountId,
         projectId,
         allocation: "project",
       });
 
       movementId = movement.id;
-      transaction = applyPayment(
-        projectId,
-        normalizedDraft,
-        movement.id,
-      );
+      transaction = applyPayment(projectId, normalizedDraft, movement.id);
 
       return {
         movement,
@@ -434,8 +401,7 @@ export function createProjectMovement(
       description: normalizedDraft.description,
       custodyId: normalizedDraft.custodyId,
       projectId,
-      financialAccountId:
-        normalizedDraft.financialAccountId,
+      financialAccountId: normalizedDraft.financialAccountId,
       contractorId: normalizedDraft.contractorId,
       siteId: normalizedDraft.siteId,
       movementType:
@@ -484,24 +450,20 @@ export function updateProjectMovement(
     workerId: draft.workerId || undefined,
     contractorId: draft.contractorId || undefined,
     siteId: draft.siteId || undefined,
-    financialAccountId:
-      draft.financialAccountId || undefined,
+    financialAccountId: draft.financialAccountId || undefined,
   };
 
   validateDraft(projectId, normalizedDraft);
 
   if (record.movementType === "worker_advance") {
-    const movement = getWorkerFinancialMovementById(
-      record.sourceId,
-    );
+    const movement = getWorkerFinancialMovementById(record.sourceId);
 
     if (!movement) {
       throw new Error("حركة سلفة العامل غير موجودة.");
     }
 
     const oldTransaction = getCustodyTransactions().find(
-      (transaction) =>
-        transaction.workerFinancialMovementId === movement.id,
+      (transaction) => transaction.workerFinancialMovementId === movement.id,
     );
 
     if (!oldTransaction) {
@@ -521,8 +483,7 @@ export function updateProjectMovement(
         date: normalizedDraft.date,
         description: normalizedDraft.description,
         custodyId: normalizedDraft.custodyId,
-        financialAccountId:
-          normalizedDraft.financialAccountId,
+        financialAccountId: normalizedDraft.financialAccountId,
         projectId,
         allocation: "project",
         type: "advance",
@@ -548,8 +509,7 @@ export function updateProjectMovement(
           date: movement.date,
           description: movement.description,
           custodyId: movement.custodyId,
-          financialAccountId:
-            movement.financialAccountId,
+          financialAccountId: movement.financialAccountId,
           projectId: movement.projectId,
           allocation: movement.allocation,
           type: movement.type,
@@ -565,8 +525,7 @@ export function updateProjectMovement(
             custodyId: oldTransaction.custodyId,
             amount: oldTransaction.amount,
             workerId: movement.workerId,
-            financialAccountId:
-              oldTransaction.financialAccountId,
+            financialAccountId: oldTransaction.financialAccountId,
           },
           movement.id,
         );
@@ -597,10 +556,7 @@ export function updateProjectMovement(
   try {
     deleteCustodyTransaction(oldTransaction.id);
 
-    const newTransaction = applyPayment(
-      projectId,
-      normalizedDraft,
-    );
+    const newTransaction = applyPayment(projectId, normalizedDraft);
 
     const updatedExpense = updateExpense(expense.id, {
       date: normalizedDraft.date,
@@ -609,8 +565,7 @@ export function updateProjectMovement(
       description: normalizedDraft.description,
       custodyId: normalizedDraft.custodyId,
       projectId,
-      financialAccountId:
-        normalizedDraft.financialAccountId,
+      financialAccountId: normalizedDraft.financialAccountId,
       movementType:
         normalizedDraft.movementType === "contractor_advance"
           ? "contractor_advance"
@@ -642,22 +597,18 @@ export function updateProjectMovement(
         deleteCustodyTransaction(existingReplacement.id);
       }
 
-      applyPayment(
-        projectId,
-        {
-          date: oldTransaction.date,
-          description: oldTransaction.description,
-          movementType:
-            expense.movementType === "contractor_advance"
-              ? "contractor_advance"
-              : "expense",
-          category: expense.category,
-          custodyId: oldTransaction.custodyId,
-          amount: oldTransaction.amount,
-          financialAccountId:
-            oldTransaction.financialAccountId,
-        },
-      );
+      applyPayment(projectId, {
+        date: oldTransaction.date,
+        description: oldTransaction.description,
+        movementType:
+          expense.movementType === "contractor_advance"
+            ? "contractor_advance"
+            : "expense",
+        category: expense.category,
+        custodyId: oldTransaction.custodyId,
+        amount: oldTransaction.amount,
+        financialAccountId: oldTransaction.financialAccountId,
+      });
     } catch {
       // Keep the original error.
     }
@@ -672,9 +623,7 @@ export function deleteProjectMovement(
 ) {
   assertCurrentUserPermission("delete");
   if (record.movementType === "worker_advance") {
-    const movement = getWorkerFinancialMovementById(
-      record.sourceId,
-    );
+    const movement = getWorkerFinancialMovementById(record.sourceId);
 
     if (!movement) {
       throw new Error("حركة سلفة العامل غير موجودة.");

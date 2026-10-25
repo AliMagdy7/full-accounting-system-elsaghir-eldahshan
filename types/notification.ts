@@ -1,10 +1,6 @@
 import type { AuditAction, AuditEntity } from "@/types/audit-log";
 
-export type NotificationType =
-  | "info"
-  | "success"
-  | "warning"
-  | "error";
+export type NotificationType = "info" | "success" | "warning" | "error";
 
 export interface Notification {
   id: string;

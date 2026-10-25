@@ -34,7 +34,8 @@ function getManagedStorageSnapshot() {
 
 export function createSystemBackup(): SystemBackup {
   assertCurrentUserPermission("update");
-  if (typeof window === "undefined") throw new Error("النسخ الاحتياطي متاح من المتصفح فقط.");
+  if (typeof window === "undefined")
+    throw new Error("النسخ الاحتياطي متاح من المتصفح فقط.");
 
   return {
     version: BACKUP_VERSION,
@@ -43,7 +44,9 @@ export function createSystemBackup(): SystemBackup {
   };
 }
 
-function validateBackupStorage(storage: unknown): asserts storage is Record<string, string> {
+function validateBackupStorage(
+  storage: unknown,
+): asserts storage is Record<string, string> {
   if (!storage || typeof storage !== "object" || Array.isArray(storage)) {
     throw new Error("بيانات النسخة الاحتياطية غير صالحة.");
   }
@@ -60,17 +63,22 @@ function validateBackupStorage(storage: unknown): asserts storage is Record<stri
 
 export function restoreSystemBackup(backup: unknown) {
   assertCurrentUserPermission("update");
-  if (typeof window === "undefined") throw new Error("الاستعادة متاحة من المتصفح فقط.");
-  if (!backup || typeof backup !== "object") throw new Error("ملف النسخة الاحتياطية غير صالح.");
+  if (typeof window === "undefined")
+    throw new Error("الاستعادة متاحة من المتصفح فقط.");
+  if (!backup || typeof backup !== "object")
+    throw new Error("ملف النسخة الاحتياطية غير صالح.");
 
   const candidate = backup as Partial<SystemBackup>;
   if (candidate.version !== BACKUP_VERSION) {
-    throw new Error(`إصدار النسخة الاحتياطية غير مدعوم. الإصدار المطلوب هو ${BACKUP_VERSION}.`);
+    throw new Error(
+      `إصدار النسخة الاحتياطية غير مدعوم. الإصدار المطلوب هو ${BACKUP_VERSION}.`,
+    );
   }
 
   validateBackupStorage(candidate.storage);
   const entries = Object.entries(candidate.storage);
-  if (!entries.length) throw new Error("النسخة الاحتياطية لا تحتوي على بيانات.");
+  if (!entries.length)
+    throw new Error("النسخة الاحتياطية لا تحتوي على بيانات.");
 
   const before = getManagedStorageSnapshot();
   const targetKeys = new Set(entries.map(([key]) => key));
@@ -99,12 +107,15 @@ export function restoreSystemBackup(backup: unknown) {
   } catch (error) {
     // Restore the previous complete state if any write fails.
     for (const key of Object.keys(getManagedStorageSnapshot())) {
-      if (!Object.prototype.hasOwnProperty.call(before, key)) window.localStorage.removeItem(key);
+      if (!Object.prototype.hasOwnProperty.call(before, key))
+        window.localStorage.removeItem(key);
     }
     for (const [key, value] of Object.entries(before)) {
       window.localStorage.setItem(key, value);
     }
     window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
-    throw error instanceof Error ? error : new Error("فشلت استعادة النسخة الاحتياطية.");
+    throw error instanceof Error
+      ? error
+      : new Error("فشلت استعادة النسخة الاحتياطية.");
   }
 }

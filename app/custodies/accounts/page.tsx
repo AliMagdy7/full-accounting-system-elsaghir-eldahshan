@@ -27,18 +27,14 @@ export default function CustodyAccountsPage() {
   const [saved, setSaved] = useState(false);
 
   const loadData = () => {
-    setAccounts(
-      getCustodyFinancialAccounts(CENTRAL_CUSTODY_ID),
-    );
+    setAccounts(getCustodyFinancialAccounts(CENTRAL_CUSTODY_ID));
   };
 
   useEffect(() => {
     loadData();
   }, []);
 
-  const handleSubmit = (
-    event: SubmitEvent<HTMLFormElement>,
-  ) => {
+  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
     setSaved(false);
@@ -52,13 +48,8 @@ export default function CustodyAccountsPage() {
       ? Number(openingBalance)
       : 0;
 
-    if (
-      !Number.isFinite(numericOpeningBalance) ||
-      numericOpeningBalance < 0
-    ) {
-      setError(
-        "الرصيد الافتتاحي يجب أن يكون صفرًا أو أكبر.",
-      );
+    if (!Number.isFinite(numericOpeningBalance) || numericOpeningBalance < 0) {
+      setError("الرصيد الافتتاحي يجب أن يكون صفرًا أو أكبر.");
       return;
     }
 
@@ -84,10 +75,7 @@ export default function CustodyAccountsPage() {
 
   return (
     <AppShell>
-      <div
-        dir="rtl"
-        className="app-page mx-auto w-full max-w-5xl space-y-6"
-      >
+      <div dir="rtl" className="app-page mx-auto w-full max-w-5xl space-y-6">
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
@@ -113,9 +101,8 @@ export default function CustodyAccountsPage() {
                 </h1>
 
                 <p className="mt-2 text-sm leading-6 text-slate-500">
-                  أنشئ بنفسك أي وسيلة دفع أو حساب تابع لعهدتك،
-                  مثل كاش أو محفظة أو InstaPay، بدون أي قائمة
-                  ثابتة داخل النظام.
+                  أنشئ بنفسك أي وسيلة دفع أو حساب تابع لعهدتك، مثل كاش أو محفظة
+                  أو InstaPay، بدون أي قائمة ثابتة داخل النظام.
                 </p>
               </div>
             </div>
@@ -155,9 +142,7 @@ export default function CustodyAccountsPage() {
                 <input
                   id="payment-method-name"
                   value={name}
-                  onChange={(event) =>
-                    setName(event.target.value)
-                  }
+                  onChange={(event) => setName(event.target.value)}
                   placeholder="مثال: إنستا، كاش، محفظة علي"
                   className="h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                 />
@@ -169,9 +154,7 @@ export default function CustodyAccountsPage() {
                   className="mb-2 block text-sm font-bold text-slate-700"
                 >
                   الرصيد الافتتاحي{" "}
-                  <span className="text-slate-400">
-                    (اختياري)
-                  </span>
+                  <span className="text-slate-400">(اختياري)</span>
                 </label>
 
                 <input
@@ -180,9 +163,7 @@ export default function CustodyAccountsPage() {
                   min="0"
                   step="0.01"
                   value={openingBalance}
-                  onChange={(event) =>
-                    setOpeningBalance(event.target.value)
-                  }
+                  onChange={(event) => setOpeningBalance(event.target.value)}
                   placeholder="0"
                   className="h-12 w-full rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                 />

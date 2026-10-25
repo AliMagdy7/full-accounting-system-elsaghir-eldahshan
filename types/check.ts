@@ -1,6 +1,7 @@
 import type { CompanyNoteImage } from "@/types/company-note";
 
-export type CheckStatus = "received" | "due" | "collected" | "returned" | "cancelled";
+export type CheckStatus =
+  "received" | "due" | "collected" | "returned" | "cancelled";
 
 export interface CompanyCheck {
   id: string;

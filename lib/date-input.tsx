@@ -78,7 +78,9 @@ export default function DateInput({
     if (!input) return;
 
     try {
-      const pickerInput = input as HTMLInputElement & { showPicker?: () => void };
+      const pickerInput = input as HTMLInputElement & {
+        showPicker?: () => void;
+      };
       pickerInput.showPicker?.();
     } catch {
       input.focus();
@@ -121,7 +123,7 @@ export default function DateInput({
       <button
         type="button"
         onClick={openCalendar}
-        className="absolute right-1 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition-all hover:bg-slate-100 hover:text-blue-600 focus-visible:bg-slate-100"
+        className="absolute top-1/2 right-1 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition-all hover:bg-slate-100 hover:text-blue-600 focus-visible:bg-slate-100"
         aria-label="اختيار التاريخ من التقويم"
         title="اختيار التاريخ من التقويم"
       >

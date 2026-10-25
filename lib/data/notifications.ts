@@ -34,8 +34,8 @@ function saveNotifications(notifications: Notification[]) {
 }
 
 export function getNotifications(): Notification[] {
-  return readNotifications().sort(
-    (a, b) => b.createdAt.localeCompare(a.createdAt),
+  return readNotifications().sort((a, b) =>
+    b.createdAt.localeCompare(a.createdAt),
   );
 }
 
@@ -80,7 +80,9 @@ export function addNotification(input: {
 
 export function markNotificationAsRead(id: string): Notification | undefined {
   const notifications = readNotifications();
-  const index = notifications.findIndex((notification) => notification.id === id);
+  const index = notifications.findIndex(
+    (notification) => notification.id === id,
+  );
 
   if (index === -1) return undefined;
 

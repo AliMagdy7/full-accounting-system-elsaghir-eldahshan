@@ -56,18 +56,13 @@ export function getCurrentAuditActor(): AuditActor {
 export function setCurrentAuditActor(actor: AuditActor) {
   if (!canUseStorage()) return;
 
-  window.localStorage.setItem(
-    ACTOR_STORAGE_KEY,
-    JSON.stringify(actor),
-  );
+  window.localStorage.setItem(ACTOR_STORAGE_KEY, JSON.stringify(actor));
 
   dispatchAuditUpdated();
 }
 
 export function getAuditLogs(): AuditLog[] {
-  return readLogs().sort(
-    (a, b) => b.createdAt.localeCompare(a.createdAt),
-  );
+  return readLogs().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export function getAuditLogsByEntity(

@@ -22,11 +22,11 @@ import type {
   WorkerFinancialMovementType,
 } from "@/types/worker-financial-movement";
 
-const STORAGE_KEY =
-  "elsaghir-eldahshan-worker-financial-movements";
+const STORAGE_KEY = "elsaghir-eldahshan-worker-financial-movements";
 
 function notifyDataUpdated() {
-  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
+  if (typeof window !== "undefined")
+    window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
 }
 
 function readMovements(): WorkerFinancialMovement[] {
@@ -35,71 +35,43 @@ function readMovements(): WorkerFinancialMovement[] {
   }
 
   try {
-    const raw =
-      window.localStorage.getItem(
-        STORAGE_KEY,
-      );
+    const raw = window.localStorage.getItem(STORAGE_KEY);
 
     if (!raw) {
       return [];
     }
 
-    const parsed =
-      JSON.parse(raw);
+    const parsed = JSON.parse(raw);
 
-    return Array.isArray(parsed)
-      ? parsed
-      : [];
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
 }
 
-function saveMovements(
-  movements: WorkerFinancialMovement[],
-) {
+function saveMovements(movements: WorkerFinancialMovement[]) {
   if (typeof window === "undefined") {
     return;
   }
 
-  window.localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(movements),
-  );
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(movements));
   notifyDataUpdated();
-
 }
 
 export function getWorkerFinancialMovements() {
   return readMovements();
 }
 
-export function getWorkerFinancialMovementById(
-  id: string,
-) {
-  return readMovements().find(
-    (movement) =>
-      movement.id === id,
-  );
+export function getWorkerFinancialMovementById(id: string) {
+  return readMovements().find((movement) => movement.id === id);
 }
 
-export function getWorkerFinancialMovementsByWorkerId(
-  workerId: string,
-) {
+export function getWorkerFinancialMovementsByWorkerId(workerId: string) {
   return readMovements()
-    .filter(
-      (movement) =>
-        movement.workerId ===
-        workerId,
-    )
+    .filter((movement) => movement.workerId === workerId)
     .sort(
       (a, b) =>
-        b.date.localeCompare(
-          a.date,
-        ) ||
-        b.createdAt.localeCompare(
-          a.createdAt,
-        ),
+        b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt),
     );
 }
 
@@ -112,23 +84,12 @@ export function getWorkerFinancialMovementsByWorkerIdAndProjectId(
   );
 }
 
-export function getWorkerFinancialMovementsByProjectId(
-  projectId: string,
-) {
+export function getWorkerFinancialMovementsByProjectId(projectId: string) {
   return readMovements()
-    .filter(
-      (movement) =>
-        movement.projectId ===
-        projectId,
-    )
+    .filter((movement) => movement.projectId === projectId)
     .sort(
       (a, b) =>
-        b.date.localeCompare(
-          a.date,
-        ) ||
-        b.createdAt.localeCompare(
-          a.createdAt,
-        ),
+        b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt),
     );
 }
 
@@ -136,19 +97,10 @@ export function getWorkerFinancialMovementsByType(
   type: WorkerFinancialMovementType,
 ) {
   return readMovements()
-    .filter(
-      (movement) =>
-        movement.type ===
-        type,
-    )
+    .filter((movement) => movement.type === type)
     .sort(
       (a, b) =>
-        b.date.localeCompare(
-          a.date,
-        ) ||
-        b.createdAt.localeCompare(
-          a.createdAt,
-        ),
+        b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt),
     );
 }
 
@@ -207,21 +159,12 @@ export function getWorkerMovementEffect(
 /**
  * إجمالي الزيادات في رصيد العامل.
  */
-export function getWorkerFinancialIncreaseTotal(
-  workerId: string,
-) {
-  const movements =
-    getWorkerFinancialMovementsByWorkerId(
-      workerId,
-    );
+export function getWorkerFinancialIncreaseTotal(workerId: string) {
+  const movements = getWorkerFinancialMovementsByWorkerId(workerId);
 
   return movements.reduce(
     (total, movement) =>
-      movement.effect ===
-      "increase"
-        ? total +
-          movement.amount
-        : total,
+      movement.effect === "increase" ? total + movement.amount : total,
     0,
   );
 }
@@ -229,21 +172,12 @@ export function getWorkerFinancialIncreaseTotal(
 /**
  * إجمالي التخفيضات من رصيد العامل.
  */
-export function getWorkerFinancialDecreaseTotal(
-  workerId: string,
-) {
-  const movements =
-    getWorkerFinancialMovementsByWorkerId(
-      workerId,
-    );
+export function getWorkerFinancialDecreaseTotal(workerId: string) {
+  const movements = getWorkerFinancialMovementsByWorkerId(workerId);
 
   return movements.reduce(
     (total, movement) =>
-      movement.effect ===
-      "decrease"
-        ? total +
-          movement.amount
-        : total,
+      movement.effect === "decrease" ? total + movement.amount : total,
     0,
   );
 }
@@ -254,47 +188,26 @@ export function getWorkerFinancialDecreaseTotal(
  * موجب = مستحقات للعامل.
  * سالب = العامل عليه مديونية للشركة.
  */
-export function getWorkerFinancialTotal(
-  workerId: string,
-) {
-  const increase =
-    getWorkerFinancialIncreaseTotal(
-      workerId,
-    );
+export function getWorkerFinancialTotal(workerId: string) {
+  const increase = getWorkerFinancialIncreaseTotal(workerId);
 
-  const decrease =
-    getWorkerFinancialDecreaseTotal(
-      workerId,
-    );
+  const decrease = getWorkerFinancialDecreaseTotal(workerId);
 
-  return (
-    increase -
-    decrease
-  );
+  return increase - decrease;
 }
 
 /**
  * إجماليات الحركات المالية.
  */
-export function getWorkerFinancialTotals(
-  workerId: string,
-) {
-  const increase =
-    getWorkerFinancialIncreaseTotal(
-      workerId,
-    );
+export function getWorkerFinancialTotals(workerId: string) {
+  const increase = getWorkerFinancialIncreaseTotal(workerId);
 
-  const decrease =
-    getWorkerFinancialDecreaseTotal(
-      workerId,
-    );
+  const decrease = getWorkerFinancialDecreaseTotal(workerId);
 
   return {
     increase,
     decrease,
-    net:
-      increase -
-      decrease,
+    net: increase - decrease,
   };
 }
 
@@ -319,17 +232,13 @@ export function getWorkerFinancialTotalsByProject(
 
   const increase = movements.reduce(
     (total, movement) =>
-      movement.effect === "increase"
-        ? total + Number(movement.amount)
-        : total,
+      movement.effect === "increase" ? total + Number(movement.amount) : total,
     0,
   );
 
   const decrease = movements.reduce(
     (total, movement) =>
-      movement.effect === "decrease"
-        ? total + Number(movement.amount)
-        : total,
+      movement.effect === "decrease" ? total + Number(movement.amount) : total,
     0,
   );
 
@@ -351,31 +260,18 @@ export function getWorkerMaximumSalaryByProject(
   workerId: string,
   projectId: string,
 ) {
-  return Math.max(
-    getWorkerFinancialBalanceByProject(workerId, projectId),
-    0,
-  );
+  return Math.max(getWorkerFinancialBalanceByProject(workerId, projectId), 0);
 }
 
-export function getWorkerFinancialBalance(
-  workerId: string,
-) {
-  return getWorkerFinancialTotal(
-    workerId,
-  );
+export function getWorkerFinancialBalance(workerId: string) {
+  return getWorkerFinancialTotal(workerId);
 }
 
 /**
  * هل العامل له مستحقات قابلة للصرف؟
  */
-export function workerHasPayableBalance(
-  workerId: string,
-) {
-  return (
-    getWorkerFinancialBalance(
-      workerId,
-    ) > 0
-  );
+export function workerHasPayableBalance(workerId: string) {
+  return getWorkerFinancialBalance(workerId) > 0;
 }
 
 /**
@@ -384,27 +280,15 @@ export function workerHasPayableBalance(
  * لا يمكن أن يكون الراتب أكبر
  * من مستحق العامل الحالي.
  */
-export function getWorkerMaximumSalary(
-  workerId: string,
-) {
-  return Math.max(
-    getWorkerFinancialBalance(
-      workerId,
-    ),
-    0,
-  );
+export function getWorkerMaximumSalary(workerId: string) {
+  return Math.max(getWorkerFinancialBalance(workerId), 0);
 }
 
 /**
  * ملخص كامل للحركات المالية للعامل.
  */
-export function getWorkerFinancialSummary(
-  workerId: string,
-) {
-  const movements =
-    getWorkerFinancialMovementsByWorkerId(
-      workerId,
-    );
+export function getWorkerFinancialSummary(workerId: string) {
+  const movements = getWorkerFinancialMovementsByWorkerId(workerId);
 
   const summary = {
     salary: 0,
@@ -419,25 +303,16 @@ export function getWorkerFinancialSummary(
   };
 
   for (const movement of movements) {
-    summary[
-      movement.type
-    ] += movement.amount;
+    summary[movement.type] += movement.amount;
 
-    if (
-      movement.effect ===
-      "increase"
-    ) {
-      summary.increase +=
-        movement.amount;
+    if (movement.effect === "increase") {
+      summary.increase += movement.amount;
     } else {
-      summary.decrease +=
-        movement.amount;
+      summary.decrease += movement.amount;
     }
   }
 
-  summary.net =
-    summary.increase -
-    summary.decrease;
+  summary.net = summary.increase - summary.decrease;
 
   return summary;
 }
@@ -452,78 +327,49 @@ export function getWorkerFinancialSummary(
 export function addWorkerFinancialMovement(
   input: Omit<
     WorkerFinancialMovement,
-    | "id"
-    | "effect"
-    | "createdAt"
-    | "updatedAt"
+    "id" | "effect" | "createdAt" | "updatedAt"
   > & {
     effect?: WorkerFinancialMovementEffect;
   },
 ) {
   assertCurrentUserPermission("create");
   if (!input.workerId) {
-    throw new Error(
-      "العامل مطلوب.",
-    );
+    throw new Error("العامل مطلوب.");
   }
 
-  if (
-    !Number.isFinite(
-      input.amount,
-    ) ||
-    input.amount <= 0
-  ) {
-    throw new Error(
-      "مبلغ الحركة غير صحيح.",
-    );
+  if (!Number.isFinite(input.amount) || input.amount <= 0) {
+    throw new Error("مبلغ الحركة غير صحيح.");
   }
 
   if (!input.date) {
-    throw new Error(
-      "تاريخ الحركة مطلوب.",
-    );
+    throw new Error("تاريخ الحركة مطلوب.");
   }
 
-  if (
-    !input.description?.trim()
-  ) {
-    throw new Error(
-      "بيان الحركة مطلوب.",
-    );
+  if (!input.description?.trim()) {
+    throw new Error("بيان الحركة مطلوب.");
   }
 
-  const effect =
-    getWorkerMovementEffect(
-      input.type,
-    );
+  const effect = getWorkerMovementEffect(input.type);
 
-  const now =
-    new Date().toISOString();
+  const now = new Date().toISOString();
 
-  const movement: WorkerFinancialMovement =
-    {
-      ...input,
+  const movement: WorkerFinancialMovement = {
+    ...input,
 
-      effect,
+    effect,
 
-      description:
-        input.description.trim(),
+    description: input.description.trim(),
 
-      notes:
-        input.notes?.trim() ||
-        undefined,
+    notes: input.notes?.trim() || undefined,
 
-      id: crypto.randomUUID(),
+    id: crypto.randomUUID(),
 
-      createdAt: now,
+    createdAt: now,
 
-      updatedAt: now,
-    };
+    updatedAt: now,
+  };
 
-  saveMovements([
-    ...readMovements(),
-    movement,
-  ]);
+  saveMovements([...readMovements(), movement]);
 
   addAuditLog({
     action: "create",
@@ -546,86 +392,49 @@ export function addWorkerFinancialMovement(
  */
 export function updateWorkerFinancialMovement(
   id: string,
-  updates: Partial<
-    Omit<
-      WorkerFinancialMovement,
-      "id" | "createdAt"
-    >
-  >,
+  updates: Partial<Omit<WorkerFinancialMovement, "id" | "createdAt">>,
 ) {
   assertCurrentUserPermission("update");
-  const movements =
-    readMovements();
+  const movements = readMovements();
 
-  const index =
-    movements.findIndex(
-      (movement) =>
-        movement.id === id,
-    );
+  const index = movements.findIndex((movement) => movement.id === id);
 
   if (index === -1) {
-    throw new Error(
-      "حركة العامل غير موجودة.",
-    );
+    throw new Error("حركة العامل غير موجودة.");
   }
 
-  const currentMovement =
-    movements[index];
+  const currentMovement = movements[index];
 
-  const nextType =
-    updates.type ??
-    currentMovement.type;
+  const nextType = updates.type ?? currentMovement.type;
 
   const nextAmount =
-    updates.amount !==
-    undefined
-      ? updates.amount
-      : currentMovement.amount;
+    updates.amount !== undefined ? updates.amount : currentMovement.amount;
 
-  const nextDate =
-    updates.date ??
-    currentMovement.date;
+  const nextDate = updates.date ?? currentMovement.date;
 
   const nextDescription =
-    updates.description !==
-    undefined
+    updates.description !== undefined
       ? updates.description.trim()
       : currentMovement.description;
 
   const nextNotes =
-    updates.notes !==
-    undefined
-      ? updates.notes?.trim() ||
-        undefined
+    updates.notes !== undefined
+      ? updates.notes?.trim() || undefined
       : currentMovement.notes;
 
-  if (
-    !Number.isFinite(
-      nextAmount,
-    ) ||
-    nextAmount <= 0
-  ) {
-    throw new Error(
-      "مبلغ الحركة غير صحيح.",
-    );
+  if (!Number.isFinite(nextAmount) || nextAmount <= 0) {
+    throw new Error("مبلغ الحركة غير صحيح.");
   }
 
   if (!nextDate) {
-    throw new Error(
-      "تاريخ الحركة مطلوب.",
-    );
+    throw new Error("تاريخ الحركة مطلوب.");
   }
 
   if (!nextDescription) {
-    throw new Error(
-      "بيان الحركة مطلوب.",
-    );
+    throw new Error("بيان الحركة مطلوب.");
   }
 
-  const nextEffect =
-    getWorkerMovementEffect(
-      nextType,
-    );
+  const nextEffect = getWorkerMovementEffect(nextType);
 
   movements[index] = {
     ...currentMovement,
@@ -633,17 +442,13 @@ export function updateWorkerFinancialMovement(
     type: nextType,
     amount: nextAmount,
     date: nextDate,
-    description:
-      nextDescription,
+    description: nextDescription,
     notes: nextNotes,
     effect: nextEffect,
-    updatedAt:
-      new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
-  saveMovements(
-    movements,
-  );
+  saveMovements(movements);
 
   addAuditLog({
     action: "update",
@@ -662,30 +467,15 @@ export function updateWorkerFinancialMovement(
 /**
  * حذف حركة مالية للعامل.
  */
-export function deleteWorkerFinancialMovement(
-  id: string,
-) {
+export function deleteWorkerFinancialMovement(id: string) {
   assertCurrentUserPermission("delete");
-  const movements =
-    readMovements();
+  const movements = readMovements();
 
-  if (
-    !movements.some(
-      (movement) =>
-        movement.id === id,
-    )
-  ) {
-    throw new Error(
-      "حركة العامل غير موجودة.",
-    );
+  if (!movements.some((movement) => movement.id === id)) {
+    throw new Error("حركة العامل غير موجودة.");
   }
 
-  saveMovements(
-    movements.filter(
-      (movement) =>
-        movement.id !== id,
-    ),
-  );
+  saveMovements(movements.filter((movement) => movement.id !== id));
 
   addAuditLog({
     action: "delete",
@@ -784,7 +574,11 @@ export function createWorkerAdvanceWithPayment(input: {
     return { movement, transaction };
   } catch (error) {
     if (transactionId) {
-      try { deleteCustodyTransaction(transactionId); } catch { /* keep original error */ }
+      try {
+        deleteCustodyTransaction(transactionId);
+      } catch {
+        /* keep original error */
+      }
     }
     if (accountChanged && input.financialAccountId) {
       try {
@@ -793,12 +587,22 @@ export function createWorkerAdvanceWithPayment(input: {
           input.amount,
           "out",
         );
-      } catch { /* keep original error */ }
+      } catch {
+        /* keep original error */
+      }
     }
     if (custodyChanged) {
-      try { reverseCustodyBalance(input.custodyId, input.amount, "out"); } catch { /* keep original error */ }
+      try {
+        reverseCustodyBalance(input.custodyId, input.amount, "out");
+      } catch {
+        /* keep original error */
+      }
     }
-    try { deleteWorkerFinancialMovement(movement.id); } catch { /* keep original error */ }
+    try {
+      deleteWorkerFinancialMovement(movement.id);
+    } catch {
+      /* keep original error */
+    }
     throw error;
   }
 }
@@ -825,25 +629,38 @@ export function updateWorkerAdvanceWithPayment(
     throw new Error("سلفة العامل غير موجودة.");
   }
 
-  const oldTransaction = getCustodyTransactionByWorkerFinancialMovementId(movementId);
-  if (!oldTransaction) throw new Error("حركة العهدة المرتبطة بالسلفة غير موجودة.");
+  const oldTransaction =
+    getCustodyTransactionByWorkerFinancialMovementId(movementId);
+  if (!oldTransaction)
+    throw new Error("حركة العهدة المرتبطة بالسلفة غير موجودة.");
 
   const newCustody = getCustodyById(updates.custodyId);
   if (!newCustody) throw new Error("العهدة الدافعة غير موجودة.");
 
   if (newCustody.id === "central") {
-    if (!updates.financialAccountId) throw new Error("اختر وسيلة الدفع من العهدة المركزية.");
+    if (!updates.financialAccountId)
+      throw new Error("اختر وسيلة الدفع من العهدة المركزية.");
     const account = getCustodyFinancialAccountById(updates.financialAccountId);
-    if (!account || account.custodyId !== "central") throw new Error("وسيلة الدفع غير صحيحة.");
-    const available = account.balance + (oldTransaction.financialAccountId === updates.financialAccountId ? oldTransaction.amount : 0);
-    if (available < updates.amount) throw new Error("رصيد وسيلة الدفع غير كافٍ.");
+    if (!account || account.custodyId !== "central")
+      throw new Error("وسيلة الدفع غير صحيحة.");
+    const available =
+      account.balance +
+      (oldTransaction.financialAccountId === updates.financialAccountId
+        ? oldTransaction.amount
+        : 0);
+    if (available < updates.amount)
+      throw new Error("رصيد وسيلة الدفع غير كافٍ.");
   } else if (updates.financialAccountId) {
     throw new Error("وسيلة الدفع متاحة مع العهدة المركزية فقط.");
   }
 
   reverseCustodyBalance(oldTransaction.custodyId, oldTransaction.amount, "out");
   if (oldTransaction.financialAccountId) {
-    reverseCustodyFinancialAccountBalance(oldTransaction.financialAccountId, oldTransaction.amount, "out");
+    reverseCustodyFinancialAccountBalance(
+      oldTransaction.financialAccountId,
+      oldTransaction.amount,
+      "out",
+    );
   }
 
   let newTransaction: ReturnType<typeof addCustodyTransaction> | undefined;
@@ -863,7 +680,11 @@ export function updateWorkerAdvanceWithPayment(
     deleteCustodyTransaction(oldTransaction.id);
     updateCustodyBalance(updates.custodyId, updates.amount, "out");
     if (updates.financialAccountId) {
-      updateCustodyFinancialAccountBalance(updates.financialAccountId, updates.amount, "out");
+      updateCustodyFinancialAccountBalance(
+        updates.financialAccountId,
+        updates.amount,
+        "out",
+      );
     }
 
     const now = new Date().toISOString();
@@ -888,13 +709,27 @@ export function updateWorkerAdvanceWithPayment(
     };
   } catch (error) {
     if (newTransaction) {
-      try { deleteCustodyTransaction(newTransaction.id); } catch { /* keep original */ }
+      try {
+        deleteCustodyTransaction(newTransaction.id);
+      } catch {
+        /* keep original */
+      }
     }
     try {
       reverseCustodyBalance(updates.custodyId, updates.amount, "out");
-    } catch { /* keep original */ }
+    } catch {
+      /* keep original */
+    }
     if (updates.financialAccountId) {
-      try { reverseCustodyFinancialAccountBalance(updates.financialAccountId, updates.amount, "out"); } catch { /* keep original */ }
+      try {
+        reverseCustodyFinancialAccountBalance(
+          updates.financialAccountId,
+          updates.amount,
+          "out",
+        );
+      } catch {
+        /* keep original */
+      }
     }
 
     try {
@@ -909,12 +744,22 @@ export function updateWorkerAdvanceWithPayment(
         allocation: current.allocation,
         type: "advance",
       });
-      updateCustodyBalance(oldTransaction.custodyId, oldTransaction.amount, "out");
+      updateCustodyBalance(
+        oldTransaction.custodyId,
+        oldTransaction.amount,
+        "out",
+      );
       if (oldTransaction.financialAccountId) {
-        updateCustodyFinancialAccountBalance(oldTransaction.financialAccountId, oldTransaction.amount, "out");
+        updateCustodyFinancialAccountBalance(
+          oldTransaction.financialAccountId,
+          oldTransaction.amount,
+          "out",
+        );
       }
       addCustodyTransaction(oldTransaction);
-    } catch { /* keep original */ }
+    } catch {
+      /* keep original */
+    }
 
     throw error;
   }
@@ -928,12 +773,17 @@ export function deleteWorkerAdvanceWithPayment(movementId: string) {
     throw new Error("سلفة العامل غير موجودة.");
   }
 
-  const transaction = getCustodyTransactionByWorkerFinancialMovementId(movementId);
+  const transaction =
+    getCustodyTransactionByWorkerFinancialMovementId(movementId);
   if (!transaction) throw new Error("حركة العهدة المرتبطة بالسلفة غير موجودة.");
 
   reverseCustodyBalance(transaction.custodyId, transaction.amount, "out");
   if (transaction.financialAccountId) {
-    reverseCustodyFinancialAccountBalance(transaction.financialAccountId, transaction.amount, "out");
+    reverseCustodyFinancialAccountBalance(
+      transaction.financialAccountId,
+      transaction.amount,
+      "out",
+    );
   }
 
   deleteCustodyTransaction(transaction.id);

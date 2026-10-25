@@ -5,7 +5,8 @@ import { addAuditLog } from "@/lib/data/audit-logs";
 const STORAGE_KEY = "accounting-system-custodies";
 
 function notifyDataUpdated() {
-  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
+  if (typeof window !== "undefined")
+    window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
 }
 
 function canUseStorage(): boolean {
@@ -47,36 +48,24 @@ function loadCustodies(): Custody[] {
   }
 }
 
-function saveCustodies(
-  custodies: Custody[],
-): void {
+function saveCustodies(custodies: Custody[]): void {
   if (!canUseStorage()) {
     return;
   }
 
-  window.localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(custodies),
-  );
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(custodies));
   notifyDataUpdated();
-
 }
 
 export function getCustodies(): Custody[] {
   return loadCustodies();
 }
 
-export function getCustodyById(
-  id: string,
-): Custody | undefined {
-  return getCustodies().find(
-    (custody) => custody.id === id,
-  );
+export function getCustodyById(id: string): Custody | undefined {
+  return getCustodies().find((custody) => custody.id === id);
 }
 
-export function addCustody(
-  custody: Custody,
-): Custody {
+export function addCustody(custody: Custody): Custody {
   assertCurrentUserPermission("create");
   const custodies = getCustodies();
 
@@ -101,14 +90,13 @@ export function updateCustody(
   id: string,
   updates: Partial<Custody>,
   options?: {
-  audit?: boolean },
+    audit?: boolean;
+  },
 ): Custody | undefined {
   assertCurrentUserPermission("update");
   const custodies = getCustodies();
 
-  const index = custodies.findIndex(
-    (custody) => custody.id === id,
-  );
+  const index = custodies.findIndex((custody) => custody.id === id);
 
   if (index === -1) {
     return undefined;
@@ -165,32 +153,21 @@ export function updateCustodyBalance(
   }
 
   const newBalance =
-    type === "in"
-      ? custody.balance + amount
-      : custody.balance - amount;
+    type === "in" ? custody.balance + amount : custody.balance - amount;
 
   /*
    * عهدة "عهدتي أنا" لها رصيد فعلي لا يجوز تجاوزه.
    * عهدة الموقع وأي عهدة أخرى تمثل حسابًا مستمرًا،
    * لذلك يمكن أن يصبح رصيدها سالبًا عند تسجيل مصروف/سلفة.
    */
-  if (
-    type === "out" &&
-    custody.type === "central" &&
-    newBalance < 0
-  ) {
+  if (type === "out" && custody.type === "central" && newBalance < 0) {
     throw new Error("رصيد عهدتي أنا غير كافٍ.");
   }
 
-  const newTotalIn =
-    type === "in"
-      ? custody.totalIn + amount
-      : custody.totalIn;
+  const newTotalIn = type === "in" ? custody.totalIn + amount : custody.totalIn;
 
   const newTotalOut =
-    type === "out"
-      ? custody.totalOut + amount
-      : custody.totalOut;
+    type === "out" ? custody.totalOut + amount : custody.totalOut;
 
   const updated = updateCustody(
     id,
@@ -285,13 +262,9 @@ export function reverseCustodyBalance(
   return updated;
 }
 
-export function getProjectCustody(
-  projectId: string,
-): Custody | undefined {
+export function getProjectCustody(projectId: string): Custody | undefined {
   return getCustodies().find(
-    (custody) =>
-      custody.type === "project" &&
-      custody.projectId === projectId,
+    (custody) => custody.type === "project" && custody.projectId === projectId,
   );
 }
 
@@ -301,8 +274,7 @@ export function ensureProjectCustody(
   responsiblePerson?: string,
 ): Custody {
   assertCurrentUserPermission("create");
-  const existingCustody =
-    getProjectCustody(projectId);
+  const existingCustody = getProjectCustody(projectId);
 
   if (existingCustody) {
     return (
@@ -333,10 +305,7 @@ export function ensureProjectCustody(
 
 export function updateProjectCustody(
   projectId: string,
-  updates: Pick<
-    Custody,
-    "name" | "responsiblePerson"
-  >,
+  updates: Pick<Custody, "name" | "responsiblePerson">,
 ): Custody | undefined {
   assertCurrentUserPermission("update");
   const custody = getProjectCustody(projectId);
@@ -345,8 +314,5 @@ export function updateProjectCustody(
     return undefined;
   }
 
-  return updateCustody(
-    custody.id,
-    updates,
-  );
+  return updateCustody(custody.id, updates);
 }

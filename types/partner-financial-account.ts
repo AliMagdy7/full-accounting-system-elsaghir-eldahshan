@@ -13,7 +13,10 @@ export interface PartnerFinancialAccount {
   updatedAt: string;
 }
 
-export const PARTNER_ACCOUNT_OWNERS: { value: PartnerAccountOwner; label: string }[] = [
+export const PARTNER_ACCOUNT_OWNERS: {
+  value: PartnerAccountOwner;
+  label: string;
+}[] = [
   { value: "hajj_ramadan", label: "الحاج رمضان" },
   { value: "hajj_nabil", label: "الحاج نبيل" },
 ];

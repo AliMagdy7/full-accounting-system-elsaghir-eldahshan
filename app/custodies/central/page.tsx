@@ -2,11 +2,7 @@
 
 import DateInput from "@/lib/date-input";
 
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import Link from "next/link";
 
@@ -27,47 +23,29 @@ import {
 import AppShell from "@/components/layout/AppShell";
 import { formatDisplayDate } from "@/lib/formatters";
 
-import {
-  getCustodies,
-  getCustodyById,
-} from "@/lib/data/custodies";
+import { getCustodies, getCustodyById } from "@/lib/data/custodies";
 
-import {
-  getCustodyTransactionsByCustodyId,
-} from "@/lib/data/custody-transactions";
+import { getCustodyTransactionsByCustodyId } from "@/lib/data/custody-transactions";
 
 import type { Custody } from "@/types/custody";
 
-import type {
-  CustodyTransaction,
-} from "@/types/custody-transaction";
+import type { CustodyTransaction } from "@/types/custody-transaction";
 import { getCustodyFinancialAccounts } from "@/lib/data/custody-financial-accounts";
 import type { CustodyFinancialAccount } from "@/types/custody-financial-account";
 
-function formatAmount(
-  amount: number,
-): string {
-  return new Intl.NumberFormat(
-    "en-US",
-    {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
-    },
-  ).format(amount);
+function formatAmount(amount: number): string {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount);
 }
 
-function formatDate(
-  date: string,
-): string {
+function formatDate(date: string): string {
   return formatDisplayDate(date);
 }
 
-function getTransactionLabel(
-  transaction: CustodyTransaction,
-): string {
-  switch (
-    transaction.type
-  ) {
+function getTransactionLabel(transaction: CustodyTransaction): string {
+  switch (transaction.type) {
     case "in":
       return "وارد";
 
@@ -82,12 +60,8 @@ function getTransactionLabel(
   }
 }
 
-function getTransactionClasses(
-  transaction: CustodyTransaction,
-): string {
-  switch (
-    transaction.type
-  ) {
+function getTransactionClasses(transaction: CustodyTransaction): string {
+  switch (transaction.type) {
     case "in":
       return "bg-emerald-50 text-emerald-700";
 
@@ -102,30 +76,16 @@ function getTransactionClasses(
   }
 }
 
-function getTransactionAmount(
-  transaction: CustodyTransaction,
-): number {
-  if (
-    transaction.type ===
-      "out" ||
-    transaction.type ===
-      "transfer"
-  ) {
-    return -Math.abs(
-      transaction.amount,
-    );
+function getTransactionAmount(transaction: CustodyTransaction): number {
+  if (transaction.type === "out" || transaction.type === "transfer") {
+    return -Math.abs(transaction.amount);
   }
 
-  return Math.abs(
-    transaction.amount,
-  );
+  return Math.abs(transaction.amount);
 }
 
 export default function CentralCustodyPage() {
-  const [custody, setCustody] =
-    useState<
-      Custody | undefined
-    >();
+  const [custody, setCustody] = useState<Custody | undefined>();
 
   /*
    * مهم جدًا:
@@ -136,19 +96,15 @@ export default function CentralCustodyPage() {
    *
    * هذا يمنع Hydration Mismatch.
    */
-  const [isHydrated, setIsHydrated] =
-    useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  const [transactions, setTransactions] =
-    useState<
-      CustodyTransaction[]
-    >([]);
+  const [transactions, setTransactions] = useState<CustodyTransaction[]>([]);
 
-  const [custodies, setCustodies] =
-    useState<Custody[]>([]);
+  const [custodies, setCustodies] = useState<Custody[]>([]);
 
-  const [financialAccounts, setFinancialAccounts] =
-    useState<CustodyFinancialAccount[]>([]);
+  const [financialAccounts, setFinancialAccounts] = useState<
+    CustodyFinancialAccount[]
+  >([]);
 
   /*
    * ============================================================
@@ -156,20 +112,15 @@ export default function CentralCustodyPage() {
    * ============================================================
    */
 
-  const [sourceFilter, setSourceFilter] =
-    useState("");
+  const [sourceFilter, setSourceFilter] = useState("");
 
-  const [destinationFilter, setDestinationFilter] =
-    useState("");
+  const [destinationFilter, setDestinationFilter] = useState("");
 
-  const [fromDate, setFromDate] =
-    useState("");
+  const [fromDate, setFromDate] = useState("");
 
-  const [toDate, setToDate] =
-    useState("");
+  const [toDate, setToDate] = useState("");
 
-  const [movementType, setMovementType] =
-    useState("");
+  const [movementType, setMovementType] = useState("");
 
   /*
    * ============================================================
@@ -178,56 +129,29 @@ export default function CentralCustodyPage() {
    */
 
   const loadData = () => {
-    const currentCustody =
-      getCustodyById(
-        "central",
-      );
+    const currentCustody = getCustodyById("central");
 
-    const currentTransactions =
-      getCustodyTransactionsByCustodyId(
-        "central",
-      );
+    const currentTransactions = getCustodyTransactionsByCustodyId("central");
 
-    const allCustodies =
-      getCustodies();
+    const allCustodies = getCustodies();
 
-    const sortedTransactions =
-      [
-        ...currentTransactions,
-      ].sort(
-        (a, b) => {
-          const dateCompare =
-            b.date.localeCompare(
-              a.date,
-            );
+    const sortedTransactions = [...currentTransactions].sort((a, b) => {
+      const dateCompare = b.date.localeCompare(a.date);
 
-          if (
-            dateCompare !== 0
-          ) {
-            return dateCompare;
-          }
+      if (dateCompare !== 0) {
+        return dateCompare;
+      }
 
-          return b.createdAt.localeCompare(
-            a.createdAt,
-          );
-        },
-      );
+      return b.createdAt.localeCompare(a.createdAt);
+    });
 
-    setCustody(
-      currentCustody,
-    );
+    setCustody(currentCustody);
 
-    setTransactions(
-      sortedTransactions,
-    );
+    setTransactions(sortedTransactions);
 
-    setCustodies(
-      allCustodies,
-    );
+    setCustodies(allCustodies);
 
-    setFinancialAccounts(
-      getCustodyFinancialAccounts("central"),
-    );
+    setFinancialAccounts(getCustodyFinancialAccounts("central"));
   };
 
   useEffect(() => {
@@ -238,7 +162,8 @@ export default function CentralCustodyPage() {
 
   const financialAccountName = (id?: string) =>
     id
-      ? financialAccounts.find((account) => account.id === id)?.name ?? "وسيلة دفع غير موجودة"
+      ? (financialAccounts.find((account) => account.id === id)?.name ??
+        "وسيلة دفع غير موجودة")
       : "غير محددة";
 
   /*
@@ -247,17 +172,9 @@ export default function CentralCustodyPage() {
    * ============================================================
    */
 
-  const custodyMap =
-    useMemo(() => {
-      return new Map(
-        custodies.map(
-          (item) => [
-            item.id,
-            item.name,
-          ],
-        ),
-      );
-    }, [custodies]);
+  const custodyMap = useMemo(() => {
+    return new Map(custodies.map((item) => [item.id, item.name]));
+  }, [custodies]);
 
   /*
    * ============================================================
@@ -271,40 +188,21 @@ export default function CentralCustodyPage() {
    * transaction.fundingSource
    */
 
-  const availableSources =
-    useMemo(() => {
-      const sources =
-        new Set<string>();
+  const availableSources = useMemo(() => {
+    const sources = new Set<string>();
 
-      transactions.forEach(
-        (transaction) => {
-          const source =
-            transaction.fundingSource?.trim() ||
-            (
-              transaction.type ===
-              "in"
-                ? transaction.source?.trim()
-                : ""
-            );
+    transactions.forEach((transaction) => {
+      const source =
+        transaction.fundingSource?.trim() ||
+        (transaction.type === "in" ? transaction.source?.trim() : "");
 
-          if (source) {
-            sources.add(
-              source,
-            );
-          }
-        },
-      );
+      if (source) {
+        sources.add(source);
+      }
+    });
 
-      return Array.from(
-        sources,
-      ).sort(
-        (a, b) =>
-          a.localeCompare(
-            b,
-            "ar",
-          ),
-      );
-    }, [transactions]);
+    return Array.from(sources).sort((a, b) => a.localeCompare(b, "ar"));
+  }, [transactions]);
 
   /*
    * ============================================================
@@ -312,58 +210,29 @@ export default function CentralCustodyPage() {
    * ============================================================
    */
 
-  const availableDestinations =
-    useMemo(() => {
-      const destinations =
-        new Map<
-          string,
-          string
-        >();
+  const availableDestinations = useMemo(() => {
+    const destinations = new Map<string, string>();
 
-      transactions.forEach(
-        (transaction) => {
-          if (
-            transaction.type !==
-            "transfer"
-          ) {
-            return;
-          }
+    transactions.forEach((transaction) => {
+      if (transaction.type !== "transfer") {
+        return;
+      }
 
-          if (
-            !transaction.relatedCustodyId
-          ) {
-            return;
-          }
+      if (!transaction.relatedCustodyId) {
+        return;
+      }
 
-          const custodyName =
-            custodyMap.get(
-              transaction.relatedCustodyId,
-            );
+      const custodyName = custodyMap.get(transaction.relatedCustodyId);
 
-          if (
-            custodyName
-          ) {
-            destinations.set(
-              transaction.relatedCustodyId,
-              custodyName,
-            );
-          }
-        },
-      );
+      if (custodyName) {
+        destinations.set(transaction.relatedCustodyId, custodyName);
+      }
+    });
 
-      return Array.from(
-        destinations.entries(),
-      ).sort(
-        (a, b) =>
-          a[1].localeCompare(
-            b[1],
-            "ar",
-          ),
-      );
-    }, [
-      transactions,
-      custodyMap,
-    ]);
+    return Array.from(destinations.entries()).sort((a, b) =>
+      a[1].localeCompare(b[1], "ar"),
+    );
+  }, [transactions, custodyMap]);
 
   /*
    * ============================================================
@@ -371,110 +240,76 @@ export default function CentralCustodyPage() {
    * ============================================================
    */
 
-  const filteredTransactions =
-    useMemo(() => {
-      return transactions.filter(
-        (transaction) => {
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((transaction) => {
+      /*
+       * فلتر المصدر الأساسي
+       *
+       * في الوارد:
+       * source
+       *
+       * في التحويل الخارجي:
+       * fundingSource
+       */
 
-          /*
-           * فلتر المصدر الأساسي
-           *
-           * في الوارد:
-           * source
-           *
-           * في التحويل الخارجي:
-           * fundingSource
-           */
+      if (sourceFilter) {
+        const transactionSource =
+          transaction.fundingSource?.trim() ||
+          (transaction.type === "in" ? transaction.source?.trim() : "");
 
-          if (
-            sourceFilter
-          ) {
-            const transactionSource =
-              transaction.fundingSource?.trim() ||
-              (
-                transaction.type ===
-                "in"
-                  ? transaction.source?.trim()
-                  : ""
-              );
+        if (transactionSource !== sourceFilter) {
+          return false;
+        }
+      }
 
-            if (
-              transactionSource !==
-              sourceFilter
-            ) {
-              return false;
-            }
-          }
+      /*
+       * فلتر العهدة المستلمة
+       */
 
-          /*
-           * فلتر العهدة المستلمة
-           */
+      if (destinationFilter) {
+        if (transaction.type !== "transfer") {
+          return false;
+        }
 
-          if (
-            destinationFilter
-          ) {
-            if (
-              transaction.type !==
-              "transfer"
-            ) {
-              return false;
-            }
+        if (transaction.relatedCustodyId !== destinationFilter) {
+          return false;
+        }
+      }
 
-            if (
-              transaction.relatedCustodyId !==
-              destinationFilter
-            ) {
-              return false;
-            }
-          }
+      /*
+       * من تاريخ
+       */
 
-          /*
-           * من تاريخ
-           */
+      if (fromDate && transaction.date < fromDate) {
+        return false;
+      }
 
-          if (
-            fromDate &&
-            transaction.date <
-              fromDate
-          ) {
-            return false;
-          }
+      /*
+       * إلى تاريخ
+       */
 
-          /*
-           * إلى تاريخ
-           */
+      if (toDate && transaction.date > toDate) {
+        return false;
+      }
 
-          if (
-            toDate &&
-            transaction.date >
-              toDate
-          ) {
-            return false;
-          }
+      /*
+       * نوع الحركة
+       */
 
-          /*
-           * نوع الحركة
-           */
+      if (movementType && transaction.type !== movementType) {
+        return false;
+      }
 
-          if (
-            movementType &&
-            transaction.type !==
-              movementType
-          ) {
-            return false;
-          }
-
-          return true;
-        },
-      );
-    }, [
-      transactions,
-      sourceFilter,
-      destinationFilter,
-      fromDate,
-      toDate,
-      movementType,
-    ]);
+      return true;
+    });
+  }, [
+    transactions,
+    sourceFilter,
+    destinationFilter,
+    fromDate,
+    toDate,
+    movementType,
+  ]);
 
   /*
    * ============================================================
@@ -482,103 +317,47 @@ export default function CentralCustodyPage() {
    * ============================================================
    */
 
-  const filteredTotalIn =
-    useMemo(() => {
-      return filteredTransactions
-        .filter(
-          (transaction) =>
-            transaction.type ===
-            "in",
-        )
-        .reduce(
-          (
-            total,
-            transaction,
-          ) =>
-            total +
-            Math.abs(
-              transaction.amount,
-            ),
-          0,
-        );
-    }, [
-      filteredTransactions,
-    ]);
+  const filteredTotalIn = useMemo(() => {
+    return filteredTransactions
+      .filter((transaction) => transaction.type === "in")
+      .reduce((total, transaction) => total + Math.abs(transaction.amount), 0);
+  }, [filteredTransactions]);
 
-  const filteredTotalOut =
-    useMemo(() => {
-      return filteredTransactions
-        .filter(
-          (transaction) =>
-            transaction.type ===
-              "out" ||
-            transaction.type ===
-              "transfer",
-        )
-        .reduce(
-          (
-            total,
-            transaction,
-          ) =>
-            total +
-            Math.abs(
-              transaction.amount,
-            ),
-          0,
-        );
-    }, [
-      filteredTransactions,
-    ]);
-
-  const filteredTransfers =
-    useMemo(() => {
-      return filteredTransactions.filter(
+  const filteredTotalOut = useMemo(() => {
+    return filteredTransactions
+      .filter(
         (transaction) =>
-          transaction.type ===
-          "transfer",
-      );
-    }, [
-      filteredTransactions,
-    ]);
+          transaction.type === "out" || transaction.type === "transfer",
+      )
+      .reduce((total, transaction) => total + Math.abs(transaction.amount), 0);
+  }, [filteredTransactions]);
 
-  const filteredIncoming =
-    useMemo(() => {
-      return filteredTransactions.filter(
-        (transaction) =>
-          transaction.type ===
-          "in",
-      );
-    }, [
-      filteredTransactions,
-    ]);
+  const filteredTransfers = useMemo(() => {
+    return filteredTransactions.filter(
+      (transaction) => transaction.type === "transfer",
+    );
+  }, [filteredTransactions]);
 
-  const resetFilters =
-    () => {
-      setSourceFilter("");
-      setDestinationFilter(
-        "",
-      );
-      setFromDate("");
-      setToDate("");
-      setMovementType("");
-    };
+  const filteredIncoming = useMemo(() => {
+    return filteredTransactions.filter(
+      (transaction) => transaction.type === "in",
+    );
+  }, [filteredTransactions]);
+
+  const resetFilters = () => {
+    setSourceFilter("");
+    setDestinationFilter("");
+    setFromDate("");
+    setToDate("");
+    setMovementType("");
+  };
 
   const hasFilters =
-    Boolean(
-      sourceFilter,
-    ) ||
-    Boolean(
-      destinationFilter,
-    ) ||
-    Boolean(
-      fromDate,
-    ) ||
-    Boolean(
-      toDate,
-    ) ||
-    Boolean(
-      movementType,
-    );
+    Boolean(sourceFilter) ||
+    Boolean(destinationFilter) ||
+    Boolean(fromDate) ||
+    Boolean(toDate) ||
+    Boolean(movementType);
 
   /*
    * ============================================================
@@ -644,16 +423,13 @@ export default function CentralCustodyPage() {
   return (
     <AppShell>
       <div className="app-page space-y-6">
-
         {/* ================================================== */}
         {/* Header */}
         {/* ================================================== */}
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-
             <div className="flex min-w-0 items-start gap-3">
-
               <Link
                 href="/custodies"
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-slate-900"
@@ -663,9 +439,7 @@ export default function CentralCustodyPage() {
               </Link>
 
               <div className="min-w-0">
-
                 <div className="mb-2 flex flex-wrap items-center gap-2">
-
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                     <Wallet className="h-5 w-5" />
                   </div>
@@ -684,14 +458,13 @@ export default function CentralCustodyPage() {
                 </h1>
 
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                  متابعة الأموال الداخلة إلى عهدتي أنا،
-                  والتحويلات التي أرسلها إلى باقي العهد.
+                  متابعة الأموال الداخلة إلى عهدتي أنا، والتحويلات التي أرسلها
+                  إلى باقي العهد.
                 </p>
               </div>
             </div>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-
               <Link
                 href="/reports?custody=central"
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-600 shadow-sm transition-all duration-200 hover:bg-slate-50 hover:text-slate-900 active:scale-[0.98]"
@@ -724,7 +497,6 @@ export default function CentralCustodyPage() {
 
         <section>
           <div className="mb-4">
-
             <h2 className="text-lg font-extrabold text-slate-900">
               ملخص العهدة
             </h2>
@@ -735,13 +507,10 @@ export default function CentralCustodyPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
             {/* Balance */}
 
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
               <div className="flex items-center justify-between gap-3">
-
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                   <WalletCards className="h-5 w-5" />
                 </div>
@@ -764,9 +533,7 @@ export default function CentralCustodyPage() {
                       : "text-slate-900"
                 }`}
               >
-                {formatAmount(
-                  custody.balance,
-                )}
+                {formatAmount(custody.balance)}
 
                 <span className="mr-2 text-xs font-medium text-slate-400">
                   جنيه
@@ -777,9 +544,7 @@ export default function CentralCustodyPage() {
             {/* Total In */}
 
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
               <div className="flex items-center justify-between gap-3">
-
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
                   <ArrowDownLeft className="h-5 w-5" />
                 </div>
@@ -794,9 +559,7 @@ export default function CentralCustodyPage() {
               </p>
 
               <p className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900">
-                {formatAmount(
-                  custody.totalIn,
-                )}
+                {formatAmount(custody.totalIn)}
 
                 <span className="mr-2 text-xs font-medium text-slate-400">
                   جنيه
@@ -807,9 +570,7 @@ export default function CentralCustodyPage() {
             {/* Total Out */}
 
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
               <div className="flex items-center justify-between gap-3">
-
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-red-600">
                   <ArrowUpLeft className="h-5 w-5" />
                 </div>
@@ -824,9 +585,7 @@ export default function CentralCustodyPage() {
               </p>
 
               <p className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900">
-                {formatAmount(
-                  custody.totalOut,
-                )}
+                {formatAmount(custody.totalOut)}
 
                 <span className="mr-2 text-xs font-medium text-slate-400">
                   جنيه
@@ -837,9 +596,7 @@ export default function CentralCustodyPage() {
             {/* Operations */}
 
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
               <div className="flex items-center justify-between gap-3">
-
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
                   <History className="h-5 w-5" />
                 </div>
@@ -866,9 +623,7 @@ export default function CentralCustodyPage() {
           {/* Financial Accounts Balances */}
 
           <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-
             <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-
               <div>
                 <h3 className="text-base font-extrabold text-slate-900">
                   أرصدة وسائل الدفع
@@ -894,7 +649,8 @@ export default function CentralCustodyPage() {
                 </p>
 
                 <p className="mt-1 text-xs text-slate-400">
-                  أضف محفظة أو نقدية أو InstaPay أو أي وسيلة دفع أخرى من إدارة وسائل الدفع.
+                  أضف محفظة أو نقدية أو InstaPay أو أي وسيلة دفع أخرى من إدارة
+                  وسائل الدفع.
                 </p>
               </div>
             ) : (
@@ -945,24 +701,20 @@ export default function CentralCustodyPage() {
         {/* ================================================== */}
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-
             <div className="flex items-start gap-3">
-
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                 <Filter className="h-5 w-5" />
               </div>
 
               <div>
-
                 <h2 className="text-base font-extrabold text-slate-900">
                   فلترة حركة عهدتي أنا
                 </h2>
 
                 <p className="mt-1 text-xs leading-5 text-slate-400">
-                  اعرض الأموال حسب مصدرها الأساسي أو التحويلات حسب العهدة
-                  التي أرسلت إليها.
+                  اعرض الأموال حسب مصدرها الأساسي أو التحويلات حسب العهدة التي
+                  أرسلت إليها.
                 </p>
               </div>
             </div>
@@ -970,9 +722,7 @@ export default function CentralCustodyPage() {
             {hasFilters && (
               <button
                 type="button"
-                onClick={
-                  resetFilters
-                }
+                onClick={resetFilters}
                 className="inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-500 transition-all duration-200 hover:bg-slate-50 hover:text-slate-900"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
@@ -982,7 +732,6 @@ export default function CentralCustodyPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-
             {/* Source */}
 
             <div>
@@ -995,34 +744,17 @@ export default function CentralCustodyPage() {
 
               <select
                 id="central-source-filter"
-                value={
-                  sourceFilter
-                }
-                onChange={(event) =>
-                  setSourceFilter(
-                    event.target.value,
-                  )
-                }
-                className="h-11 w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition-all hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10"
+                value={sourceFilter}
+                onChange={(event) => setSourceFilter(event.target.value)}
+                className="h-11 w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 transition-all outline-none hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10"
               >
-                <option value="">
-                  كل المصادر
-                </option>
+                <option value="">كل المصادر</option>
 
-                {availableSources.map(
-                  (source) => (
-                    <option
-                      key={
-                        source
-                      }
-                      value={
-                        source
-                      }
-                    >
-                      {source}
-                    </option>
-                  ),
-                )}
+                {availableSources.map((source) => (
+                  <option key={source} value={source}>
+                    {source}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -1038,33 +770,17 @@ export default function CentralCustodyPage() {
 
               <select
                 id="central-destination-filter"
-                value={
-                  destinationFilter
-                }
-                onChange={(event) =>
-                  setDestinationFilter(
-                    event.target.value,
-                  )
-                }
-                className="h-11 w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition-all hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10"
+                value={destinationFilter}
+                onChange={(event) => setDestinationFilter(event.target.value)}
+                className="h-11 w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 transition-all outline-none hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10"
               >
-                <option value="">
-                  كل العهد
-                </option>
+                <option value="">كل العهد</option>
 
-                {availableDestinations.map(
-                  ([
-                    id,
-                    name,
-                  ]) => (
-                    <option
-                      key={id}
-                      value={id}
-                    >
-                      {name}
-                    </option>
-                  ),
-                )}
+                {availableDestinations.map(([id, name]) => (
+                  <option key={id} value={id}>
+                    {name}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -1080,31 +796,17 @@ export default function CentralCustodyPage() {
 
               <select
                 id="central-type-filter"
-                value={
-                  movementType
-                }
-                onChange={(event) =>
-                  setMovementType(
-                    event.target.value,
-                  )
-                }
-                className="h-11 w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition-all hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10"
+                value={movementType}
+                onChange={(event) => setMovementType(event.target.value)}
+                className="h-11 w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 transition-all outline-none hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10"
               >
-                <option value="">
-                  كل الحركات
-                </option>
+                <option value="">كل الحركات</option>
 
-                <option value="in">
-                  وارد
-                </option>
+                <option value="in">وارد</option>
 
-                <option value="out">
-                  صرف
-                </option>
+                <option value="out">صرف</option>
 
-                <option value="transfer">
-                  تحويل لعهدة
-                </option>
+                <option value="transfer">تحويل لعهدة</option>
               </select>
             </div>
 
@@ -1119,20 +821,13 @@ export default function CentralCustodyPage() {
               </label>
 
               <div className="relative">
-
-                <CalendarDays className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <CalendarDays className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
                 <DateInput
                   id="central-from-date"
-                  value={
-                    fromDate
-                  }
-                  onChange={(value) =>
-                    setFromDate(
-                      value,
-                    )
-                  }
-                  className="h-11 w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 py-2 pl-3 pr-10 text-sm text-slate-700 outline-none transition-all hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10"
+                  value={fromDate}
+                  onChange={(value) => setFromDate(value)}
+                  className="h-11 w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 py-2 pr-10 pl-3 text-sm text-slate-700 transition-all outline-none hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10"
                 />
               </div>
             </div>
@@ -1148,20 +843,13 @@ export default function CentralCustodyPage() {
               </label>
 
               <div className="relative">
-
-                <CalendarDays className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <CalendarDays className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
                 <DateInput
                   id="central-to-date"
-                  value={
-                    toDate
-                  }
-                  onChange={(value) =>
-                    setToDate(
-                      value,
-                    )
-                  }
-                  className="h-11 w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 py-2 pl-3 pr-10 text-sm text-slate-700 outline-none transition-all hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10"
+                  value={toDate}
+                  onChange={(value) => setToDate(value)}
+                  className="h-11 w-full cursor-pointer rounded-xl border border-slate-200 bg-slate-50 py-2 pr-10 pl-3 text-sm text-slate-700 transition-all outline-none hover:border-slate-300 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-500/10"
                 />
               </div>
             </div>
@@ -1171,40 +859,28 @@ export default function CentralCustodyPage() {
 
           {hasFilters && (
             <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
-
               <span className="text-xs font-bold text-slate-400">
                 الفلاتر الحالية:
               </span>
 
               {sourceFilter && (
                 <span className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
-                  المصدر الأساسي:{" "}
-                  {
-                    sourceFilter
-                  }
+                  المصدر الأساسي: {sourceFilter}
                 </span>
               )}
 
               {destinationFilter && (
                 <span className="rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
-                  إلى:{" "}
-                  {
-                    custodyMap.get(
-                      destinationFilter,
-                    ) ??
-                    "عهدة غير معروفة"
-                  }
+                  إلى: {custodyMap.get(destinationFilter) ?? "عهدة غير معروفة"}
                 </span>
               )}
 
               {movementType && (
                 <span className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600">
                   النوع:{" "}
-                  {movementType ===
-                  "in"
+                  {movementType === "in"
                     ? "وارد"
-                    : movementType ===
-                        "out"
+                    : movementType === "out"
                       ? "صرف"
                       : "تحويل لعهدة"}
                 </span>
@@ -1212,19 +888,13 @@ export default function CentralCustodyPage() {
 
               {fromDate && (
                 <span className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-500">
-                  من:{" "}
-                  {formatDate(
-                    fromDate,
-                  )}
+                  من: {formatDate(fromDate)}
                 </span>
               )}
 
               {toDate && (
                 <span className="rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-500">
-                  إلى:{" "}
-                  {formatDate(
-                    toDate,
-                  )}
+                  إلى: {formatDate(toDate)}
                 </span>
               )}
             </div>
@@ -1237,9 +907,7 @@ export default function CentralCustodyPage() {
 
         {hasFilters && (
           <section>
-
             <div className="mb-4">
-
               <h2 className="text-lg font-extrabold text-slate-900">
                 نتيجة الفلترة
               </h2>
@@ -1250,19 +918,15 @@ export default function CentralCustodyPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
               {/* Total In */}
 
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
                 <p className="text-xs font-bold text-slate-400">
                   إجمالي الوارد
                 </p>
 
                 <p className="mt-2 text-2xl font-extrabold text-emerald-600">
-                  {formatAmount(
-                    filteredTotalIn,
-                  )}
+                  {formatAmount(filteredTotalIn)}
 
                   <span className="mr-2 text-xs font-medium text-slate-400">
                     جنيه
@@ -1270,48 +934,37 @@ export default function CentralCustodyPage() {
                 </p>
 
                 <p className="mt-1 text-[11px] text-slate-400">
-                  {
-                    filteredIncoming.length
-                  }{" "}
-                  حركة وارد
+                  {filteredIncoming.length} حركة وارد
                 </p>
               </div>
 
               {/* Total Out */}
 
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
                 <p className="text-xs font-bold text-slate-400">
                   إجمالي الخارج
                 </p>
 
                 <p className="mt-2 text-2xl font-extrabold text-red-600">
-                  {formatAmount(
-                    filteredTotalOut,
-                  )}
+                  {formatAmount(filteredTotalOut)}
 
                   <span className="mr-2 text-xs font-medium text-slate-400">
                     جنيه
                   </span>
                 </p>
 
-                <p className="mt-1 text-[11px] text-slate-400">
-                  صرف + تحويل
-                </p>
+                <p className="mt-1 text-[11px] text-slate-400">صرف + تحويل</p>
               </div>
 
               {/* Transfers */}
 
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
                 <p className="text-xs font-bold text-slate-400">
                   إجمالي التحويلات
                 </p>
 
                 <p className="mt-2 text-2xl font-extrabold text-blue-600">
-                  {
-                    filteredTransfers.length
-                  }
+                  {filteredTransfers.length}
                 </p>
 
                 <p className="mt-1 text-[11px] text-slate-400">
@@ -1322,20 +975,13 @@ export default function CentralCustodyPage() {
               {/* Count */}
 
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-
-                <p className="text-xs font-bold text-slate-400">
-                  عدد الحركات
-                </p>
+                <p className="text-xs font-bold text-slate-400">عدد الحركات</p>
 
                 <p className="mt-2 text-2xl font-extrabold text-slate-900">
-                  {
-                    filteredTransactions.length
-                  }
+                  {filteredTransactions.length}
                 </p>
 
-                <p className="mt-1 text-[11px] text-slate-400">
-                  حركة مطابقة
-                </p>
+                <p className="mt-1 text-[11px] text-slate-400">حركة مطابقة</p>
               </div>
             </div>
           </section>
@@ -1346,11 +992,8 @@ export default function CentralCustodyPage() {
         {/* ================================================== */}
 
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-
           <div className="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-
             <div>
-
               <h2 className="text-base font-extrabold text-slate-900">
                 كشف حركة عهدتي أنا
               </h2>
@@ -1363,20 +1006,13 @@ export default function CentralCustodyPage() {
 
             <span className="flex w-fit items-center gap-2 rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-500">
               <History className="h-3.5 w-3.5" />
-
-              {
-                filteredTransactions.length
-              }{" "}
-              حركة
+              {filteredTransactions.length} حركة
             </span>
           </div>
 
-          {filteredTransactions.length ===
-          0 ? (
+          {filteredTransactions.length === 0 ? (
             <div className="flex min-h-60 items-center justify-center px-5 py-10">
-
               <div className="max-w-md text-center">
-
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
                   <Search className="h-6 w-6" />
                 </div>
@@ -1386,16 +1022,13 @@ export default function CentralCustodyPage() {
                 </h3>
 
                 <p className="mt-1 text-xs leading-5 text-slate-400">
-                  جرّب تغيير مصدر الأموال أو العهدة المستلمة أو الفترة
-                  المحددة.
+                  جرّب تغيير مصدر الأموال أو العهدة المستلمة أو الفترة المحددة.
                 </p>
 
                 {hasFilters && (
                   <button
                     type="button"
-                    onClick={
-                      resetFilters
-                    }
+                    onClick={resetFilters}
                     className="mt-4 inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 text-xs font-bold text-white transition-colors hover:bg-slate-800"
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
@@ -1409,13 +1042,9 @@ export default function CentralCustodyPage() {
               {/* Desktop */}
 
               <div className="hidden overflow-x-auto md:block">
-
                 <table className="w-full min-w-[1000px] text-right">
-
                   <thead>
-
                     <tr className="border-b border-slate-100 bg-slate-50/70">
-
                       <th className="px-5 py-4 text-xs font-bold text-slate-500">
                         التاريخ
                       </th>
@@ -1439,155 +1068,101 @@ export default function CentralCustodyPage() {
                       <th className="px-5 py-4 text-xs font-bold text-slate-500">
                         المبلغ
                       </th>
-
                     </tr>
                   </thead>
 
                   <tbody>
+                    {filteredTransactions.map((transaction) => {
+                      const isIncoming = transaction.type === "in";
 
-                    {filteredTransactions.map(
-                      (
-                        transaction,
-                      ) => {
+                      const isTransfer = transaction.type === "transfer";
 
-                        const isIncoming =
-                          transaction.type ===
-                          "in";
+                      const amount = getTransactionAmount(transaction);
 
-                        const isTransfer =
-                          transaction.type ===
-                          "transfer";
+                      const destinationName = transaction.relatedCustodyId
+                        ? custodyMap.get(transaction.relatedCustodyId)
+                        : undefined;
 
-                        const amount =
-                          getTransactionAmount(
-                            transaction,
-                          );
+                      return (
+                        <tr
+                          key={transaction.id}
+                          className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/70"
+                        >
+                          <td className="px-5 py-4 text-xs font-semibold whitespace-nowrap text-slate-500">
+                            {formatDate(transaction.date)}
+                          </td>
 
-                        const destinationName =
-                          transaction.relatedCustodyId
-                            ? custodyMap.get(
-                                transaction.relatedCustodyId,
-                              )
-                            : undefined;
-
-                        return (
-                          <tr
-                            key={
-                              transaction.id
-                            }
-                            className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/70"
-                          >
-
-                            <td className="whitespace-nowrap px-5 py-4 text-xs font-semibold text-slate-500">
-                              {formatDate(
-                                transaction.date,
-                              )}
-                            </td>
-
-                            <td className="px-5 py-4">
-
-                              <span
-                                className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${getTransactionClasses(
-                                  transaction,
-                                )}`}
-                              >
-
-                                {isIncoming ? (
-                                  <ArrowDownLeft className="h-3.5 w-3.5" />
-                                ) : isTransfer ? (
-                                  <WalletCards className="h-3.5 w-3.5" />
-                                ) : (
-                                  <ArrowUpLeft className="h-3.5 w-3.5" />
-                                )}
-
-                                {
-                                  getTransactionLabel(
-                                    transaction,
-                                  )
-                                }
-                              </span>
-                            </td>
-
-                            <td className="max-w-[360px] px-5 py-4">
-
-                              <p className="text-sm font-bold text-slate-800">
-                                {
-                                  transaction.description
-                                }
-                              </p>
-                            </td>
-
-                            <td className="max-w-[280px] px-5 py-4">
-
-                              {isIncoming ||
-                              transaction.fundingSource ? (
-                                <span className="text-xs font-semibold text-emerald-700">
-                                  <span className="block">
-                                    {transaction.fundingSource ||
-                                      transaction.source ||
-                                      "مصدر غير محدد"}
-                                  </span>
-                                  <span className="mt-1 block text-[10px] text-blue-600">
-                                    وسيلة الدفع: {financialAccountName(transaction.financialAccountId)}
-                                  </span>
-                                </span>
+                          <td className="px-5 py-4">
+                            <span
+                              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${getTransactionClasses(
+                                transaction,
+                              )}`}
+                            >
+                              {isIncoming ? (
+                                <ArrowDownLeft className="h-3.5 w-3.5" />
+                              ) : isTransfer ? (
+                                <WalletCards className="h-3.5 w-3.5" />
                               ) : (
-                                <span className="text-xs text-slate-400">
-                                  —
-                                </span>
+                                <ArrowUpLeft className="h-3.5 w-3.5" />
                               )}
-                            </td>
 
-                            <td className="max-w-[260px] px-5 py-4">
+                              {getTransactionLabel(transaction)}
+                            </span>
+                          </td>
 
-                              {isTransfer ? (
-                                <span className="text-xs font-semibold text-blue-700">
-                                  {
-                                    destinationName ||
-                                    "عهدة غير معروفة"
-                                  }
+                          <td className="max-w-[360px] px-5 py-4">
+                            <p className="text-sm font-bold text-slate-800">
+                              {transaction.description}
+                            </p>
+                          </td>
+
+                          <td className="max-w-[280px] px-5 py-4">
+                            {isIncoming || transaction.fundingSource ? (
+                              <span className="text-xs font-semibold text-emerald-700">
+                                <span className="block">
+                                  {transaction.fundingSource ||
+                                    transaction.source ||
+                                    "مصدر غير محدد"}
                                 </span>
-                              ) : (
-                                <span className="text-xs text-slate-400">
-                                  —
+                                <span className="mt-1 block text-[10px] text-blue-600">
+                                  وسيلة الدفع:{" "}
+                                  {financialAccountName(
+                                    transaction.financialAccountId,
+                                  )}
                                 </span>
-                              )}
-                            </td>
-
-                            <td className="whitespace-nowrap px-5 py-4">
-
-                              <span
-                                className={`text-sm font-extrabold ${
-                                  amount >
-                                  0
-                                    ? "text-emerald-600"
-                                    : amount <
-                                        0
-                                      ? "text-red-600"
-                                      : "text-slate-600"
-                                }`}
-                              >
-                                {amount >
-                                0
-                                  ? "+"
-                                  : amount <
-                                      0
-                                    ? "-"
-                                    : ""}
-
-                                {formatAmount(
-                                  Math.abs(
-                                    amount,
-                                  ),
-                                )}{" "}
-                                جنيه
                               </span>
-                            </td>
-                          </tr>
-                        );
-                      },
-                    )}
+                            ) : (
+                              <span className="text-xs text-slate-400">—</span>
+                            )}
+                          </td>
 
+                          <td className="max-w-[260px] px-5 py-4">
+                            {isTransfer ? (
+                              <span className="text-xs font-semibold text-blue-700">
+                                {destinationName || "عهدة غير معروفة"}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-slate-400">—</span>
+                            )}
+                          </td>
+
+                          <td className="px-5 py-4 whitespace-nowrap">
+                            <span
+                              className={`text-sm font-extrabold ${
+                                amount > 0
+                                  ? "text-emerald-600"
+                                  : amount < 0
+                                    ? "text-red-600"
+                                    : "text-slate-600"
+                              }`}
+                            >
+                              {amount > 0 ? "+" : amount < 0 ? "-" : ""}
+                              {formatAmount(Math.abs(amount))} جنيه
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -1595,146 +1170,95 @@ export default function CentralCustodyPage() {
               {/* Mobile */}
 
               <div className="divide-y divide-slate-100 md:hidden">
+                {filteredTransactions.map((transaction) => {
+                  const isIncoming = transaction.type === "in";
 
-                {filteredTransactions.map(
-                  (
-                    transaction,
-                  ) => {
+                  const isTransfer = transaction.type === "transfer";
 
-                    const isIncoming =
-                      transaction.type ===
-                      "in";
+                  const amount = getTransactionAmount(transaction);
 
-                    const isTransfer =
-                      transaction.type ===
-                      "transfer";
+                  const destinationName = transaction.relatedCustodyId
+                    ? custodyMap.get(transaction.relatedCustodyId)
+                    : undefined;
 
-                    const amount =
-                      getTransactionAmount(
-                        transaction,
-                      );
+                  return (
+                    <div key={transaction.id} className="p-5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-slate-400">
+                            {formatDate(transaction.date)}
+                          </p>
 
-                    const destinationName =
-                      transaction.relatedCustodyId
-                        ? custodyMap.get(
-                            transaction.relatedCustodyId,
-                          )
-                        : undefined;
+                          <p className="mt-1 text-sm font-extrabold text-slate-800">
+                            {transaction.description}
+                          </p>
+                        </div>
 
-                    return (
-                      <div
-                        key={
-                          transaction.id
-                        }
-                        className="p-5"
-                      >
+                        <span
+                          className={`shrink-0 rounded-lg px-2.5 py-1.5 text-[10px] font-bold ${getTransactionClasses(
+                            transaction,
+                          )}`}
+                        >
+                          {getTransactionLabel(transaction)}
+                        </span>
+                      </div>
 
-                        <div className="flex items-start justify-between gap-3">
+                      <div className="mt-4 grid grid-cols-1 gap-2">
+                        {(isIncoming || transaction.fundingSource) && (
+                          <div className="rounded-xl bg-emerald-50/70 p-3">
+                            <p className="text-[10px] font-bold text-emerald-600">
+                              مصدر الأموال الأساسي
+                            </p>
 
-                          <div className="min-w-0">
+                            <p className="mt-1 text-xs font-bold text-slate-700">
+                              {transaction.fundingSource ||
+                                transaction.source ||
+                                "مصدر غير محدد"}
+                            </p>
 
-                            <p className="text-xs font-semibold text-slate-400">
-                              {formatDate(
-                                transaction.date,
+                            <p className="mt-1 text-[10px] font-bold text-blue-600">
+                              وسيلة الدفع:{" "}
+                              {financialAccountName(
+                                transaction.financialAccountId,
                               )}
                             </p>
+                          </div>
+                        )}
 
-                            <p className="mt-1 text-sm font-extrabold text-slate-800">
-                              {
-                                transaction.description
-                              }
+                        {isTransfer && (
+                          <div className="rounded-xl bg-blue-50/70 p-3">
+                            <p className="text-[10px] font-bold text-blue-600">
+                              العهدة المرسلة إليها
+                            </p>
+
+                            <p className="mt-1 text-xs font-bold text-slate-700">
+                              {destinationName || "عهدة غير معروفة"}
                             </p>
                           </div>
-
-                          <span
-                            className={`shrink-0 rounded-lg px-2.5 py-1.5 text-[10px] font-bold ${getTransactionClasses(
-                              transaction,
-                            )}`}
-                          >
-                            {
-                              getTransactionLabel(
-                                transaction,
-                              )
-                            }
-                          </span>
-                        </div>
-
-                        <div className="mt-4 grid grid-cols-1 gap-2">
-
-                          {(isIncoming ||
-                            transaction.fundingSource) && (
-                            <div className="rounded-xl bg-emerald-50/70 p-3">
-
-                              <p className="text-[10px] font-bold text-emerald-600">
-                                مصدر الأموال الأساسي
-                              </p>
-
-                              <p className="mt-1 text-xs font-bold text-slate-700">
-                                {transaction.fundingSource ||
-                                  transaction.source ||
-                                  "مصدر غير محدد"}
-                              </p>
-
-                              <p className="mt-1 text-[10px] font-bold text-blue-600">
-                                وسيلة الدفع: {financialAccountName(transaction.financialAccountId)}
-                              </p>
-                            </div>
-                          )}
-
-                          {isTransfer && (
-                            <div className="rounded-xl bg-blue-50/70 p-3">
-
-                              <p className="text-[10px] font-bold text-blue-600">
-                                العهدة المرسلة إليها
-                              </p>
-
-                              <p className="mt-1 text-xs font-bold text-slate-700">
-                                {
-                                  destinationName ||
-                                  "عهدة غير معروفة"
-                                }
-                              </p>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="mt-3 flex items-center justify-between">
-
-                          <span className="text-xs font-semibold text-slate-400">
-                            المبلغ
-                          </span>
-
-                          <span
-                            className={`text-base font-extrabold ${
-                              amount >
-                              0
-                                ? "text-emerald-600"
-                                : amount <
-                                    0
-                                  ? "text-red-600"
-                                  : "text-slate-600"
-                            }`}
-                          >
-                            {amount >
-                            0
-                              ? "+"
-                              : amount <
-                                  0
-                                ? "-"
-                                : ""}
-
-                            {formatAmount(
-                              Math.abs(
-                                amount,
-                              ),
-                            )}{" "}
-                            جنيه
-                          </span>
-                        </div>
+                        )}
                       </div>
-                    );
-                  },
-                )}
+
+                      <div className="mt-3 flex items-center justify-between">
+                        <span className="text-xs font-semibold text-slate-400">
+                          المبلغ
+                        </span>
+
+                        <span
+                          className={`text-base font-extrabold ${
+                            amount > 0
+                              ? "text-emerald-600"
+                              : amount < 0
+                                ? "text-red-600"
+                                : "text-slate-600"
+                          }`}
+                        >
+                          {amount > 0 ? "+" : amount < 0 ? "-" : ""}
+                          {formatAmount(Math.abs(amount))} جنيه
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </>
           )}
@@ -1745,26 +1269,23 @@ export default function CentralCustodyPage() {
         {/* ================================================== */}
 
         <section className="rounded-2xl border border-blue-100 bg-blue-50/60 p-5 sm:p-6">
-
           <div className="flex items-start gap-3">
-
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm">
               <WalletCards className="h-5 w-5" />
             </div>
 
             <div>
-
               <h2 className="text-sm font-extrabold text-slate-800">
                 طريقة قراءة عهدتي أنا
               </h2>
 
               <p className="mt-1 text-xs leading-6 text-slate-500 sm:text-sm">
-                الأموال الداخلة يمكن تصفيتها حسب مصدرها الأساسي، مثل
-                الحاج نبيل أو الحاج رمضان أو أي مصدر آخر. وإذا تم تحويل
-                مبلغ إلى عهدة أخرى وكان مصدره جهة خارجية، يظهر نفس المصدر
-                على التحويل ويمكن تصفيته به. أما التحويل المباشر من رصيد
-                عهدتي أنا فلا يكون له مصدر خارجي. ويمكن كذلك تصفية
-                التحويلات حسب العهدة التي تم إرسال المبلغ إليها.
+                الأموال الداخلة يمكن تصفيتها حسب مصدرها الأساسي، مثل الحاج نبيل
+                أو الحاج رمضان أو أي مصدر آخر. وإذا تم تحويل مبلغ إلى عهدة أخرى
+                وكان مصدره جهة خارجية، يظهر نفس المصدر على التحويل ويمكن تصفيته
+                به. أما التحويل المباشر من رصيد عهدتي أنا فلا يكون له مصدر
+                خارجي. ويمكن كذلك تصفية التحويلات حسب العهدة التي تم إرسال
+                المبلغ إليها.
               </p>
             </div>
           </div>

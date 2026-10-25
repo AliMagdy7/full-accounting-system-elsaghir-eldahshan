@@ -1,12 +1,17 @@
 import { assertCurrentUserPermission } from "@/lib/permission-check";
-import { getCustodyById, updateCustodyBalance, reverseCustodyBalance } from "@/lib/data/custodies";
+import {
+  getCustodyById,
+  updateCustodyBalance,
+  reverseCustodyBalance,
+} from "@/lib/data/custodies";
 import type { CustodyFinancialAccount } from "@/types/custody-financial-account";
 import { addAuditLog } from "@/lib/data/audit-logs";
 
 const STORAGE_KEY = "elsaghir-eldahshan-custody-financial-accounts";
 
 function notifyDataUpdated() {
-  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
+  if (typeof window !== "undefined")
+    window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
 }
 
 function readAccounts(): CustodyFinancialAccount[] {
@@ -27,7 +32,6 @@ function saveAccounts(accounts: CustodyFinancialAccount[]) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
   notifyDataUpdated();
-
 }
 
 export function getCustodyFinancialAccounts(custodyId?: string) {
@@ -52,11 +56,19 @@ export function addCustodyFinancialAccount(input: {
 
   const accounts = readAccounts();
   const normalizedName = name.replace(/\s+/g, " ").toLocaleLowerCase();
-  if (accounts.some((account) => account.custodyId === input.custodyId && account.name.replace(/\s+/g, " ").trim().toLocaleLowerCase() === normalizedName)) {
+  if (
+    accounts.some(
+      (account) =>
+        account.custodyId === input.custodyId &&
+        account.name.replace(/\s+/g, " ").trim().toLocaleLowerCase() ===
+          normalizedName,
+    )
+  ) {
     throw new Error("يوجد وسيلة دفع بنفس الاسم داخل هذه العهدة بالفعل.");
   }
 
-  if (!getCustodyById(input.custodyId)) throw new Error("العهدة المحددة غير موجودة.");
+  if (!getCustodyById(input.custodyId))
+    throw new Error("العهدة المحددة غير موجودة.");
 
   const openingBalance = Number(input.openingBalance ?? 0);
   if (!Number.isFinite(openingBalance) || openingBalance < 0) {
@@ -77,8 +89,13 @@ export function addCustodyFinancialAccount(input: {
   };
 
   if (openingBalance > 0) {
-    const updatedCustody = updateCustodyBalance(input.custodyId, openingBalance, "in");
-    if (!updatedCustody) throw new Error("تعذر تحديث رصيد العهدة لإنشاء الرصيد الافتتاحي.");
+    const updatedCustody = updateCustodyBalance(
+      input.custodyId,
+      openingBalance,
+      "in",
+    );
+    if (!updatedCustody)
+      throw new Error("تعذر تحديث رصيد العهدة لإنشاء الرصيد الافتتاحي.");
   }
 
   try {
@@ -87,7 +104,9 @@ export function addCustodyFinancialAccount(input: {
     if (openingBalance > 0) {
       try {
         reverseCustodyBalance(input.custodyId, openingBalance, "in");
-      } catch { /* preserve original storage error */ }
+      } catch {
+        /* preserve original storage error */
+      }
     }
     throw error;
   }
@@ -121,9 +140,7 @@ export function updateCustodyFinancialAccountBalance(
 
   const account = accounts[index];
   const nextBalance =
-    type === "in"
-      ? account.balance + amount
-      : account.balance - amount;
+    type === "in" ? account.balance + amount : account.balance - amount;
 
   if (type === "out" && nextBalance < 0) {
     throw new Error("رصيد وسيلة الدفع غير كافٍ.");
@@ -132,14 +149,8 @@ export function updateCustodyFinancialAccountBalance(
   accounts[index] = {
     ...account,
     balance: nextBalance,
-    totalIn:
-      type === "in"
-        ? account.totalIn + amount
-        : account.totalIn,
-    totalOut:
-      type === "out"
-        ? account.totalOut + amount
-        : account.totalOut,
+    totalIn: type === "in" ? account.totalIn + amount : account.totalIn,
+    totalOut: type === "out" ? account.totalOut + amount : account.totalOut,
     updatedAt: new Date().toISOString(),
   };
 
@@ -227,7 +238,9 @@ export function transferCustodyFinancialAccount(
   }
 
   const accounts = readAccounts();
-  const fromIndex = accounts.findIndex((account) => account.id === fromAccountId);
+  const fromIndex = accounts.findIndex(
+    (account) => account.id === fromAccountId,
+  );
   const toIndex = accounts.findIndex((account) => account.id === toAccountId);
 
   if (fromIndex === -1 || toIndex === -1) {

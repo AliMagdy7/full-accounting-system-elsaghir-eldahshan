@@ -1,7 +1,5 @@
 export type ProjectExpenseMovementType =
-  | "expense"
-  | "worker_advance"
-  | "contractor_advance";
+  "expense" | "worker_advance" | "contractor_advance";
 
 export interface Expense {
   id: string;

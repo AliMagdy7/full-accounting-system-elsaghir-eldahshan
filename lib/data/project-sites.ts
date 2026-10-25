@@ -99,15 +99,17 @@ function migrateLegacySites() {
 
     const raw = window.localStorage.getItem(key);
     const parsed = parseArray(raw);
-    if (parsed.some((item) => {
-      if (!item || typeof item !== "object") return false;
-      const record = item as Record<string, unknown>;
-      return (
-        typeof record.id === "string" &&
-        typeof record.projectId === "string" &&
-        typeof record.name === "string"
-      );
-    })) {
+    if (
+      parsed.some((item) => {
+        if (!item || typeof item !== "object") return false;
+        const record = item as Record<string, unknown>;
+        return (
+          typeof record.id === "string" &&
+          typeof record.projectId === "string" &&
+          typeof record.name === "string"
+        );
+      })
+    ) {
       collect(key);
     }
   }
@@ -171,7 +173,9 @@ function save(items: ProjectSite[]) {
 
 export function getProjectSites(projectId?: string) {
   const items = read();
-  return projectId ? items.filter((item) => item.projectId === projectId) : items;
+  return projectId
+    ? items.filter((item) => item.projectId === projectId)
+    : items;
 }
 
 export function getProjectSiteById(id: string) {
@@ -252,25 +256,49 @@ export function deleteProjectSite(id: string) {
   const site = getProjectSiteById(id);
   if (!site) throw new Error("الموقع غير موجود.");
 
-  const hasFinancialMovements = getExpenses().some((expense) => expense.siteId === id);
+  const hasFinancialMovements = getExpenses().some(
+    (expense) => expense.siteId === id,
+  );
   if (hasFinancialMovements) {
-    throw new Error("لا يمكن حذف الموقع لأنه مرتبط بحركات مالية. عطّل الموقع بدلًا من حذفه.");
+    throw new Error(
+      "لا يمكن حذف الموقع لأنه مرتبط بحركات مالية. عطّل الموقع بدلًا من حذفه.",
+    );
   }
 
   if (canUseStorage()) {
     try {
-      const raw = window.localStorage.getItem("elsaghir-eldahshan-contractor-site-assignments");
+      const raw = window.localStorage.getItem(
+        "elsaghir-eldahshan-contractor-site-assignments",
+      );
       const assignments = raw ? JSON.parse(raw) : [];
-      if (Array.isArray(assignments) && assignments.some((item) => item?.siteId === id)) {
-        throw new Error("لا يمكن حذف الموقع لأنه مرتبط بمقاولين. عطّل الموقع بدلًا من حذفه.");
+      if (
+        Array.isArray(assignments) &&
+        assignments.some((item) => item?.siteId === id)
+      ) {
+        throw new Error(
+          "لا يمكن حذف الموقع لأنه مرتبط بمقاولين. عطّل الموقع بدلًا من حذفه.",
+        );
       }
-      const workerAssignmentRaw = window.localStorage.getItem("elsaghir-eldahshan-worker-site-assignments");
-      const workerAssignments = workerAssignmentRaw ? JSON.parse(workerAssignmentRaw) : [];
-      if (Array.isArray(workerAssignments) && workerAssignments.some((item) => item?.siteId === id)) {
-        throw new Error("لا يمكن حذف الموقع لأنه مرتبط بفترات عمل للعمال. عطّل الموقع بدلًا من حذفه.");
+      const workerAssignmentRaw = window.localStorage.getItem(
+        "elsaghir-eldahshan-worker-site-assignments",
+      );
+      const workerAssignments = workerAssignmentRaw
+        ? JSON.parse(workerAssignmentRaw)
+        : [];
+      if (
+        Array.isArray(workerAssignments) &&
+        workerAssignments.some((item) => item?.siteId === id)
+      ) {
+        throw new Error(
+          "لا يمكن حذف الموقع لأنه مرتبط بفترات عمل للعمال. عطّل الموقع بدلًا من حذفه.",
+        );
       }
     } catch (error) {
-      if (error instanceof Error && error.message.startsWith("لا يمكن حذف الموقع")) throw error;
+      if (
+        error instanceof Error &&
+        error.message.startsWith("لا يمكن حذف الموقع")
+      )
+        throw error;
     }
   }
 

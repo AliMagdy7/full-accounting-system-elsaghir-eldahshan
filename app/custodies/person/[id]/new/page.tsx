@@ -15,10 +15,7 @@ import {
 } from "lucide-react";
 
 import AppShell from "@/components/layout/AppShell";
-import {
-  getCustodyById,
-  updateCustodyBalance,
-} from "@/lib/data/custodies";
+import { getCustodyById, updateCustodyBalance } from "@/lib/data/custodies";
 import { addCustodyTransaction } from "@/lib/data/custody-transactions";
 
 export default function NewPersonCustodyTransactionPage() {
@@ -30,9 +27,7 @@ export default function NewPersonCustodyTransactionPage() {
   const custody = custodyId ? getCustodyById(custodyId) : undefined;
 
   const [type, setType] = useState<"in" | "out">("in");
-  const [date, setDate] = useState(
-    new Date().toISOString().split("T")[0],
-  );
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [source, setSource] = useState("");
@@ -85,20 +80,14 @@ export default function NewPersonCustodyTransactionPage() {
       amount: numericAmount,
       date,
       description: trimmedDescription,
-      ...(type === "in" && trimmedSource
-        ? { source: trimmedSource }
-        : {}),
+      ...(type === "in" && trimmedSource ? { source: trimmedSource } : {}),
       createdAt: now,
       updatedAt: now,
     };
 
     addCustodyTransaction(transaction);
 
-    updateCustodyBalance(
-      custody.id,
-      numericAmount,
-      type,
-    );
+    updateCustodyBalance(custody.id, numericAmount, type);
 
     router.push(`/custodies/person/${custody.id}`);
   };
@@ -160,9 +149,7 @@ export default function NewPersonCustodyTransactionPage() {
 
               <p className="mt-2 text-sm leading-6 text-slate-500">
                 تسجيل حركة مالية جديدة على عهدة{" "}
-                <span className="font-bold text-slate-700">
-                  {custody.name}
-                </span>
+                <span className="font-bold text-slate-700">{custody.name}</span>
               </p>
             </div>
           </div>
@@ -172,9 +159,7 @@ export default function NewPersonCustodyTransactionPage() {
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-xs font-bold text-slate-400">
-                الرصيد الحالي
-              </p>
+              <p className="text-xs font-bold text-slate-400">الرصيد الحالي</p>
 
               <p
                 dir="ltr"
@@ -268,7 +253,7 @@ export default function NewPersonCustodyTransactionPage() {
               </label>
 
               <div className="relative">
-                <CalendarDays className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <CalendarDays className="pointer-events-none absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2 text-slate-400" />
 
                 <DateInput
                   id="transaction-date"
@@ -277,7 +262,7 @@ export default function NewPersonCustodyTransactionPage() {
                     setDate(value);
                     setError("");
                   }}
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm text-slate-800 outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm text-slate-800 transition-all outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                 />
               </div>
             </div>
@@ -293,7 +278,7 @@ export default function NewPersonCustodyTransactionPage() {
               </label>
 
               <div className="relative">
-                <WalletCards className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                <WalletCards className="pointer-events-none absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2 text-slate-400" />
 
                 <input
                   id="transaction-amount"
@@ -306,7 +291,7 @@ export default function NewPersonCustodyTransactionPage() {
                     setError("");
                   }}
                   placeholder="مثال: 50000"
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm text-slate-800 outline-none transition-all placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm text-slate-800 transition-all outline-none placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                 />
               </div>
             </div>
@@ -331,7 +316,7 @@ export default function NewPersonCustodyTransactionPage() {
                     setError("");
                   }}
                   placeholder="مثال: الحاج نبيل"
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-800 outline-none transition-all placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-800 transition-all outline-none placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                 />
 
                 <p className="mt-2 text-[11px] leading-5 text-slate-400">
@@ -351,7 +336,7 @@ export default function NewPersonCustodyTransactionPage() {
               </label>
 
               <div className="relative">
-                <FileText className="pointer-events-none absolute right-4 top-4 h-5 w-5 text-slate-400" />
+                <FileText className="pointer-events-none absolute top-4 right-4 h-5 w-5 text-slate-400" />
 
                 <textarea
                   id="transaction-description"
@@ -366,7 +351,7 @@ export default function NewPersonCustodyTransactionPage() {
                       ? "مثال: واصل من الحاج نبيل إلى عهدة أحمد زكريا"
                       : "مثال: مصروفات موقع سيوة"
                   }
-                  className="w-full resize-y rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm leading-6 text-slate-800 outline-none transition-all placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                  className="w-full resize-y rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm leading-6 text-slate-800 transition-all outline-none placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                 />
               </div>
             </div>
@@ -382,9 +367,7 @@ export default function NewPersonCustodyTransactionPage() {
               <div className="flex items-start gap-3">
                 <div
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ${
-                    type === "in"
-                      ? "text-emerald-600"
-                      : "text-red-600"
+                    type === "in" ? "text-emerald-600" : "text-red-600"
                   }`}
                 >
                   {type === "in" ? (
@@ -396,9 +379,7 @@ export default function NewPersonCustodyTransactionPage() {
 
                 <div>
                   <h3 className="text-sm font-extrabold text-slate-800">
-                    {type === "in"
-                      ? "حركة وارد"
-                      : "حركة منصرف"}
+                    {type === "in" ? "حركة وارد" : "حركة منصرف"}
                   </h3>
 
                   <p className="mt-1 text-xs leading-6 text-slate-500">
@@ -412,7 +393,7 @@ export default function NewPersonCustodyTransactionPage() {
 
             {/* Error */}
             {error && (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold leading-6 text-red-700">
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 font-semibold text-red-700">
                 {error}
               </div>
             )}
@@ -434,9 +415,7 @@ export default function NewPersonCustodyTransactionPage() {
             >
               <WalletCards className="h-4 w-4" />
 
-              {isSaving
-                ? "جاري الحفظ..."
-                : "حفظ الحركة"}
+              {isSaving ? "جاري الحفظ..." : "حفظ الحركة"}
             </button>
           </div>
         </form>

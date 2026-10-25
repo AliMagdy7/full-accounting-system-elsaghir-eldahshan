@@ -1,7 +1,14 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import AppShell from "@/components/layout/AppShell";
 
@@ -107,14 +114,16 @@ function SystemWorkspacePageContent() {
   useEffect(() => {
     const handleWorkspaceNavigation = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
-      if (!event.data || event.data.type !== "elsaghir-workspace-navigation") return;
+      if (!event.data || event.data.type !== "elsaghir-workspace-navigation")
+        return;
       if (typeof event.data.path !== "string") return;
 
       navigateToSection(event.data.path);
     };
 
     window.addEventListener("message", handleWorkspaceNavigation);
-    return () => window.removeEventListener("message", handleWorkspaceNavigation);
+    return () =>
+      window.removeEventListener("message", handleWorkspaceNavigation);
   }, [navigateToSection]);
 
   useEffect(() => {
@@ -127,7 +136,8 @@ function SystemWorkspacePageContent() {
       try {
         const current = new URL(frame.contentWindow.location.href);
 
-        if (current.pathname === "/system" || current.pathname === "/login") return;
+        if (current.pathname === "/system" || current.pathname === "/login")
+          return;
 
         current.searchParams.delete("embedded");
 
@@ -145,11 +155,17 @@ function SystemWorkspacePageContent() {
 
     const handleClick = (event: MouseEvent) => {
       if (event.defaultPrevented || event.button !== 0) return;
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+        return;
 
       const target = event.target as HTMLElement | null;
       const anchor = target?.closest("a") as HTMLAnchorElement | null;
-      if (!anchor || anchor.target === "_blank" || anchor.hasAttribute("download")) return;
+      if (
+        !anchor ||
+        anchor.target === "_blank" ||
+        anchor.hasAttribute("download")
+      )
+        return;
 
       const href = anchor.getAttribute("href");
       if (!href || !href.startsWith("/system")) return;
@@ -211,9 +227,7 @@ function SystemWorkspacePageContent() {
             <p className="text-[11px] font-black tracking-wide text-blue-600">
               مساحة النظام
             </p>
-            <h1 className="mt-1 text-lg font-black text-slate-900">
-              {title}
-            </h1>
+            <h1 className="mt-1 text-lg font-black text-slate-900">{title}</h1>
           </div>
 
           <button

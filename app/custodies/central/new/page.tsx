@@ -2,11 +2,7 @@
 
 import DateInput from "@/lib/date-input";
 
-import {
-  SubmitEvent,
-  useEffect,
-  useState,
-} from "react";
+import { SubmitEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -18,18 +14,10 @@ import {
   WalletCards,
 } from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
-import {
-  updateCustodyBalance,
-} from "@/lib/data/custodies";
-import {
-  addCustodyTransaction,
-} from "@/lib/data/custody-transactions";
-import {
-  addExpense,
-} from "@/lib/data/expenses";
-import {
-  getProjects,
-} from "@/lib/data/projects";
+import { updateCustodyBalance } from "@/lib/data/custodies";
+import { addCustodyTransaction } from "@/lib/data/custody-transactions";
+import { addExpense } from "@/lib/data/expenses";
+import { getProjects } from "@/lib/data/projects";
 import {
   getCustodyFinancialAccounts,
   getCustodyFinancialAccountById,
@@ -48,115 +36,78 @@ const movementTypes = [
     title: "وارد إليَّ",
     description: "مبلغ دخل إلى عهدتي من مصدر خارجي",
     icon: ArrowDownLeft,
-    className:
-      "border-emerald-200 bg-emerald-50 text-emerald-700",
+    className: "border-emerald-200 bg-emerald-50 text-emerald-700",
   },
   {
     value: "out" as MovementType,
     title: "خارج مني — مصروف",
     description: "مبلغ خرج من عهدتي كمصروف فعلي",
     icon: ArrowUpLeft,
-    className:
-      "border-red-200 bg-red-50 text-red-700",
+    className: "border-red-200 bg-red-50 text-red-700",
   },
   {
     value: "transfer" as MovementType,
     title: "تحويل داخلي",
     description: "تحويل مبلغ بين وسائل الدفع داخل عهدتي أنا",
     icon: WalletCards,
-    className:
-      "border-blue-200 bg-blue-50 text-blue-700",
+    className: "border-blue-200 bg-blue-50 text-blue-700",
   },
 ];
 
-
 export default function NewCentralCustodyTransactionPage() {
   const router = useRouter();
-  const [movementType, setMovementType] =
-    useState<MovementType>("in");
+  const [movementType, setMovementType] = useState<MovementType>("in");
 
-
-  const [projects, setProjects] =
-    useState<Project[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   const [date, setDate] = useState("");
 
   const [amount, setAmount] = useState("");
 
-  const [description, setDescription] =
-    useState("");
+  const [description, setDescription] = useState("");
 
-  const [financialAccountId, setFinancialAccountId] =
-    useState("");
+  const [financialAccountId, setFinancialAccountId] = useState("");
 
   const [destinationFinancialAccountId, setDestinationFinancialAccountId] =
     useState("");
 
-  const [financialAccounts, setFinancialAccounts] =
-    useState<CustodyFinancialAccount[]>([]);
+  const [financialAccounts, setFinancialAccounts] = useState<
+    CustodyFinancialAccount[]
+  >([]);
 
+  const [source, setSource] = useState("");
 
-  const [source, setSource] =
-    useState("");
+  const [category, setCategory] = useState("");
 
+  const [projectId, setProjectId] = useState("");
 
-  const [category, setCategory] =
-    useState("");
+  const [notes, setNotes] = useState("");
 
-  const [projectId, setProjectId] =
-    useState("");
+  const [error, setError] = useState("");
 
-  const [notes, setNotes] =
-    useState("");
-
-  const [error, setError] =
-    useState("");
-
-  const [isSaving, setIsSaving] =
-    useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     setProjects(getProjects());
-    setFinancialAccounts(
-      getCustodyFinancialAccounts("central"),
-    );
+    setFinancialAccounts(getCustodyFinancialAccounts("central"));
 
-    setDate(
-      new Date()
-        .toISOString()
-        .split("T")[0],
-    );
+    setDate(new Date().toISOString().split("T")[0]);
   }, []);
 
+  const selectedMovement = movementTypes.find(
+    (item) => item.value === movementType,
+  );
 
-  const selectedMovement =
-    movementTypes.find(
-      (item) =>
-        item.value === movementType,
-    );
+  const selectedProject = projects.find((project) => project.id === projectId);
 
-
-  const selectedProject =
-    projects.find(
-      (project) =>
-        project.id === projectId,
-    );
-
-  const formatAmount = (
-    value: number,
-  ) => {
-    return value.toLocaleString(
-      "en-US",
-      {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-      },
-    );
+  const formatAmount = (value: number) => {
+    return value.toLocaleString("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    });
   };
 
-  const handleMovementTypeChange = (
-    type: MovementType,
-  ) => {
+  const handleMovementTypeChange = (type: MovementType) => {
     setMovementType(type);
     setError("");
 
@@ -170,54 +121,32 @@ export default function NewCentralCustodyTransactionPage() {
     }
   };
 
-  const handleSubmit = (
-    event: SubmitEvent<HTMLFormElement>,
-  ) => {
+  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const numericAmount =
-      Number(amount);
+    const numericAmount = Number(amount);
 
-    const trimmedDescription =
-      description.trim();
+    const trimmedDescription = description.trim();
 
-    const trimmedCategory =
-      category.trim();
+    const trimmedCategory = category.trim();
 
     if (!date) {
-      setError(
-        "من فضلك اختر تاريخ الحركة.",
-      );
+      setError("من فضلك اختر تاريخ الحركة.");
       return;
     }
 
-    if (
-      !amount ||
-      !Number.isFinite(
-        numericAmount,
-      ) ||
-      numericAmount <= 0
-    ) {
-      setError(
-        "من فضلك أدخل مبلغًا صحيحًا أكبر من صفر.",
-      );
+    if (!amount || !Number.isFinite(numericAmount) || numericAmount <= 0) {
+      setError("من فضلك أدخل مبلغًا صحيحًا أكبر من صفر.");
       return;
     }
 
     if (!trimmedDescription) {
-      setError(
-        "من فضلك أدخل بيان الحركة.",
-      );
+      setError("من فضلك أدخل بيان الحركة.");
       return;
     }
 
-    if (
-      movementType === "in" &&
-      !source.trim()
-    ) {
-      setError(
-        "من فضلك اكتب مصدر المبلغ.",
-      );
+    if (movementType === "in" && !source.trim()) {
+      setError("من فضلك اكتب مصدر المبلغ.");
       return;
     }
 
@@ -229,28 +158,17 @@ export default function NewCentralCustodyTransactionPage() {
       return;
     }
 
-    if (
-      movementType === "out" &&
-      !trimmedCategory
-    ) {
-      setError(
-        "من فضلك اكتب تصنيف المصروف.",
-      );
+    if (movementType === "out" && !trimmedCategory) {
+      setError("من فضلك اكتب تصنيف المصروف.");
       return;
     }
 
-    if (
-      movementType === "transfer" &&
-      !financialAccountId
-    ) {
+    if (movementType === "transfer" && !financialAccountId) {
       setError("من فضلك اختر وسيلة الدفع المرسلة.");
       return;
     }
 
-    if (
-      movementType === "transfer" &&
-      !destinationFinancialAccountId
-    ) {
+    if (movementType === "transfer" && !destinationFinancialAccountId) {
       setError("من فضلك اختر وسيلة الدفع المستلمة.");
       return;
     }
@@ -272,27 +190,22 @@ export default function NewCentralCustodyTransactionPage() {
       }
 
       if (sourceAccount.balance < numericAmount) {
-        setError("الرصيد المتاح في وسيلة الدفع المرسلة لا يكفي لإتمام التحويل.");
+        setError(
+          "الرصيد المتاح في وسيلة الدفع المرسلة لا يكفي لإتمام التحويل.",
+        );
         return;
       }
     }
 
-    if (
-      movementType === "out" &&
-      projectId &&
-      !selectedProject
-    ) {
-      setError(
-        "المشروع المختار غير موجود.",
-      );
+    if (movementType === "out" && projectId && !selectedProject) {
+      setError("المشروع المختار غير موجود.");
       return;
     }
 
     setError("");
     setIsSaving(true);
 
-    const now =
-      new Date().toISOString();
+    const now = new Date().toISOString();
 
     /*
      * ================================
@@ -307,19 +220,14 @@ export default function NewCentralCustodyTransactionPage() {
         type: "in" as CustodyTransactionType,
         amount: numericAmount,
         date,
-        description:
-          trimmedDescription,
+        description: trimmedDescription,
         source: source.trim(),
         financialAccountId,
         createdAt: now,
         updatedAt: now,
       });
 
-      updateCustodyBalance(
-        "central",
-        numericAmount,
-        "in",
-      );
+      updateCustodyBalance("central", numericAmount, "in");
 
       updateCustodyFinancialAccountBalance(
         financialAccountId,
@@ -340,8 +248,7 @@ export default function NewCentralCustodyTransactionPage() {
         date,
         amount: numericAmount,
         category: trimmedCategory,
-        description:
-          trimmedDescription,
+        description: trimmedDescription,
         custodyId: "central",
         financialAccountId,
         ...(projectId
@@ -359,8 +266,7 @@ export default function NewCentralCustodyTransactionPage() {
         type: "out" as CustodyTransactionType,
         amount: numericAmount,
         date,
-        description:
-          trimmedDescription,
+        description: trimmedDescription,
         financialAccountId,
         ...(projectId
           ? {
@@ -371,11 +277,7 @@ export default function NewCentralCustodyTransactionPage() {
         updatedAt: now,
       });
 
-      updateCustodyBalance(
-        "central",
-        numericAmount,
-        "out",
-      );
+      updateCustodyBalance("central", numericAmount, "out");
 
       updateCustodyFinancialAccountBalance(
         financialAccountId,
@@ -453,10 +355,7 @@ export default function NewCentralCustodyTransactionPage() {
 
   return (
     <AppShell>
-      <div
-        dir="rtl"
-        className="mx-auto w-full max-w-5xl space-y-6"
-      >
+      <div dir="rtl" className="mx-auto w-full max-w-5xl space-y-6">
         {/* ================================
             Page Header
         ================================= */}
@@ -491,8 +390,8 @@ export default function NewCentralCustodyTransactionPage() {
               </h1>
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                سجل المبالغ الواردة إلى عهدتك،
-                المصروفات، أو التحويلات الداخلية بين وسائل الدفع الخاصة بك.
+                سجل المبالغ الواردة إلى عهدتك، المصروفات، أو التحويلات الداخلية
+                بين وسائل الدفع الخاصة بك.
               </p>
             </div>
           </div>
@@ -509,66 +408,57 @@ export default function NewCentralCustodyTransactionPage() {
             </h2>
 
             <p className="mt-1 text-xs leading-5 text-slate-400">
-              اختر نوع العملية أولًا، وسيتم إظهار
-              البيانات المناسبة لها.
+              اختر نوع العملية أولًا، وسيتم إظهار البيانات المناسبة لها.
             </p>
           </div>
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-            {movementTypes.map(
-              (item) => {
-                const Icon = item.icon;
+            {movementTypes.map((item) => {
+              const Icon = item.icon;
 
-                const isSelected =
-                  movementType ===
-                  item.value;
+              const isSelected = movementType === item.value;
 
-                return (
-                  <button
-                    key={item.value}
-                    type="button"
-                    onClick={() =>
-                      handleMovementTypeChange(
-                        item.value,
-                      )
-                    }
-                    className={`relative flex min-h-24 items-center gap-4 rounded-2xl border p-4 text-right transition-all duration-200 ${
+              return (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => handleMovementTypeChange(item.value)}
+                  className={`relative flex min-h-24 items-center gap-4 rounded-2xl border p-4 text-right transition-all duration-200 ${
+                    isSelected
+                      ? "border-slate-900 bg-slate-50 shadow-sm ring-2 ring-slate-900/5"
+                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                  }`}
+                >
+                  <div
+                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${item.className}`}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-sm font-extrabold text-slate-900">
+                      {item.title}
+                    </p>
+
+                    <p className="mt-1 text-xs leading-5 text-slate-400">
+                      {item.description}
+                    </p>
+                  </div>
+
+                  <span
+                    className={`mr-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
                       isSelected
-                        ? "border-slate-900 bg-slate-50 shadow-sm ring-2 ring-slate-900/5"
-                        : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                        ? "border-slate-900 bg-slate-900"
+                        : "border-slate-300 bg-white"
                     }`}
                   >
-                    <div
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${item.className}`}
-                    >
-                      <Icon className="h-5 w-5" />
-                    </div>
-
-                    <div className="min-w-0">
-                      <p className="text-sm font-extrabold text-slate-900">
-                        {item.title}
-                      </p>
-
-                      <p className="mt-1 text-xs leading-5 text-slate-400">
-                        {item.description}
-                      </p>
-                    </div>
-
-                    <span
-                      className={`mr-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
-                        isSelected
-                          ? "border-slate-900 bg-slate-900"
-                          : "border-slate-300 bg-white"
-                      }`}
-                    >
-                      {isSelected && (
-                        <span className="h-2 w-2 rounded-full bg-white" />
-                      )}
-                    </span>
-                  </button>
-                );
-              },
-            )}
+                    {isSelected && (
+                      <span className="h-2 w-2 rounded-full bg-white" />
+                    )}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </section>
 
@@ -596,8 +486,7 @@ export default function NewCentralCustodyTransactionPage() {
                 </h2>
 
                 <p className="mt-1 text-xs text-slate-400">
-                  نوع الحركة:{" "}
-                  {selectedMovement?.title}
+                  نوع الحركة: {selectedMovement?.title}
                 </p>
               </div>
             </div>
@@ -611,25 +500,18 @@ export default function NewCentralCustodyTransactionPage() {
                   className="mb-2 block text-sm font-bold text-slate-700"
                 >
                   تاريخ الحركة
-                  <span className="mr-1 text-red-500">
-                    *
-                  </span>
+                  <span className="mr-1 text-red-500">*</span>
                 </label>
 
                 <DateInput
                   id="movement-date"
                   value={date}
-                  onChange={(value) =>
-                    setDate(
-                      value,
-                    )
-                  }
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-right text-sm text-slate-800 outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                  onChange={(value) => setDate(value)}
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-right text-sm text-slate-800 transition-all outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                 />
 
                 <p className="mt-2 text-[11px] text-slate-400">
-                  الشهر يتم تحديده تلقائيًا من
-                  التاريخ.
+                  الشهر يتم تحديده تلقائيًا من التاريخ.
                 </p>
               </div>
 
@@ -639,9 +521,7 @@ export default function NewCentralCustodyTransactionPage() {
                   className="mb-2 block text-sm font-bold text-slate-700"
                 >
                   المبلغ
-                  <span className="mr-1 text-red-500">
-                    *
-                  </span>
+                  <span className="mr-1 text-red-500">*</span>
                 </label>
 
                 <div className="relative">
@@ -652,16 +532,12 @@ export default function NewCentralCustodyTransactionPage() {
                     step="0.01"
                     inputMode="decimal"
                     value={amount}
-                    onChange={(event) =>
-                      setAmount(
-                        event.target.value,
-                      )
-                    }
+                    onChange={(event) => setAmount(event.target.value)}
                     placeholder="0.00"
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 pl-16 text-left text-base font-bold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 pl-16 text-left text-base font-bold text-slate-900 transition-all outline-none placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                   />
 
-                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                  <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-xs font-semibold text-slate-400">
                     جنيه
                   </span>
                 </div>
@@ -675,25 +551,20 @@ export default function NewCentralCustodyTransactionPage() {
                   className="mb-2 block text-sm font-bold text-slate-700"
                 >
                   مصدر المبلغ
-                  <span className="mr-1 text-red-500">
-                    *
-                  </span>
+                  <span className="mr-1 text-red-500">*</span>
                 </label>
 
                 <input
                   id="movement-source"
                   type="text"
                   value={source}
-                  onChange={(event) =>
-                    setSource(event.target.value)
-                  }
+                  onChange={(event) => setSource(event.target.value)}
                   placeholder="مثال: الحاج نبيل، الحاج رمضان، أو أي مصدر آخر"
-                  className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-right text-sm font-semibold text-slate-800 outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                  className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-right text-sm font-semibold text-slate-800 transition-all outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                 />
 
                 <p className="mt-2 text-[11px] leading-5 text-slate-400">
-                  اختر الشخص أو الجهة التي جاء
-                  منها المبلغ.
+                  اختر الشخص أو الجهة التي جاء منها المبلغ.
                 </p>
               </div>
             )}
@@ -718,13 +589,16 @@ export default function NewCentralCustodyTransactionPage() {
                 <select
                   id="financial-account"
                   value={financialAccountId}
-                  onChange={(event) => setFinancialAccountId(event.target.value)}
+                  onChange={(event) =>
+                    setFinancialAccountId(event.target.value)
+                  }
                   className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-right text-sm font-semibold text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                 >
                   <option value="">اختر وسيلة الدفع</option>
                   {financialAccounts.map((account) => (
                     <option key={account.id} value={account.id}>
-                      {account.name} — الرصيد {formatAmount(account.balance)} جنيه
+                      {account.name} — الرصيد {formatAmount(account.balance)}{" "}
+                      جنيه
                     </option>
                   ))}
                 </select>
@@ -744,27 +618,20 @@ export default function NewCentralCustodyTransactionPage() {
                     className="mb-2 block text-sm font-bold text-slate-700"
                   >
                     تصنيف المصروف
-                    <span className="mr-1 text-red-500">
-                      *
-                    </span>
+                    <span className="mr-1 text-red-500">*</span>
                   </label>
 
                   <input
                     id="movement-category"
                     type="text"
                     value={category}
-                    onChange={(event) =>
-                      setCategory(
-                        event.target.value,
-                      )
-                    }
+                    onChange={(event) => setCategory(event.target.value)}
                     placeholder="مثال: معدات، مواصلات، صيانة..."
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-right text-sm text-slate-800 outline-none transition-all placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-right text-sm text-slate-800 transition-all outline-none placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                   />
 
                   <p className="mt-2 text-[11px] text-slate-400">
-                    التصنيف حر ويمكنك كتابة أي بيان
-                    يناسب المصروف.
+                    التصنيف حر ويمكنك كتابة أي بيان يناسب المصروف.
                   </p>
                 </div>
 
@@ -782,39 +649,26 @@ export default function NewCentralCustodyTransactionPage() {
                   <select
                     id="movement-project"
                     value={projectId}
-                    onChange={(event) =>
-                      setProjectId(
-                        event.target.value,
-                      )
-                    }
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-right text-sm font-semibold text-slate-800 outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                    onChange={(event) => setProjectId(event.target.value)}
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-right text-sm font-semibold text-slate-800 transition-all outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                   >
-                    <option value="">
-                      مصروف عام — بدون مشروع
-                    </option>
+                    <option value="">مصروف عام — بدون مشروع</option>
 
-                    {projects.map(
-                      (project) => (
-                        <option
-                          key={project.id}
-                          value={project.id}
-                        >
-                          {project.name}
-                        </option>
-                      ),
-                    )}
+                    {projects.map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.name}
+                      </option>
+                    ))}
                   </select>
 
                   <p className="mt-2 text-[11px] leading-5 text-slate-400">
-                    لو المصروف خاص بمشروع، اختاره
-                    عشان يظهر في حساب المشروع.
+                    لو المصروف خاص بمشروع، اختاره عشان يظهر في حساب المشروع.
                   </p>
                 </div>
               </div>
             )}
 
-            {movementType ===
-              "transfer" && (
+            {movementType === "transfer" && (
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <div>
                   <div className="mb-2 flex items-center justify-between gap-3">
@@ -840,7 +694,8 @@ export default function NewCentralCustodyTransactionPage() {
                     <option value="">اختر وسيلة الدفع المرسلة</option>
                     {financialAccounts.map((account) => (
                       <option key={account.id} value={account.id}>
-                        {account.name} — الرصيد {formatAmount(account.balance)} جنيه
+                        {account.name} — الرصيد {formatAmount(account.balance)}{" "}
+                        جنيه
                       </option>
                     ))}
                   </select>
@@ -872,7 +727,8 @@ export default function NewCentralCustodyTransactionPage() {
                       .filter((account) => account.id !== financialAccountId)
                       .map((account) => (
                         <option key={account.id} value={account.id}>
-                          {account.name} — الرصيد {formatAmount(account.balance)} جنيه
+                          {account.name} — الرصيد{" "}
+                          {formatAmount(account.balance)} جنيه
                         </option>
                       ))}
                   </select>
@@ -886,19 +742,13 @@ export default function NewCentralCustodyTransactionPage() {
                 className="mb-2 block text-sm font-bold text-slate-700"
               >
                 البيان
-                <span className="mr-1 text-red-500">
-                  *
-                </span>
+                <span className="mr-1 text-red-500">*</span>
               </label>
 
               <textarea
                 id="movement-description"
                 value={description}
-                onChange={(event) =>
-                  setDescription(
-                    event.target.value,
-                  )
-                }
+                onChange={(event) => setDescription(event.target.value)}
                 rows={4}
                 placeholder={
                   movementType === "in"
@@ -907,12 +757,11 @@ export default function NewCentralCustodyTransactionPage() {
                       ? "مثال: شراء مستلزمات للموقع"
                       : "مثال: تحويل من النقدية إلى InstaPay"
                 }
-                className="w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-right text-sm leading-6 text-slate-800 outline-none transition-all placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                className="w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-right text-sm leading-6 text-slate-800 transition-all outline-none placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
               />
 
               <p className="mt-2 text-[11px] text-slate-400">
-                اكتب البيان بالشكل الذي تريد ظهوره
-                في كشف الحساب.
+                اكتب البيان بالشكل الذي تريد ظهوره في كشف الحساب.
               </p>
             </div>
 
@@ -930,19 +779,15 @@ export default function NewCentralCustodyTransactionPage() {
               <textarea
                 id="movement-notes"
                 value={notes}
-                onChange={(event) =>
-                  setNotes(
-                    event.target.value,
-                  )
-                }
+                onChange={(event) => setNotes(event.target.value)}
                 rows={3}
                 placeholder="أي ملاحظات إضافية على الحركة..."
-                className="w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-right text-sm leading-6 text-slate-800 outline-none transition-all placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                className="w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-right text-sm leading-6 text-slate-800 transition-all outline-none placeholder:text-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
               />
             </div>
 
             {error && (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-right text-sm font-semibold leading-6 text-red-700">
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-right text-sm leading-6 font-semibold text-red-700">
                 {error}
               </div>
             )}
@@ -969,9 +814,7 @@ export default function NewCentralCustodyTransactionPage() {
                         : "text-red-600"
                     }`}
                   >
-                    {movementType === "in"
-                      ? "+"
-                      : "-"}
+                    {movementType === "in" ? "+" : "-"}
                     {amount || "0.00"} جنيه
                   </p>
                 </div>
@@ -980,32 +823,28 @@ export default function NewCentralCustodyTransactionPage() {
                   <p className="text-[11px] font-semibold text-slate-400">
                     {movementType === "in"
                       ? "مصدر المبلغ"
-                      : movementType ===
-                          "transfer"
+                      : movementType === "transfer"
                         ? "التحويل الداخلي"
                         : "المشروع"}
                   </p>
 
                   <p className="mt-1 truncate text-sm font-extrabold text-slate-700">
                     {movementType === "in"
-                      ? source ||
-                        "لم يتم الاختيار"
-                      : movementType ===
-                          "transfer"
+                      ? source || "لم يتم الاختيار"
+                      : movementType === "transfer"
                         ? financialAccounts.find(
                             (account) => account.id === financialAccountId,
                           )?.name || "لم يتم الاختيار"
-                        : selectedProject
-                            ?.name ||
-                          "مصروف عام"}
+                        : selectedProject?.name || "مصروف عام"}
                   </p>
                 </div>
               </div>
 
-              {movementType ===
-                "transfer" && (
-                <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-xs font-semibold leading-6 text-blue-700">
-                  سيتم تحويل {formatAmount(Number(amount) || 0)} جنيه داخل عهدتي أنا من وسيلة الدفع المرسلة إلى وسيلة الدفع المستلمة، بدون تغيير إجمالي رصيد العهدة.
+              {movementType === "transfer" && (
+                <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-xs leading-6 font-semibold text-blue-700">
+                  سيتم تحويل {formatAmount(Number(amount) || 0)} جنيه داخل عهدتي
+                  أنا من وسيلة الدفع المرسلة إلى وسيلة الدفع المستلمة، بدون
+                  تغيير إجمالي رصيد العهدة.
                 </div>
               )}
             </div>
@@ -1026,9 +865,7 @@ export default function NewCentralCustodyTransactionPage() {
             >
               <CircleDollarSign className="h-4 w-4" />
 
-              {isSaving
-                ? "جاري التسجيل..."
-                : "تسجيل الحركة"}
+              {isSaving ? "جاري التسجيل..." : "تسجيل الحركة"}
             </button>
           </div>
         </form>

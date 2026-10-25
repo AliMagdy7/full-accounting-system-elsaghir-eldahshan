@@ -29,9 +29,7 @@ function formatDate(date: string) {
 
 export default function CustodiesPage() {
   const [custodies, setCustodies] = useState<Custody[]>([]);
-  const [transactions, setTransactions] = useState<
-    CustodyTransaction[]
-  >([]);
+  const [transactions, setTransactions] = useState<CustodyTransaction[]>([]);
 
   const loadData = () => {
     const allCustodies = getCustodies();
@@ -41,8 +39,7 @@ export default function CustodiesPage() {
 
     setTransactions(
       [...allTransactions].sort((a, b) => {
-        const dateCompare =
-          b.date.localeCompare(a.date);
+        const dateCompare = b.date.localeCompare(a.date);
 
         if (dateCompare !== 0) {
           return dateCompare;
@@ -58,44 +55,27 @@ export default function CustodiesPage() {
   }, []);
 
   const centralCustody = useMemo(
-    () =>
-      custodies.find(
-        (custody) => custody.id === "central",
-      ),
+    () => custodies.find((custody) => custody.id === "central"),
     [custodies],
   );
 
   const personCustodies = useMemo(
-    () =>
-      custodies.filter(
-        (custody) => custody.type === "person",
-      ),
+    () => custodies.filter((custody) => custody.type === "person"),
     [custodies],
   );
 
   const projectCustodies = useMemo(
-    () =>
-      custodies.filter(
-        (custody) => custody.type === "project",
-      ),
+    () => custodies.filter((custody) => custody.type === "project"),
     [custodies],
   );
 
   const workerCustodies = useMemo(
-    () =>
-      custodies.filter(
-        (custody) => custody.type === "worker",
-      ),
+    () => custodies.filter((custody) => custody.type === "worker"),
     [custodies],
   );
 
   const totalBalance = useMemo(
-    () =>
-      custodies.reduce(
-        (total, custody) =>
-          total + custody.balance,
-        0,
-      ),
+    () => custodies.reduce((total, custody) => total + custody.balance, 0),
     [custodies],
   );
 
@@ -104,8 +84,7 @@ export default function CustodiesPage() {
   const custodyTypes = [
     {
       title: "العهدة المركزية",
-      description:
-        "العهدة الرئيسية الخاصة بالإدارة",
+      description: "العهدة الرئيسية الخاصة بالإدارة",
       balance: centralCustody?.balance ?? 0,
       incoming: centralCustody?.totalIn ?? 0,
       outgoing: centralCustody?.totalOut ?? 0,
@@ -114,21 +93,17 @@ export default function CustodiesPage() {
     },
     {
       title: "عهد المواقع",
-      description:
-        "العهد المرتبطة بالمشاريع والمواقع",
+      description: "العهد المرتبطة بالمشاريع والمواقع",
       balance: projectCustodies.reduce(
-        (total, custody) =>
-          total + custody.balance,
+        (total, custody) => total + custody.balance,
         0,
       ),
       incoming: projectCustodies.reduce(
-        (total, custody) =>
-          total + custody.totalIn,
+        (total, custody) => total + custody.totalIn,
         0,
       ),
       outgoing: projectCustodies.reduce(
-        (total, custody) =>
-          total + custody.totalOut,
+        (total, custody) => total + custody.totalOut,
         0,
       ),
       count: projectCustodies.length,
@@ -136,21 +111,17 @@ export default function CustodiesPage() {
     },
     {
       title: "عهد الأشخاص",
-      description:
-        "العهد المسلمة للموزعين والأفراد",
+      description: "العهد المسلمة للموزعين والأفراد",
       balance: personCustodies.reduce(
-        (total, custody) =>
-          total + custody.balance,
+        (total, custody) => total + custody.balance,
         0,
       ),
       incoming: personCustodies.reduce(
-        (total, custody) =>
-          total + custody.totalIn,
+        (total, custody) => total + custody.totalIn,
         0,
       ),
       outgoing: personCustodies.reduce(
-        (total, custody) =>
-          total + custody.totalOut,
+        (total, custody) => total + custody.totalOut,
         0,
       ),
       count: personCustodies.length,
@@ -180,8 +151,7 @@ export default function CustodiesPage() {
               </h1>
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                متابعة أرصدة العهد، الحركات المالية، والتحويلات
-                بين العهد.
+                متابعة أرصدة العهد، الحركات المالية، والتحويلات بين العهد.
               </p>
             </div>
 
@@ -206,17 +176,13 @@ export default function CustodiesPage() {
               <div className="mt-2 flex flex-wrap items-baseline gap-2">
                 <span
                   className={`text-3xl font-extrabold tracking-tight sm:text-4xl ${
-                    totalBalance < 0
-                      ? "text-red-300"
-                      : "text-white"
+                    totalBalance < 0 ? "text-red-300" : "text-white"
                   }`}
                 >
                   {formatAmount(totalBalance)}
                 </span>
 
-                <span className="text-sm font-medium text-slate-400">
-                  جنيه
-                </span>
+                <span className="text-sm font-medium text-slate-400">جنيه</span>
               </div>
 
               <p className="mt-2 text-xs text-slate-400">
@@ -272,17 +238,13 @@ export default function CustodiesPage() {
                   <div className="mt-1 flex items-baseline gap-2">
                     <span
                       className={`text-2xl font-extrabold ${
-                        custody.balance < 0
-                          ? "text-red-600"
-                          : "text-slate-900"
+                        custody.balance < 0 ? "text-red-600" : "text-slate-900"
                       }`}
                     >
                       {formatAmount(custody.balance)}
                     </span>
 
-                    <span className="text-xs text-slate-400">
-                      جنيه
-                    </span>
+                    <span className="text-xs text-slate-400">جنيه</span>
                   </div>
                 </div>
 
@@ -377,8 +339,7 @@ export default function CustodiesPage() {
                 </h3>
 
                 <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-slate-400">
-                  أضف أول عهدة شخصية لبدء متابعة أرصدة الأشخاص
-                  وحركتهم المالية.
+                  أضف أول عهدة شخصية لبدء متابعة أرصدة الأشخاص وحركتهم المالية.
                 </p>
 
                 <Link
@@ -420,9 +381,7 @@ export default function CustodiesPage() {
 
                     <p
                       className={`mt-1 text-2xl font-extrabold ${
-                        custody.balance < 0
-                          ? "text-red-600"
-                          : "text-slate-900"
+                        custody.balance < 0 ? "text-red-600" : "text-slate-900"
                       }`}
                     >
                       {formatAmount(custody.balance)}
@@ -477,8 +436,8 @@ export default function CustodiesPage() {
               </h2>
 
               <p className="mt-1 text-xs leading-5 text-slate-400">
-                عهد العمال منفصلة عن حسابات الأجور والسلف، وسيتم
-                ربطها عند بناء نظام العمال.
+                عهد العمال منفصلة عن حسابات الأجور والسلف، وسيتم ربطها عند بناء
+                نظام العمال.
               </p>
             </div>
 
@@ -524,8 +483,8 @@ export default function CustodiesPage() {
                 </h3>
 
                 <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-slate-400">
-                  عند تسجيل أول حركة، ستظهر تفاصيلها هنا مع مصدر
-                  المبلغ والجهة المستلمة والرصيد الناتج.
+                  عند تسجيل أول حركة، ستظهر تفاصيلها هنا مع مصدر المبلغ والجهة
+                  المستلمة والرصيد الناتج.
                 </p>
 
                 <Link
@@ -562,18 +521,16 @@ export default function CustodiesPage() {
 
                 <tbody>
                   {latestTransactions.map((transaction) => {
-                    const isIn =
-                      transaction.type === "in";
+                    const isIn = transaction.type === "in";
 
-                    const isTransfer =
-                      transaction.type === "transfer";
+                    const isTransfer = transaction.type === "transfer";
 
                     return (
                       <tr
                         key={transaction.id}
                         className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/70"
                       >
-                        <td className="whitespace-nowrap px-5 py-4 text-xs font-semibold text-slate-500">
+                        <td className="px-5 py-4 text-xs font-semibold whitespace-nowrap text-slate-500">
                           {formatDate(transaction.date)}
                         </td>
 
@@ -593,11 +550,7 @@ export default function CustodiesPage() {
                               <ArrowUpRight className="h-3.5 w-3.5" />
                             )}
 
-                            {isIn
-                              ? "وارد"
-                              : isTransfer
-                                ? "تحويل"
-                                : "خارج"}
+                            {isIn ? "وارد" : isTransfer ? "تحويل" : "خارج"}
                           </span>
                         </td>
 
@@ -607,17 +560,14 @@ export default function CustodiesPage() {
                           </p>
                         </td>
 
-                        <td className="whitespace-nowrap px-5 py-4">
+                        <td className="px-5 py-4 whitespace-nowrap">
                           <span
                             className={`text-sm font-extrabold ${
-                              isIn
-                                ? "text-emerald-600"
-                                : "text-red-600"
+                              isIn ? "text-emerald-600" : "text-red-600"
                             }`}
                           >
                             {isIn ? "+" : "-"}
-                            {formatAmount(transaction.amount)}{" "}
-                            جنيه
+                            {formatAmount(transaction.amount)} جنيه
                           </span>
                         </td>
                       </tr>

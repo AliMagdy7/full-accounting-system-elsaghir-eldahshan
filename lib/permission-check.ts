@@ -23,5 +23,6 @@ export function canCurrentUser(permission: Permission): boolean {
 }
 
 export function assertCurrentUserPermission(permission: Permission): void {
-  if (!canCurrentUser(permission)) throw new Error("ليس لديك صلاحية لتنفيذ هذه العملية.");
+  if (!canCurrentUser(permission))
+    throw new Error("ليس لديك صلاحية لتنفيذ هذه العملية.");
 }

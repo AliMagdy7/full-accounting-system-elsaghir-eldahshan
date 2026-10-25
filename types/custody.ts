@@ -1,8 +1,4 @@
-export type CustodyType =
-  | "central"
-  | "person"
-  | "project"
-  | "worker";
+export type CustodyType = "central" | "person" | "project" | "worker";
 
 export interface Custody {
   id: string;

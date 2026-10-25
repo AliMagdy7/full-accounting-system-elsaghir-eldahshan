@@ -1,11 +1,6 @@
-export type WorkerPayType =
-  | "daily"
-  | "monthly";
+export type WorkerPayType = "daily" | "monthly";
 
-export type WorkerMonthlyDivision =
-  | 30
-  | 26
-  | 24;
+export type WorkerMonthlyDivision = 30 | 26 | 24;
 
 export interface Worker {
   id: string;

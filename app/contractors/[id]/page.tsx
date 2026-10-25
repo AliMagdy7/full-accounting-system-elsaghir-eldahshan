@@ -41,7 +41,10 @@ import {
 import { getExpenses } from "@/lib/data/expenses";
 import { getProjects } from "@/lib/data/projects";
 import { getCustodies } from "@/lib/data/custodies";
-import { getProjectSites, subscribeToProjectSites } from "@/lib/data/project-sites";
+import {
+  getProjectSites,
+  subscribeToProjectSites,
+} from "@/lib/data/project-sites";
 import {
   addContractorSiteAssignment,
   deleteContractorSiteAssignment,
@@ -50,7 +53,10 @@ import {
 } from "@/lib/data/contractor-site-assignments";
 import { formatDisplayDate } from "@/lib/formatters";
 import type { Contractor } from "@/types/contractor";
-import type { ContractorNote, ContractorNoteImage } from "@/types/contractor-note";
+import type {
+  ContractorNote,
+  ContractorNoteImage,
+} from "@/types/contractor-note";
 import type { ContractorSiteAssignment } from "@/types/contractor-site-assignment";
 import type { ProjectSite } from "@/types/project-site";
 import type { Expense } from "@/types/expense";
@@ -118,15 +124,20 @@ export default function ContractorDetailsPage() {
   const [noteImages, setNoteImages] = useState<ContractorNoteImage[]>([]);
   const [savingNote, setSavingNote] = useState(false);
   const [noteError, setNoteError] = useState("");
-  const [viewerImage, setViewerImage] = useState<ContractorNoteImage | null>(null);
+  const [viewerImage, setViewerImage] = useState<ContractorNoteImage | null>(
+    null,
+  );
   const [isWorkModalOpen, setIsWorkModalOpen] = useState(false);
   const [workValue, setWorkValue] = useState("0");
   const [workError, setWorkError] = useState("");
   const [savingWork, setSavingWork] = useState(false);
-  const [siteAssignments, setSiteAssignments] = useState<ContractorSiteAssignment[]>([]);
+  const [siteAssignments, setSiteAssignments] = useState<
+    ContractorSiteAssignment[]
+  >([]);
   const [sites, setSites] = useState<ProjectSite[]>([]);
   const [isSiteModalOpen, setIsSiteModalOpen] = useState(false);
-  const [editingSiteAssignment, setEditingSiteAssignment] = useState<ContractorSiteAssignment | null>(null);
+  const [editingSiteAssignment, setEditingSiteAssignment] =
+    useState<ContractorSiteAssignment | null>(null);
   const [siteId, setSiteId] = useState("");
   const [siteStartDate, setSiteStartDate] = useState("");
   const [siteEndDate, setSiteEndDate] = useState("");
@@ -220,9 +231,12 @@ export default function ContractorDetailsPage() {
     return advances.filter((expense) => {
       if (advanceFromDate && expense.date < advanceFromDate) return false;
       if (advanceToDate && expense.date > advanceToDate) return false;
-      if (advanceCustodyFilter && expense.custodyId !== advanceCustodyFilter) return false;
-      if (advanceProjectFilter && expense.projectId !== advanceProjectFilter) return false;
-      if (advanceSiteFilter && expense.siteId !== advanceSiteFilter) return false;
+      if (advanceCustodyFilter && expense.custodyId !== advanceCustodyFilter)
+        return false;
+      if (advanceProjectFilter && expense.projectId !== advanceProjectFilter)
+        return false;
+      if (advanceSiteFilter && expense.siteId !== advanceSiteFilter)
+        return false;
       return true;
     });
   }, [
@@ -235,7 +249,11 @@ export default function ContractorDetailsPage() {
   ]);
 
   const filteredAdvanceTotal = useMemo(
-    () => filteredAdvances.reduce((sum, expense) => sum + Number(expense.amount || 0), 0),
+    () =>
+      filteredAdvances.reduce(
+        (sum, expense) => sum + Number(expense.amount || 0),
+        0,
+      ),
     [filteredAdvances],
   );
 
@@ -367,7 +385,9 @@ export default function ContractorDetailsPage() {
     if (!contractor) return;
     const normalized = Number(workValue.replace(/,/g, ""));
     if (!Number.isFinite(normalized) || normalized < 0) {
-      setWorkError("إجمالي الأعمال يجب أن يكون رقمًا صحيحًا يساوي صفرًا أو أكثر.");
+      setWorkError(
+        "إجمالي الأعمال يجب أن يكون رقمًا صحيحًا يساوي صفرًا أو أكثر.",
+      );
       return;
     }
 
@@ -375,7 +395,9 @@ export default function ContractorDetailsPage() {
     setWorkError("");
 
     try {
-      const updated = updateContractor(contractor.id, { totalWork: normalized });
+      const updated = updateContractor(contractor.id, {
+        totalWork: normalized,
+      });
       setContractor(updated);
       setIsWorkModalOpen(false);
     } catch (errorValue) {
@@ -428,9 +450,7 @@ export default function ContractorDetailsPage() {
       setNoteImages((current) => [...current, ...converted]);
     } catch (errorValue) {
       setNoteError(
-        errorValue instanceof Error
-          ? errorValue.message
-          : "تعذر إضافة الصورة.",
+        errorValue instanceof Error ? errorValue.message : "تعذر إضافة الصورة.",
       );
     }
   };
@@ -480,7 +500,8 @@ export default function ContractorDetailsPage() {
     confirm(
       {
         title: "تأكيد حذف الملاحظة",
-        description: "هل أنت متأكد من حذف هذه الملاحظة والصور المرفقة بها؟ لا يمكن التراجع عن هذا الإجراء.",
+        description:
+          "هل أنت متأكد من حذف هذه الملاحظة والصور المرفقة بها؟ لا يمكن التراجع عن هذا الإجراء.",
         confirmText: "حذف الملاحظة",
         cancelText: "إلغاء",
         variant: "danger",
@@ -513,8 +534,12 @@ export default function ContractorDetailsPage() {
           </Link>
           <section className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
             <HardHat className="mx-auto h-10 w-10 text-slate-300" />
-            <h1 className="mt-4 text-xl font-black text-slate-900">المقاول غير موجود</h1>
-            <p className="mt-2 text-sm text-slate-500">قد يكون تم حذف المقاول أو أن الرابط غير صحيح.</p>
+            <h1 className="mt-4 text-xl font-black text-slate-900">
+              المقاول غير موجود
+            </h1>
+            <p className="mt-2 text-sm text-slate-500">
+              قد يكون تم حذف المقاول أو أن الرابط غير صحيح.
+            </p>
           </section>
         </div>
       </AppShell>
@@ -538,7 +563,7 @@ export default function ContractorDetailsPage() {
           </span>
         </div>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 ui-fade-up">
+        <section className="ui-fade-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
@@ -551,7 +576,9 @@ export default function ContractorDetailsPage() {
                 </h1>
                 <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold text-slate-400">
                   <span>{contractor.phone || "بدون هاتف"}</span>
-                  {contractor.nationalId && <span>{contractor.nationalId}</span>}
+                  {contractor.nationalId && (
+                    <span>{contractor.nationalId}</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -582,8 +609,12 @@ export default function ContractorDetailsPage() {
 
           {contractor.notes && (
             <div className="mt-5 rounded-2xl border border-slate-100 bg-slate-50 p-4">
-              <p className="mb-1 text-xs font-black text-slate-500">الملاحظة الأساسية</p>
-              <p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">{contractor.notes}</p>
+              <p className="mb-1 text-xs font-black text-slate-500">
+                الملاحظة الأساسية
+              </p>
+              <p className="text-sm leading-7 whitespace-pre-wrap text-slate-700">
+                {contractor.notes}
+              </p>
             </div>
           )}
         </section>
@@ -608,19 +639,26 @@ export default function ContractorDetailsPage() {
             icon={<CircleDollarSign className="h-5 w-5" />}
             label="المتبقي من الأعمال"
             value={money(summary?.remaining ?? 0)}
-            valueClass={summary && summary.remaining < 0 ? "text-red-600" : "text-slate-900"}
+            valueClass={
+              summary && summary.remaining < 0
+                ? "text-red-600"
+                : "text-slate-900"
+            }
           />
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm ui-fade-up">
+        <section className="ui-fade-up rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex items-center gap-2">
                 <MapPin className="h-5 w-5 text-slate-700" />
-                <h2 className="text-lg font-black text-slate-900">المواقع وفترات العمل</h2>
+                <h2 className="text-lg font-black text-slate-900">
+                  المواقع وفترات العمل
+                </h2>
               </div>
               <p className="mt-1 text-xs text-slate-400">
-                المقاول يمكن أن يكون مرتبطًا بأكثر من موقع في نفس الوقت، ولكل موقع فترة بداية ونهاية مستقلة.
+                المقاول يمكن أن يكون مرتبطًا بأكثر من موقع في نفس الوقت، ولكل
+                موقع فترة بداية ونهاية مستقلة.
               </p>
             </div>
             {canCurrentUser("create") && (
@@ -636,7 +674,7 @@ export default function ContractorDetailsPage() {
           </div>
 
           {siteError && !isSiteModalOpen && (
-            <div className="m-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700 ui-shake">
+            <div className="ui-shake m-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
               {siteError}
             </div>
           )}
@@ -646,26 +684,41 @@ export default function ContractorDetailsPage() {
               icon={<MapPin className="h-6 w-6" />}
               title="لا توجد مواقع مرتبطة بالمقاول"
               description="أضف الموقع الذي يعمل فيه المقاول وحدد فترة عمله. ويمكنك إضافة أكثر من موقع في نفس الوقت."
-              action={canCurrentUser("create") ? openCreateSiteAssignment : undefined}
+              action={
+                canCurrentUser("create") ? openCreateSiteAssignment : undefined
+              }
             />
           ) : (
             <div className="divide-y divide-slate-100">
               {siteAssignments.map((assignment) => {
-                const site = sites.find((item) => item.id === assignment.siteId);
-                const projectName = site ? siteProjects.get(site.projectId) : undefined;
+                const site = sites.find(
+                  (item) => item.id === assignment.siteId,
+                );
+                const projectName = site
+                  ? siteProjects.get(site.projectId)
+                  : undefined;
                 const isOpen = !assignment.endDate;
 
                 return (
-                  <article key={assignment.id} className="p-5 transition-colors hover:bg-slate-50/60">
+                  <article
+                    key={assignment.id}
+                    className="p-5 transition-colors hover:bg-slate-50/60"
+                  >
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-black ${isOpen ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${isOpen ? "bg-emerald-500" : "bg-slate-400"}`} />
+                          <span
+                            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-black ${isOpen ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}
+                          >
+                            <span
+                              className={`h-1.5 w-1.5 rounded-full ${isOpen ? "bg-emerald-500" : "bg-slate-400"}`}
+                            />
                             {isOpen ? "فترة مفتوحة" : "فترة منتهية"}
                           </span>
                           <span className="text-[11px] font-bold text-slate-400">
-                            {projectName ? `المشروع: ${projectName}` : "مشروع غير معروف"}
+                            {projectName
+                              ? `المشروع: ${projectName}`
+                              : "مشروع غير معروف"}
                           </span>
                         </div>
                         <div className="mt-3 flex items-start gap-3">
@@ -673,37 +726,65 @@ export default function ContractorDetailsPage() {
                             <MapPin className="h-5 w-5" />
                           </div>
                           <div className="min-w-0">
-                            <h3 className="font-black text-slate-900">{site?.name ?? "موقع غير موجود"}</h3>
-                            {site?.address && <p className="mt-1 text-xs text-slate-400">{site.address}</p>}
+                            <h3 className="font-black text-slate-900">
+                              {site?.name ?? "موقع غير موجود"}
+                            </h3>
+                            {site?.address && (
+                              <p className="mt-1 text-xs text-slate-400">
+                                {site.address}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="mt-4 grid gap-3 sm:grid-cols-2">
                           <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                            <p className="text-[11px] font-bold text-slate-400">بداية الفترة</p>
-                            <p className="mt-1 text-sm font-black text-slate-700">{formatDisplayDate(assignment.startDate)}</p>
+                            <p className="text-[11px] font-bold text-slate-400">
+                              بداية الفترة
+                            </p>
+                            <p className="mt-1 text-sm font-black text-slate-700">
+                              {formatDisplayDate(assignment.startDate)}
+                            </p>
                           </div>
                           <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                            <p className="text-[11px] font-bold text-slate-400">نهاية الفترة</p>
-                            <p className="mt-1 text-sm font-black text-slate-700">{assignment.endDate ? formatDisplayDate(assignment.endDate) : "مستمرة حتى الآن"}</p>
+                            <p className="text-[11px] font-bold text-slate-400">
+                              نهاية الفترة
+                            </p>
+                            <p className="mt-1 text-sm font-black text-slate-700">
+                              {assignment.endDate
+                                ? formatDisplayDate(assignment.endDate)
+                                : "مستمرة حتى الآن"}
+                            </p>
                           </div>
                         </div>
                         {assignment.notes && (
                           <div className="mt-3 rounded-xl border border-slate-100 bg-white p-3">
-                            <p className="text-[11px] font-black text-slate-400">ملاحظات الفترة</p>
-                            <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-600">{assignment.notes}</p>
+                            <p className="text-[11px] font-black text-slate-400">
+                              ملاحظات الفترة
+                            </p>
+                            <p className="mt-1 text-sm leading-6 whitespace-pre-wrap text-slate-600">
+                              {assignment.notes}
+                            </p>
                           </div>
                         )}
                       </div>
 
                       <div className="flex shrink-0 gap-2">
                         {canCurrentUser("update") && (
-                          <button type="button" onClick={() => openEditSiteAssignment(assignment)} className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50">
+                          <button
+                            type="button"
+                            onClick={() => openEditSiteAssignment(assignment)}
+                            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50"
+                          >
                             <Pencil className="h-3.5 w-3.5" />
                             تعديل
                           </button>
                         )}
                         {canCurrentUser("delete") && (
-                          <button type="button" onClick={() => removeSiteAssignment(assignment)} className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 text-xs font-bold text-red-600 transition-all hover:bg-red-50">
+                          <button
+                            type="button"
+                            onClick={() => removeSiteAssignment(assignment)}
+                            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-red-200 bg-white px-3 text-xs font-bold text-red-600 transition-all hover:bg-red-50"
+                          >
                             <Trash2 className="h-3.5 w-3.5" />
                             حذف
                           </button>
@@ -717,15 +798,18 @@ export default function ContractorDetailsPage() {
           )}
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm ui-fade-up">
+        <section className="ui-fade-up rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex items-center gap-2">
                 <ReceiptText className="h-5 w-5 text-slate-700" />
-                <h2 className="text-lg font-black text-slate-900">سلف المقاول</h2>
+                <h2 className="text-lg font-black text-slate-900">
+                  سلف المقاول
+                </h2>
               </div>
               <p className="mt-1 text-xs text-slate-400">
-                كل السلف المسجلة للمقاول من جميع الجهات والحركات داخل النظام تظهر هنا تلقائيًا.
+                كل السلف المسجلة للمقاول من جميع الجهات والحركات داخل النظام
+                تظهر هنا تلقائيًا.
               </p>
             </div>
             <span className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-600">
@@ -737,7 +821,9 @@ export default function ContractorDetailsPage() {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-slate-500" />
-                <p className="text-xs font-black text-slate-600">فلاتر حساب السلف</p>
+                <p className="text-xs font-black text-slate-600">
+                  فلاتر حساب السلف
+                </p>
               </div>
               <button
                 type="button"
@@ -749,40 +835,103 @@ export default function ContractorDetailsPage() {
               </button>
             </div>
             <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
-              <DateInput value={advanceFromDate} onChange={setAdvanceFromDate} placeholder="من تاريخ" className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold" />
-              <DateInput value={advanceToDate} onChange={setAdvanceToDate} placeholder="إلى تاريخ" className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold" />
-              <select value={advanceCustodyFilter} onChange={(event) => setAdvanceCustodyFilter(event.target.value)} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold outline-none focus:border-blue-500">
+              <DateInput
+                value={advanceFromDate}
+                onChange={setAdvanceFromDate}
+                placeholder="من تاريخ"
+                className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold"
+              />
+              <DateInput
+                value={advanceToDate}
+                onChange={setAdvanceToDate}
+                placeholder="إلى تاريخ"
+                className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold"
+              />
+              <select
+                value={advanceCustodyFilter}
+                onChange={(event) =>
+                  setAdvanceCustodyFilter(event.target.value)
+                }
+                className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold outline-none focus:border-blue-500"
+              >
                 <option value="">كل العهد</option>
-                {custodies.map((custody) => <option key={custody.id} value={custody.id}>{custody.name}</option>)}
+                {custodies.map((custody) => (
+                  <option key={custody.id} value={custody.id}>
+                    {custody.name}
+                  </option>
+                ))}
               </select>
-              <select value={advanceProjectFilter} onChange={(event) => {
-              setAdvanceProjectFilter(event.target.value);
-              setAdvanceSiteFilter("");
-              }} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold outline-none focus:border-blue-500">
+              <select
+                value={advanceProjectFilter}
+                onChange={(event) => {
+                  setAdvanceProjectFilter(event.target.value);
+                  setAdvanceSiteFilter("");
+                }}
+                className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold outline-none focus:border-blue-500"
+              >
                 <option value="">كل المشاريع</option>
-                {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
               </select>
-              <select value={advanceSiteFilter} onChange={(event) => setAdvanceSiteFilter(event.target.value)} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold outline-none focus:border-blue-500">
+              <select
+                value={advanceSiteFilter}
+                onChange={(event) => setAdvanceSiteFilter(event.target.value)}
+                className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold outline-none focus:border-blue-500"
+              >
                 <option value="">كل المواقع</option>
-                {sites.filter((site) => !advanceProjectFilter || site.projectId === advanceProjectFilter).map((site) => <option key={site.id} value={site.id}>{site.name}</option>)}
+                {sites
+                  .filter(
+                    (site) =>
+                      !advanceProjectFilter ||
+                      site.projectId === advanceProjectFilter,
+                  )
+                  .map((site) => (
+                    <option key={site.id} value={site.id}>
+                      {site.name}
+                    </option>
+                  ))}
               </select>
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-3 text-xs font-bold text-slate-500">
-              <span>الحركات الظاهرة: <strong className="text-slate-800">{filteredAdvances.length}</strong></span>
-              <span>إجمالي السلف بعد الفلترة: <strong className="text-violet-700">{money(filteredAdvanceTotal)} جنيه</strong></span>
+              <span>
+                الحركات الظاهرة:{" "}
+                <strong className="text-slate-800">
+                  {filteredAdvances.length}
+                </strong>
+              </span>
+              <span>
+                إجمالي السلف بعد الفلترة:{" "}
+                <strong className="text-violet-700">
+                  {money(filteredAdvanceTotal)} جنيه
+                </strong>
+              </span>
             </div>
           </div>
 
           {filteredAdvances.length === 0 ? (
             <EmptyState
               icon={<ReceiptText className="h-6 w-6" />}
-              title={advances.length === 0 ? "لا توجد سلف مسجلة" : "لا توجد سلف مطابقة للفلاتر"}
-              description={advances.length === 0 ? "عند تسجيل سلفة مرتبطة بهذا المقاول ستظهر هنا تلقائيًا." : "غيّر الفلاتر أو امسحها لعرض باقي حركات المقاول."}
+              title={
+                advances.length === 0
+                  ? "لا توجد سلف مسجلة"
+                  : "لا توجد سلف مطابقة للفلاتر"
+              }
+              description={
+                advances.length === 0
+                  ? "عند تسجيل سلفة مرتبطة بهذا المقاول ستظهر هنا تلقائيًا."
+                  : "غيّر الفلاتر أو امسحها لعرض باقي حركات المقاول."
+              }
             />
           ) : (
             <div className="divide-y divide-slate-100">
               {filteredAdvances.map((expense) => (
-                <div key={expense.id} className="grid gap-4 p-5 sm:grid-cols-[1fr_auto] sm:items-center">
+                <div
+                  key={expense.id}
+                  className="grid gap-4 p-5 sm:grid-cols-[1fr_auto] sm:items-center"
+                >
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="rounded-lg bg-violet-50 px-2.5 py-1 text-[11px] font-black text-violet-700">
@@ -791,26 +940,40 @@ export default function ContractorDetailsPage() {
                       {expense.siteId && (
                         <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-black text-slate-600">
                           <MapPin className="h-3 w-3" />
-                          الموقع: {advanceSiteNames.get(expense.siteId) ?? "موقع غير معروف"}
+                          الموقع:{" "}
+                          {advanceSiteNames.get(expense.siteId) ??
+                            "موقع غير معروف"}
                         </span>
                       )}
                       <span className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1 text-[11px] font-black text-blue-700">
-                        العهدة الدافعة: {custodies.find((custody) => custody.id === expense.custodyId)?.name ?? "عهدة غير معروفة"}
+                        العهدة الدافعة:{" "}
+                        {custodies.find(
+                          (custody) => custody.id === expense.custodyId,
+                        )?.name ?? "عهدة غير معروفة"}
                       </span>
                       <span className="text-xs font-semibold text-slate-400">
                         {formatDisplayDate(expense.date)}
                       </span>
                     </div>
-                    <p className="mt-2 font-extrabold text-slate-900">{expense.description}</p>
+                    <p className="mt-2 font-extrabold text-slate-900">
+                      {expense.description}
+                    </p>
                     <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
-                      {expense.category && <span>التصنيف: {expense.category}</span>}
+                      {expense.category && (
+                        <span>التصنيف: {expense.category}</span>
+                      )}
                       {expense.projectId && (
-                        <span>المشروع: {projectNames.get(expense.projectId) ?? "مشروع غير معروف"}</span>
+                        <span>
+                          المشروع:{" "}
+                          {projectNames.get(expense.projectId) ??
+                            "مشروع غير معروف"}
+                        </span>
                       )}
                     </div>
                   </div>
                   <p className="accounting-number text-lg font-black text-slate-900">
-                    {money(Number(expense.amount || 0))} <span className="text-xs">جنيه</span>
+                    {money(Number(expense.amount || 0))}{" "}
+                    <span className="text-xs">جنيه</span>
                   </p>
                 </div>
               ))}
@@ -818,15 +981,18 @@ export default function ContractorDetailsPage() {
           )}
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white shadow-sm ui-fade-up">
+        <section className="ui-fade-up rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex items-center gap-2">
                 <FileText className="h-5 w-5 text-slate-700" />
-                <h2 className="text-lg font-black text-slate-900">ملاحظات ومستخلصات المقاول</h2>
+                <h2 className="text-lg font-black text-slate-900">
+                  ملاحظات ومستخلصات المقاول
+                </h2>
               </div>
               <p className="mt-1 text-xs text-slate-400">
-                سجل كل ملاحظة أو مستخلص في خانة مستقلة، وأرفق بها الصور والمستندات التي تخصها.
+                سجل كل ملاحظة أو مستخلص في خانة مستقلة، وأرفق بها الصور
+                والمستندات التي تخصها.
               </p>
             </div>
             {canCurrentUser("create") && (
@@ -862,14 +1028,16 @@ export default function ContractorDetailsPage() {
                       </div>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-sm font-black text-slate-800">ملاحظة #{notes.length - index}</span>
+                          <span className="text-sm font-black text-slate-800">
+                            ملاحظة #{notes.length - index}
+                          </span>
                           <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400">
                             <CalendarDays className="h-3.5 w-3.5" />
                             {formatDisplayDate(note.createdAt)}
                           </span>
                         </div>
                         {note.text && (
-                          <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-slate-700">
+                          <p className="mt-2 text-sm leading-7 whitespace-pre-wrap text-slate-700">
                             {note.text}
                           </p>
                         )}
@@ -937,34 +1105,55 @@ export default function ContractorDetailsPage() {
 
       {isSiteModalOpen && (
         <div
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm ui-modal-backdrop"
+          className="ui-modal-backdrop fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) closeSiteModal();
           }}
         >
-          <div dir="rtl" role="dialog" aria-modal="true" className="ui-modal w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+          <div
+            dir="rtl"
+            role="dialog"
+            aria-modal="true"
+            className="ui-modal w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+          >
             <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 sm:px-6">
               <div>
                 <div className="flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-slate-700" />
-                  <h2 className="text-lg font-black text-slate-900">{editingSiteAssignment ? "تعديل فترة موقع" : "إضافة موقع للمقاول"}</h2>
+                  <h2 className="text-lg font-black text-slate-900">
+                    {editingSiteAssignment
+                      ? "تعديل فترة موقع"
+                      : "إضافة موقع للمقاول"}
+                  </h2>
                 </div>
-                <p className="mt-1 text-xs font-semibold text-slate-400">يمكن للمقاول أن يعمل في أكثر من موقع، ولكل ارتباط فترة مستقلة.</p>
+                <p className="mt-1 text-xs font-semibold text-slate-400">
+                  يمكن للمقاول أن يعمل في أكثر من موقع، ولكل ارتباط فترة مستقلة.
+                </p>
               </div>
-              <button type="button" onClick={closeSiteModal} disabled={savingSite} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition-all hover:bg-slate-50 disabled:opacity-50" aria-label="إغلاق">
+              <button
+                type="button"
+                onClick={closeSiteModal}
+                disabled={savingSite}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition-all hover:bg-slate-50 disabled:opacity-50"
+                aria-label="إغلاق"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             <div className="p-5 sm:p-6">
               {siteError && (
-                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700 ui-shake">{siteError}</div>
+                <div className="ui-shake mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+                  {siteError}
+                </div>
               )}
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="md:col-span-2">
                   <div className="mb-2 flex items-center justify-between gap-3">
-                    <label className="block text-xs font-black text-slate-600">الموقع</label>
+                    <label className="block text-xs font-black text-slate-600">
+                      الموقع
+                    </label>
                     <button
                       type="button"
                       onClick={() => setSites(getProjectSites())}
@@ -975,45 +1164,88 @@ export default function ContractorDetailsPage() {
                       تحديث المواقع
                     </button>
                   </div>
-                  <select value={siteId} onChange={(event) => setSiteId(event.target.value)} className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold outline-none transition-all focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-100">
+                  <select
+                    value={siteId}
+                    onChange={(event) => setSiteId(event.target.value)}
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold transition-all outline-none focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-100"
+                  >
                     <option value="">اختر الموقع</option>
                     {sites.map((site) => {
                       const projectName = siteProjects.get(site.projectId);
-                      return <option key={site.id} value={site.id}>{projectName ? `${projectName} — ` : ""}{site.name}</option>;
+                      return (
+                        <option key={site.id} value={site.id}>
+                          {projectName ? `${projectName} — ` : ""}
+                          {site.name}
+                        </option>
+                      );
                     })}
                   </select>
-                  {sites.length === 0 && <p className="mt-2 text-xs font-semibold text-amber-600">لا توجد مواقع مسجلة حاليًا. أضف الموقع من صفحة المشاريع أولًا.</p>}
+                  {sites.length === 0 && (
+                    <p className="mt-2 text-xs font-semibold text-amber-600">
+                      لا توجد مواقع مسجلة حاليًا. أضف الموقع من صفحة المشاريع
+                      أولًا.
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-xs font-black text-slate-600">بداية الفترة</label>
+                  <label className="mb-2 block text-xs font-black text-slate-600">
+                    بداية الفترة
+                  </label>
                   <DateInput
                     required
                     value={siteStartDate}
                     onChange={setSiteStartDate}
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold outline-none transition-all focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-100"
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold transition-all outline-none focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-100"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-xs font-black text-slate-600">نهاية الفترة <span className="font-semibold text-slate-400">(اختياري)</span></label>
+                  <label className="mb-2 block text-xs font-black text-slate-600">
+                    نهاية الفترة{" "}
+                    <span className="font-semibold text-slate-400">
+                      (اختياري)
+                    </span>
+                  </label>
                   <DateInput
                     value={siteEndDate}
                     onChange={setSiteEndDate}
                     min={siteStartDate || undefined}
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold outline-none transition-all focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-100"
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold transition-all outline-none focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-100"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="mb-2 block text-xs font-black text-slate-600">ملاحظات الفترة <span className="font-semibold text-slate-400">(اختياري)</span></label>
-                  <textarea value={siteNotes} onChange={(event) => setSiteNotes(event.target.value)} placeholder="اكتب أي تفاصيل تخص فترة عمل المقاول في الموقع..." className="min-h-28 w-full resize-y rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold leading-7 outline-none transition-all focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-100" />
+                  <label className="mb-2 block text-xs font-black text-slate-600">
+                    ملاحظات الفترة{" "}
+                    <span className="font-semibold text-slate-400">
+                      (اختياري)
+                    </span>
+                  </label>
+                  <textarea
+                    value={siteNotes}
+                    onChange={(event) => setSiteNotes(event.target.value)}
+                    placeholder="اكتب أي تفاصيل تخص فترة عمل المقاول في الموقع..."
+                    className="min-h-28 w-full resize-y rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-7 font-semibold transition-all outline-none focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-100"
+                  />
                 </div>
               </div>
 
               <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <button type="button" onClick={closeSiteModal} disabled={savingSite} className="h-11 rounded-xl border border-slate-200 bg-white px-6 text-sm font-bold text-slate-600 transition-all hover:bg-slate-50 disabled:opacity-50">إلغاء</button>
-                <button type="button" onClick={saveSiteAssignment} disabled={savingSite || sites.length === 0} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-7 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
+                <button
+                  type="button"
+                  onClick={closeSiteModal}
+                  disabled={savingSite}
+                  className="h-11 rounded-xl border border-slate-200 bg-white px-6 text-sm font-bold text-slate-600 transition-all hover:bg-slate-50 disabled:opacity-50"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  onClick={saveSiteAssignment}
+                  disabled={savingSite || sites.length === 0}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-7 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                >
                   <Save className="h-4 w-4" />
                   {savingSite ? "جارٍ الحفظ..." : "حفظ الفترة"}
                 </button>
@@ -1025,35 +1257,68 @@ export default function ContractorDetailsPage() {
 
       {isWorkModalOpen && (
         <div
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm ui-modal-backdrop"
+          className="ui-modal-backdrop fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) closeWorkModal();
           }}
         >
-          <div dir="rtl" role="dialog" aria-modal="true" className="ui-modal w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+          <div
+            dir="rtl"
+            role="dialog"
+            aria-modal="true"
+            className="ui-modal w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+          >
             <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
               <div>
-                <h2 className="text-lg font-black text-slate-900">إجمالي قيمة الأعمال</h2>
-                <p className="mt-1 text-xs font-semibold text-slate-400">القيمة التي تستحق للمقاول قبل خصم السلف.</p>
+                <h2 className="text-lg font-black text-slate-900">
+                  إجمالي قيمة الأعمال
+                </h2>
+                <p className="mt-1 text-xs font-semibold text-slate-400">
+                  القيمة التي تستحق للمقاول قبل خصم السلف.
+                </p>
               </div>
-              <button type="button" onClick={closeWorkModal} disabled={savingWork} className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition-all hover:bg-slate-50 disabled:opacity-50" aria-label="إغلاق">
+              <button
+                type="button"
+                onClick={closeWorkModal}
+                disabled={savingWork}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-500 transition-all hover:bg-slate-50 disabled:opacity-50"
+                aria-label="إغلاق"
+              >
                 <X className="h-4 w-4" />
               </button>
             </div>
             <div className="p-5">
-              {workError && <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700 ui-shake">{workError}</div>}
-              <label className="mb-2 block text-xs font-black text-slate-600">إجمالي الأعمال بالجنيه</label>
+              {workError && (
+                <div className="ui-shake mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
+                  {workError}
+                </div>
+              )}
+              <label className="mb-2 block text-xs font-black text-slate-600">
+                إجمالي الأعمال بالجنيه
+              </label>
               <input
                 type="text"
                 value={workValue}
                 onChange={(event) => setWorkValue(event.target.value)}
                 inputMode="decimal"
                 autoFocus
-                className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold outline-none transition-all focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-100"
+                className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm font-bold transition-all outline-none focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-100"
               />
               <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <button type="button" onClick={closeWorkModal} disabled={savingWork} className="h-11 rounded-xl border border-slate-200 bg-white px-6 text-sm font-bold text-slate-600 transition-all hover:bg-slate-50 disabled:opacity-50">إلغاء</button>
-                <button type="button" onClick={saveWorkValue} disabled={savingWork} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-7 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-slate-800 disabled:opacity-60">
+                <button
+                  type="button"
+                  onClick={closeWorkModal}
+                  disabled={savingWork}
+                  className="h-11 rounded-xl border border-slate-200 bg-white px-6 text-sm font-bold text-slate-600 transition-all hover:bg-slate-50 disabled:opacity-50"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="button"
+                  onClick={saveWorkValue}
+                  disabled={savingWork}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-7 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-slate-800 disabled:opacity-60"
+                >
                   <Save className="h-4 w-4" />
                   {savingWork ? "جارٍ الحفظ..." : "حفظ القيمة"}
                 </button>
@@ -1065,7 +1330,7 @@ export default function ContractorDetailsPage() {
 
       {isNoteModalOpen && (
         <div
-          className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm ui-modal-backdrop"
+          className="ui-modal-backdrop fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) closeNoteModal();
           }}
@@ -1082,7 +1347,8 @@ export default function ContractorDetailsPage() {
                   {editingNote ? "تعديل الملاحظة" : "إضافة ملاحظة جديدة"}
                 </h2>
                 <p className="mt-1 text-xs font-semibold text-slate-400">
-                  اكتب كل التفاصيل الخاصة بالمستخلص أو أرفق الصور التي تريد الاحتفاظ بها.
+                  اكتب كل التفاصيل الخاصة بالمستخلص أو أرفق الصور التي تريد
+                  الاحتفاظ بها.
                 </p>
               </div>
               <button
@@ -1098,26 +1364,32 @@ export default function ContractorDetailsPage() {
 
             <div className="max-h-[calc(92vh-78px)] overflow-y-auto p-5 sm:p-6">
               {noteError && (
-                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700 ui-shake">
+                <div className="ui-shake mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">
                   {noteError}
                 </div>
               )}
 
               <div>
-                <label className="mb-2 block text-xs font-black text-slate-600">الملاحظة</label>
+                <label className="mb-2 block text-xs font-black text-slate-600">
+                  الملاحظة
+                </label>
                 <textarea
                   value={noteText}
                   onChange={(event) => setNoteText(event.target.value)}
                   placeholder="اكتب هنا كل ما يخص المستخلص أو الملاحظة..."
-                  className="min-h-36 w-full resize-y rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold leading-7 outline-none transition-all focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-100"
+                  className="min-h-36 w-full resize-y rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-7 font-semibold transition-all outline-none focus:border-slate-400 focus:bg-white focus:ring-4 focus:ring-slate-100"
                 />
               </div>
 
               <div className="mt-5">
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <label className="block text-xs font-black text-slate-600">الصور والمستندات</label>
-                    <p className="mt-1 text-[11px] font-semibold text-slate-400">يمكنك اختيار أكثر من صورة مرة واحدة.</p>
+                    <label className="block text-xs font-black text-slate-600">
+                      الصور والمستندات
+                    </label>
+                    <p className="mt-1 text-[11px] font-semibold text-slate-400">
+                      يمكنك اختيار أكثر من صورة مرة واحدة.
+                    </p>
                   </div>
                   <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-black text-slate-700 transition-all hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-sm">
                     <Camera className="h-4 w-4" />
@@ -1135,30 +1407,44 @@ export default function ContractorDetailsPage() {
                 {noteImages.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
                     <ImagePlus className="mx-auto h-8 w-8 text-slate-300" />
-                    <p className="mt-3 text-sm font-bold text-slate-600">لم تتم إضافة صور</p>
-                    <p className="mt-1 text-xs text-slate-400">صور المستخلصات ستظهر هنا بشكل مصغر ويمكن فتحها بالحجم الكامل.</p>
+                    <p className="mt-3 text-sm font-bold text-slate-600">
+                      لم تتم إضافة صور
+                    </p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      صور المستخلصات ستظهر هنا بشكل مصغر ويمكن فتحها بالحجم
+                      الكامل.
+                    </p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {noteImages.map((image) => (
-                      <div key={image.id} className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white">
+                      <div
+                        key={image.id}
+                        className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white"
+                      >
                         <button
                           type="button"
                           onClick={() => setViewerImage(image)}
                           className="block h-32 w-full"
                           title="فتح الصورة"
                         >
-                          <img src={image.dataUrl} alt={image.name} className="h-full w-full object-cover" />
+                          <img
+                            src={image.dataUrl}
+                            alt={image.name}
+                            className="h-full w-full object-cover"
+                          />
                         </button>
                         <button
                           type="button"
                           onClick={() => removePendingImage(image.id)}
-                          className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg bg-red-600 text-white shadow-sm transition-all hover:bg-red-700"
+                          className="absolute top-2 left-2 flex h-7 w-7 items-center justify-center rounded-lg bg-red-600 text-white shadow-sm transition-all hover:bg-red-700"
                           aria-label="حذف الصورة"
                         >
                           <X className="h-3.5 w-3.5" />
                         </button>
-                        <p className="truncate border-t border-slate-100 px-2 py-2 text-[10px] font-bold text-slate-500">{image.name}</p>
+                        <p className="truncate border-t border-slate-100 px-2 py-2 text-[10px] font-bold text-slate-500">
+                          {image.name}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -1199,7 +1485,7 @@ export default function ContractorDetailsPage() {
           <button
             type="button"
             onClick={() => setViewerImage(null)}
-            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white transition-all hover:bg-white/20"
+            className="absolute top-4 right-4 flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white transition-all hover:bg-white/20"
             aria-label="إغلاق الصورة"
           >
             <X className="h-5 w-5" />
@@ -1210,7 +1496,9 @@ export default function ContractorDetailsPage() {
               alt={viewerImage.name}
               className="max-h-[82vh] max-w-[95vw] rounded-2xl object-contain shadow-2xl"
             />
-            <p className="max-w-[90vw] truncate text-xs font-bold text-white/80">{viewerImage.name}</p>
+            <p className="max-w-[90vw] truncate text-xs font-bold text-white/80">
+              {viewerImage.name}
+            </p>
           </div>
         </div>
       )}
@@ -1233,10 +1521,15 @@ function SummaryCard({
 }) {
   return (
     <div className="accounting-card ui-fade-up p-5">
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700">{icon}</div>
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+        {icon}
+      </div>
       <p className="mt-4 text-sm text-slate-500">{label}</p>
       <p className={`accounting-number mt-2 text-2xl font-black ${valueClass}`}>
-        {value} <span className="text-sm font-bold">{label.includes("عدد") ? "" : "جنيه"}</span>
+        {value}{" "}
+        <span className="text-sm font-bold">
+          {label.includes("عدد") ? "" : "جنيه"}
+        </span>
       </p>
     </div>
   );
@@ -1255,9 +1548,13 @@ function EmptyState({
 }) {
   return (
     <div className="p-12 text-center">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">{icon}</div>
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+        {icon}
+      </div>
       <p className="mt-4 text-sm font-black text-slate-700">{title}</p>
-      <p className="mx-auto mt-1 max-w-md text-xs leading-6 text-slate-400">{description}</p>
+      <p className="mx-auto mt-1 max-w-md text-xs leading-6 text-slate-400">
+        {description}
+      </p>
       {action && (
         <button
           type="button"

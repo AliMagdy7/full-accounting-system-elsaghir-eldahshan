@@ -2,11 +2,11 @@ import { assertCurrentUserPermission } from "@/lib/permission-check";
 import type { CustodyTransaction } from "@/types/custody-transaction";
 import { addAuditLog } from "@/lib/data/audit-logs";
 
-const STORAGE_KEY =
-  "elsaghir-eldahshan-custody-transactions";
+const STORAGE_KEY = "elsaghir-eldahshan-custody-transactions";
 
 function notifyDataUpdated() {
-  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
+  if (typeof window !== "undefined")
+    window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
 }
 
 function canUseStorage(): boolean {
@@ -18,8 +18,7 @@ function readTransactions(): CustodyTransaction[] {
     return [];
   }
 
-  const stored =
-    window.localStorage.getItem(STORAGE_KEY);
+  const stored = window.localStorage.getItem(STORAGE_KEY);
 
   if (!stored) {
     return [];
@@ -38,19 +37,13 @@ function readTransactions(): CustodyTransaction[] {
   return [];
 }
 
-function saveTransactions(
-  transactions: CustodyTransaction[],
-): void {
+function saveTransactions(transactions: CustodyTransaction[]): void {
   if (!canUseStorage()) {
     return;
   }
 
-  window.localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(transactions),
-  );
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
   notifyDataUpdated();
-
 }
 
 export function getCustodyTransactions(): CustodyTransaction[] {
@@ -61,18 +54,14 @@ export function getCustodyTransactionsByCustodyId(
   custodyId: string,
 ): CustodyTransaction[] {
   return readTransactions().filter(
-    (transaction) =>
-      transaction.custodyId === custodyId,
+    (transaction) => transaction.custodyId === custodyId,
   );
 }
 
 export function getCustodyTransactionById(
   id: string,
 ): CustodyTransaction | undefined {
-  return readTransactions().find(
-    (transaction) =>
-      transaction.id === id,
-  );
+  return readTransactions().find((transaction) => transaction.id === id);
 }
 
 export function getCustodyTransactionByWorkerFinancialMovementId(
@@ -80,8 +69,7 @@ export function getCustodyTransactionByWorkerFinancialMovementId(
 ): CustodyTransaction | undefined {
   return readTransactions().find(
     (transaction) =>
-      transaction.workerFinancialMovementId ===
-      workerFinancialMovementId,
+      transaction.workerFinancialMovementId === workerFinancialMovementId,
   );
 }
 
@@ -89,8 +77,7 @@ export function addCustodyTransaction(
   transaction: CustodyTransaction,
 ): CustodyTransaction {
   assertCurrentUserPermission("create");
-  const transactions =
-    readTransactions();
+  const transactions = readTransactions();
 
   transactions.push(transaction);
 
@@ -101,7 +88,8 @@ export function addCustodyTransaction(
     entity: "custody_transaction",
     entityId: transaction.id,
     description: `تمت إضافة حركة عهدة: ${transaction.description} بقيمة ${transaction.amount.toLocaleString("en-US")} ج.م.`,
-    notificationTitle: transaction.type === "transfer" ? "تحويل بين العهد" : "حركة عهدة جديدة",
+    notificationTitle:
+      transaction.type === "transfer" ? "تحويل بين العهد" : "حركة عهدة جديدة",
     notificationType: "success",
     notificationHref: "/custodies",
     notify: transaction.type === "transfer",
@@ -115,14 +103,9 @@ export function updateCustodyTransaction(
   updates: Partial<CustodyTransaction>,
 ): CustodyTransaction | undefined {
   assertCurrentUserPermission("update");
-  const transactions =
-    readTransactions();
+  const transactions = readTransactions();
 
-  const index =
-    transactions.findIndex(
-      (transaction) =>
-        transaction.id === id,
-    );
+  const index = transactions.findIndex((transaction) => transaction.id === id);
 
   if (index === -1) {
     return undefined;
@@ -130,16 +113,13 @@ export function updateCustodyTransaction(
 
   const previousTransaction = transactions[index];
 
-  const updatedTransaction: CustodyTransaction =
-    {
-      ...previousTransaction,
-      ...updates,
-      updatedAt:
-        new Date().toISOString(),
-    };
+  const updatedTransaction: CustodyTransaction = {
+    ...previousTransaction,
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  };
 
-  transactions[index] =
-    updatedTransaction;
+  transactions[index] = updatedTransaction;
 
   saveTransactions(transactions);
 
@@ -157,28 +137,17 @@ export function updateCustodyTransaction(
   return updatedTransaction;
 }
 
-export function deleteCustodyTransaction(
-  id: string,
-): void {
+export function deleteCustodyTransaction(id: string): void {
   assertCurrentUserPermission("delete");
-  const transactions =
-    readTransactions();
+  const transactions = readTransactions();
 
-  const exists = transactions.some(
-    (transaction) =>
-      transaction.id === id,
-  );
+  const exists = transactions.some((transaction) => transaction.id === id);
 
   if (!exists) {
     throw new Error("حركة العهدة غير موجودة.");
   }
 
-  saveTransactions(
-    transactions.filter(
-      (transaction) =>
-        transaction.id !== id,
-    ),
-  );
+  saveTransactions(transactions.filter((transaction) => transaction.id !== id));
 
   addAuditLog({
     action: "delete",

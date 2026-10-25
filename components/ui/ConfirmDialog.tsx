@@ -69,14 +69,22 @@ export function ConfirmDialog({
         dir="rtl"
       >
         <div className="flex items-start gap-4 border-b border-slate-100 px-5 py-5 sm:px-6">
-          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${iconClass}`}>
+          <div
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${iconClass}`}
+          >
             <AlertTriangle className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <h2 id="confirm-dialog-title" className="text-base font-extrabold text-slate-900">
+            <h2
+              id="confirm-dialog-title"
+              className="text-base font-extrabold text-slate-900"
+            >
               {options.title}
             </h2>
-            <p id="confirm-dialog-description" className="mt-2 text-sm leading-6 text-slate-500">
+            <p
+              id="confirm-dialog-description"
+              className="mt-2 text-sm leading-6 text-slate-500"
+            >
               {options.description}
             </p>
           </div>
@@ -102,9 +110,13 @@ export function ConfirmDialog({
             type="button"
             autoFocus
             onClick={onConfirm}
-            className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl px-5 text-sm font-extrabold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 active:translate-y-0 active:scale-[0.98] ${confirmClass}`}
+            className={`inline-flex h-10 items-center justify-center gap-2 rounded-xl px-5 text-sm font-extrabold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-4 focus-visible:outline-none active:translate-y-0 active:scale-[0.98] ${confirmClass}`}
           >
-            {isDanger ? <AlertTriangle className="h-4 w-4" /> : <Check className="h-4 w-4" />}
+            {isDanger ? (
+              <AlertTriangle className="h-4 w-4" />
+            ) : (
+              <Check className="h-4 w-4" />
+            )}
             {options.confirmText ?? "تأكيد"}
           </button>
         </div>

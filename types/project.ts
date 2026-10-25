@@ -1,7 +1,4 @@
-export type ProjectStatus =
-  | "active"
-  | "stopped"
-  | "closed";
+export type ProjectStatus = "active" | "stopped" | "closed";
 
 export interface ProjectResponsibleHistory {
   id: string;

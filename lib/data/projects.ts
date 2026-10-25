@@ -2,11 +2,11 @@ import { assertCurrentUserPermission } from "@/lib/permission-check";
 import type { Project } from "@/types/project";
 import { addAuditLog } from "@/lib/data/audit-logs";
 
-const STORAGE_KEY =
-  "elsaghir-eldahshan-projects";
+const STORAGE_KEY = "elsaghir-eldahshan-projects";
 
 function notifyDataUpdated() {
-  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
+  if (typeof window !== "undefined")
+    window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
 }
 
 function canUseStorage(): boolean {
@@ -18,8 +18,7 @@ function loadProjects(): Project[] {
     return [];
   }
 
-  const stored =
-    window.localStorage.getItem(STORAGE_KEY);
+  const stored = window.localStorage.getItem(STORAGE_KEY);
 
   if (!stored) {
     return [];
@@ -38,31 +37,22 @@ function loadProjects(): Project[] {
   return [];
 }
 
-function saveProjects(
-  projects: Project[],
-): void {
+function saveProjects(projects: Project[]): void {
   if (!canUseStorage()) {
     return;
   }
 
-  window.localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(projects),
-  );
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
   notifyDataUpdated();
-
 }
 
 export function getProjects(): Project[] {
   return loadProjects();
 }
 
-export function addProject(
-  project: Project,
-): Project {
+export function addProject(project: Project): Project {
   assertCurrentUserPermission("create");
-  const projects =
-    loadProjects();
+  const projects = loadProjects();
 
   projects.push(project);
 
@@ -81,13 +71,8 @@ export function addProject(
   return project;
 }
 
-export function getProjectById(
-  id: string,
-): Project | undefined {
-  return loadProjects().find(
-    (project) =>
-      project.id === id,
-  );
+export function getProjectById(id: string): Project | undefined {
+  return loadProjects().find((project) => project.id === id);
 }
 
 export function updateProject(
@@ -95,14 +80,9 @@ export function updateProject(
   updates: Partial<Project>,
 ): Project | undefined {
   assertCurrentUserPermission("update");
-  const projects =
-    loadProjects();
+  const projects = loadProjects();
 
-  const index =
-    projects.findIndex(
-      (project) =>
-        project.id === id,
-    );
+  const index = projects.findIndex((project) => project.id === id);
 
   if (index === -1) {
     return undefined;
@@ -113,12 +93,10 @@ export function updateProject(
   const updatedProject: Project = {
     ...previousProject,
     ...updates,
-    updatedAt:
-      new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
-  projects[index] =
-    updatedProject;
+  projects[index] = updatedProject;
 
   saveProjects(projects);
 

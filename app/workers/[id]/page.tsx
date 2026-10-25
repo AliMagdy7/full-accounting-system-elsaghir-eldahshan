@@ -33,9 +33,7 @@ import { getProjects } from "@/lib/data/projects";
 import { getProjectSites } from "@/lib/data/project-sites";
 import type { ProjectSite } from "@/types/project-site";
 
-import {
-  getCustodies,
-} from "@/lib/data/custodies";
+import { getCustodies } from "@/lib/data/custodies";
 
 import {
   getCustodyFinancialAccounts,
@@ -53,9 +51,7 @@ import {
 } from "@/lib/data/financial-transactions";
 
 import type { Worker, WorkerSiteAssignment } from "@/types/worker";
-import type {
-  Project,
-} from "@/types/project";
+import type { Project } from "@/types/project";
 import type { Custody } from "@/types/custody";
 import type { CustodyFinancialAccount } from "@/types/custody-financial-account";
 import type {
@@ -66,9 +62,10 @@ import type {
 const CENTRAL_CUSTODY_ID = "central";
 
 function getMonthKey(date: Date): string {
-  return `${date.getFullYear()}-${String(
-    date.getMonth() + 1,
-  ).padStart(2, "0")}`;
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+    2,
+    "0",
+  )}`;
 }
 
 interface WorkerMonthlyPayrollSummary {
@@ -141,9 +138,7 @@ function readWorkerMonthlyPayrollSummaries(): WorkerMonthlyPayrollSummary[] {
   }
 
   try {
-    const raw = window.localStorage.getItem(
-      WORKER_MONTHLY_PAYROLL_STORAGE_KEY,
-    );
+    const raw = window.localStorage.getItem(WORKER_MONTHLY_PAYROLL_STORAGE_KEY);
 
     if (!raw) {
       return [];
@@ -157,10 +152,7 @@ function readWorkerMonthlyPayrollSummaries(): WorkerMonthlyPayrollSummary[] {
   }
 }
 
-const MOVEMENT_LABELS: Record<
-  WorkerFinancialMovementType,
-  string
-> = {
+const MOVEMENT_LABELS: Record<WorkerFinancialMovementType, string> = {
   salary: "راتب",
   advance: "سلفة",
   bonus: "مكافأة / إكرامية",
@@ -184,26 +176,18 @@ function getToday(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function getMovementLabel(
-  type: WorkerFinancialMovementType,
-): string {
+function getMovementLabel(type: WorkerFinancialMovementType): string {
   return MOVEMENT_LABELS[type] ?? "حركة مالية";
 }
 
-function getMovementClasses(
-  effect: "increase" | "decrease",
-): string {
+function getMovementClasses(effect: "increase" | "decrease"): string {
   return effect === "increase"
     ? "bg-emerald-50 text-emerald-600"
     : "bg-red-50 text-red-600";
 }
 
-function getMovementAmountClasses(
-  effect: "increase" | "decrease",
-): string {
-  return effect === "increase"
-    ? "text-emerald-600"
-    : "text-red-600";
+function getMovementAmountClasses(effect: "increase" | "decrease"): string {
+  return effect === "increase" ? "text-emerald-600" : "text-red-600";
 }
 
 function normalizeNumber(value: string): number {
@@ -216,14 +200,8 @@ function normalizeNumber(value: string): number {
   return number;
 }
 
-function isCashOutMovement(
-  type: WorkerFinancialMovementType,
-): boolean {
-  return (
-    type === "salary" ||
-    type === "advance" ||
-    type === "payment"
-  );
+function isCashOutMovement(type: WorkerFinancialMovementType): boolean {
+  return type === "salary" || type === "advance" || type === "payment";
 }
 
 export default function WorkerDetailsPage() {
@@ -231,68 +209,52 @@ export default function WorkerDetailsPage() {
 
   const workerId = String(params.id);
 
-  const [worker, setWorker] =
-    useState<Worker | null>(null);
+  const [worker, setWorker] = useState<Worker | null>(null);
 
-  const [projects, setProjects] =
-    useState<Project[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
 
-  const [sites, setSites] =
-    useState<ProjectSite[]>([]);
+  const [sites, setSites] = useState<ProjectSite[]>([]);
 
-  const [custodies, setCustodies] =
-    useState<Custody[]>([]);
+  const [custodies, setCustodies] = useState<Custody[]>([]);
 
-  const [financialAccounts, setFinancialAccounts] =
-    useState<CustodyFinancialAccount[]>([]);
+  const [financialAccounts, setFinancialAccounts] = useState<
+    CustodyFinancialAccount[]
+  >([]);
 
-  const [assignments, setAssignments] =
-    useState<ReturnType<typeof getWorkerSiteAssignments>>(
-      [],
-    );
+  const [assignments, setAssignments] = useState<
+    ReturnType<typeof getWorkerSiteAssignments>
+  >([]);
 
-  const [movements, setMovements] =
-    useState<WorkerFinancialMovement[]>([]);
+  const [movements, setMovements] = useState<WorkerFinancialMovement[]>([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [isSaving, setIsSaving] =
-    useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const { confirm, dialog } = useConfirmDialog();
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
 
-  const [success, setSuccess] =
-    useState("");
+  const [success, setSuccess] = useState("");
 
   /*
    * تعديل بيانات العامل
    */
-  const [isEditOpen, setIsEditOpen] =
-    useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
 
-  const [editName, setEditName] =
-    useState("");
+  const [editName, setEditName] = useState("");
 
   /*
    * نقل العامل
    */
-  const [isTransferOpen, setIsTransferOpen] =
-    useState(false);
+  const [isTransferOpen, setIsTransferOpen] = useState(false);
 
-  const [transferProjectId, setTransferProjectId] =
-    useState("");
+  const [transferProjectId, setTransferProjectId] = useState("");
 
-  const [transferSiteId, setTransferSiteId] =
-    useState("");
+  const [transferSiteId, setTransferSiteId] = useState("");
 
-  const [transferDate, setTransferDate] =
-    useState(getToday());
+  const [transferDate, setTransferDate] = useState(getToday());
 
-  const [transferSalary, setTransferSalary] =
-    useState("");
+  const [transferSalary, setTransferSalary] = useState("");
 
   /*
    * الحركة المالية
@@ -300,78 +262,67 @@ export default function WorkerDetailsPage() {
   const [movementType, setMovementType] =
     useState<WorkerFinancialMovementType>("advance");
 
-  const [movementDate, setMovementDate] =
-    useState(getToday());
+  const [movementDate, setMovementDate] = useState(getToday());
 
-  const [movementAmount, setMovementAmount] =
-    useState("");
+  const [movementAmount, setMovementAmount] = useState("");
 
-  const [movementDescription, setMovementDescription] =
-    useState("");
+  const [movementDescription, setMovementDescription] = useState("");
 
-  const [movementNotes, setMovementNotes] =
-    useState("");
+  const [movementNotes, setMovementNotes] = useState("");
 
-  const [movementCustodyId, setMovementCustodyId] =
-    useState("");
+  const [movementCustodyId, setMovementCustodyId] = useState("");
 
   const [movementFinancialAccountId, setMovementFinancialAccountId] =
     useState("");
 
-  const [movementProjectId, setMovementProjectId] =
-    useState("");
+  const [movementProjectId, setMovementProjectId] = useState("");
 
-  const [movementAllocation, setMovementAllocation] =
-    useState<"general" | "project">("general");
+  const [movementAllocation, setMovementAllocation] = useState<
+    "general" | "project"
+  >("general");
 
-  const [isMovementFormOpen, setIsMovementFormOpen] =
-    useState(false);
+  const [isMovementFormOpen, setIsMovementFormOpen] = useState(false);
 
   /*
    * تعديل / حذف الحركة المالية
    */
-  const [editingMovementId, setEditingMovementId] =
-    useState("");
+  const [editingMovementId, setEditingMovementId] = useState("");
 
-  const [isMovementEditOpen, setIsMovementEditOpen] =
-    useState(false);
+  const [isMovementEditOpen, setIsMovementEditOpen] = useState(false);
 
   const [editMovementType, setEditMovementType] =
     useState<WorkerFinancialMovementType>("advance");
 
-  const [editMovementDate, setEditMovementDate] =
-    useState(getToday());
+  const [editMovementDate, setEditMovementDate] = useState(getToday());
 
-  const [editMovementAmount, setEditMovementAmount] =
-    useState("");
+  const [editMovementAmount, setEditMovementAmount] = useState("");
 
-  const [editMovementDescription, setEditMovementDescription] =
-    useState("");
+  const [editMovementDescription, setEditMovementDescription] = useState("");
 
-  const [editMovementNotes, setEditMovementNotes] =
-    useState("");
+  const [editMovementNotes, setEditMovementNotes] = useState("");
 
-  const [editMovementCustodyId, setEditMovementCustodyId] =
-    useState("");
+  const [editMovementCustodyId, setEditMovementCustodyId] = useState("");
 
   const [editMovementFinancialAccountId, setEditMovementFinancialAccountId] =
     useState("");
 
-  const [editMovementProjectId, setEditMovementProjectId] =
-    useState("");
+  const [editMovementProjectId, setEditMovementProjectId] = useState("");
 
-  const [editMovementAllocation, setEditMovementAllocation] =
-    useState<"general" | "project">("general");
+  const [editMovementAllocation, setEditMovementAllocation] = useState<
+    "general" | "project"
+  >("general");
 
   /*
    * ملخص مرتب الشهر
    * يتم حفظه لكل عامل ولكل شهر، ويمكن تعديل أرقامه مباشرة من الملخص.
    */
-  const [attendanceMonth, setAttendanceMonth] =
-    useState(getMonthKey(new Date()));
+  const [attendanceMonth, setAttendanceMonth] = useState(
+    getMonthKey(new Date()),
+  );
 
-  const [projectPayrollInputs, setProjectPayrollInputs] =
-    useState<Record<string, WorkerMonthlyProjectPayrollSummary>>({});
+  const [projectPayrollInputs, setProjectPayrollInputs] = useState<
+    Record<string, WorkerMonthlyProjectPayrollSummary>
+  >({});
 
   /*
    * تحميل البيانات
@@ -380,8 +331,7 @@ export default function WorkerDetailsPage() {
     setLoading(true);
     setError("");
 
-    const currentWorker =
-      getWorkerById(workerId);
+    const currentWorker = getWorkerById(workerId);
 
     if (!currentWorker) {
       setWorker(null);
@@ -395,34 +345,25 @@ export default function WorkerDetailsPage() {
       return;
     }
 
-    const allProjects =
-      getProjects();
+    const allProjects = getProjects();
 
     const allSites = getProjectSites();
 
-    const allCustodies =
-      getCustodies();
+    const allCustodies = getCustodies();
 
-    const workerAssignments =
-      getWorkerSiteAssignments(workerId);
+    const workerAssignments = getWorkerSiteAssignments(workerId);
 
-    const workerMovements =
-      getWorkerFinancialMovementsByWorkerId(
-        workerId,
-      )
-        .slice()
-        .sort((a, b) => {
-          const dateComparison =
-            b.date.localeCompare(a.date);
+    const workerMovements = getWorkerFinancialMovementsByWorkerId(workerId)
+      .slice()
+      .sort((a, b) => {
+        const dateComparison = b.date.localeCompare(a.date);
 
-          if (dateComparison !== 0) {
-            return dateComparison;
-          }
+        if (dateComparison !== 0) {
+          return dateComparison;
+        }
 
-          return b.createdAt.localeCompare(
-            a.createdAt,
-          );
-        });
+        return b.createdAt.localeCompare(a.createdAt);
+      });
 
     setWorker(currentWorker);
     setProjects(allProjects);
@@ -431,21 +372,10 @@ export default function WorkerDetailsPage() {
     setAssignments(workerAssignments);
     setMovements(workerMovements);
 
-    if (
-      movementCustodyId ===
-      CENTRAL_CUSTODY_ID
-    ) {
-      setFinancialAccounts(
-        getCustodyFinancialAccounts(
-          CENTRAL_CUSTODY_ID,
-        ),
-      );
+    if (movementCustodyId === CENTRAL_CUSTODY_ID) {
+      setFinancialAccounts(getCustodyFinancialAccounts(CENTRAL_CUSTODY_ID));
     } else if (movementCustodyId) {
-      setFinancialAccounts(
-        getCustodyFinancialAccounts(
-          movementCustodyId,
-        ),
-      );
+      setFinancialAccounts(getCustodyFinancialAccounts(movementCustodyId));
     } else {
       setFinancialAccounts([]);
     }
@@ -468,10 +398,7 @@ export default function WorkerDetailsPage() {
       return;
     }
 
-    const accounts =
-      getCustodyFinancialAccounts(
-        movementCustodyId,
-      );
+    const accounts = getCustodyFinancialAccounts(movementCustodyId);
 
     setFinancialAccounts(accounts);
 
@@ -483,36 +410,23 @@ export default function WorkerDetailsPage() {
    */
   const workedProjectIds = useMemo(() => {
     return new Set(
-      assignments
-        .map(
-          (assignment) =>
-            assignment.projectId,
-        )
-        .filter(Boolean),
+      assignments.map((assignment) => assignment.projectId).filter(Boolean),
     );
   }, [assignments]);
 
   const workedProjects = useMemo(() => {
-    return projects.filter((project) =>
-      workedProjectIds.has(project.id),
-    );
+    return projects.filter((project) => workedProjectIds.has(project.id));
   }, [projects, workedProjectIds]);
 
   /*
    * المشروع الحالي
    */
   const currentAssignment =
-    assignments.find((assignment) => !assignment.endDate) ??
-    assignments[0];
+    assignments.find((assignment) => !assignment.endDate) ?? assignments[0];
 
-  const currentProject =
-    currentAssignment
-      ? projects.find(
-          (project) =>
-            project.id ===
-            currentAssignment.projectId,
-        )
-      : undefined;
+  const currentProject = currentAssignment
+    ? projects.find((project) => project.id === currentAssignment.projectId)
+    : undefined;
 
   /*
    * تعديل بيانات العامل
@@ -539,9 +453,7 @@ export default function WorkerDetailsPage() {
         name,
       });
 
-      setSuccess(
-        "تم تحديث بيانات العامل بنجاح.",
-      );
+      setSuccess("تم تحديث بيانات العامل بنجاح.");
 
       setIsEditOpen(false);
 
@@ -569,13 +481,13 @@ export default function WorkerDetailsPage() {
     setSuccess("");
 
     if (!transferSiteId) {
-      setError(
-        "من فضلك اختر الموقع الجديد.",
-      );
+      setError("من فضلك اختر الموقع الجديد.");
       return;
     }
 
-    const selectedTransferSite = sites.find((site) => site.id === transferSiteId);
+    const selectedTransferSite = sites.find(
+      (site) => site.id === transferSiteId,
+    );
     if (!selectedTransferSite) {
       setError("الموقع المحدد غير موجود.");
       return;
@@ -584,23 +496,14 @@ export default function WorkerDetailsPage() {
     const selectedTransferProjectId = selectedTransferSite.projectId;
 
     if (!transferDate) {
-      setError(
-        "من فضلك اختر تاريخ النقل.",
-      );
+      setError("من فضلك اختر تاريخ النقل.");
       return;
     }
 
-    const salary = normalizeNumber(
-      transferSalary,
-    );
+    const salary = normalizeNumber(transferSalary);
 
-    if (
-      transferSalary.trim() &&
-      salary <= 0
-    ) {
-      setError(
-        "قيمة الراتب الجديدة غير صحيحة.",
-      );
+    if (transferSalary.trim() && salary <= 0) {
+      setError("قيمة الراتب الجديدة غير صحيحة.");
       return;
     }
 
@@ -616,25 +519,17 @@ export default function WorkerDetailsPage() {
         ...(transferSalary.trim()
           ? {
               payType: worker.payType,
-              dailyRate:
-                worker.payType === "daily"
-                  ? salary
-                  : undefined,
-              monthlySalary:
-                worker.payType === "monthly"
-                  ? salary
-                  : undefined,
+              dailyRate: worker.payType === "daily" ? salary : undefined,
+              monthlySalary: worker.payType === "monthly" ? salary : undefined,
               monthlyDivision:
                 worker.payType === "monthly"
-                  ? worker.monthlyDivision ?? 26
+                  ? (worker.monthlyDivision ?? 26)
                   : undefined,
             }
           : {}),
       });
 
-      setSuccess(
-        "تم نقل العامل للمشروع الجديد وإنشاء فترة عمل جديدة.",
-      );
+      setSuccess("تم نقل العامل للمشروع الجديد وإنشاء فترة عمل جديدة.");
 
       setIsTransferOpen(false);
       setTransferProjectId("");
@@ -658,9 +553,7 @@ export default function WorkerDetailsPage() {
    * المشروع الحالي للعامل، ويُستخدم تلقائيًا في الحركة المالية.
    */
   const movementCurrentProjectId =
-    currentAssignment?.projectId ??
-    worker?.currentProjectId ??
-    "";
+    currentAssignment?.projectId ?? worker?.currentProjectId ?? "";
 
   /*
    * تسجيل حركة مالية
@@ -673,8 +566,7 @@ export default function WorkerDetailsPage() {
     setError("");
     setSuccess("");
 
-    const amount =
-      normalizeNumber(movementAmount);
+    const amount = normalizeNumber(movementAmount);
 
     if (!movementDate) {
       setError("من فضلك اختر تاريخ الحركة.");
@@ -682,16 +574,11 @@ export default function WorkerDetailsPage() {
     }
 
     if (amount <= 0) {
-      setError(
-        "من فضلك أدخل مبلغًا صحيحًا أكبر من صفر.",
-      );
+      setError("من فضلك أدخل مبلغًا صحيحًا أكبر من صفر.");
       return;
     }
 
-    if (
-      movementType !== "salary" &&
-      movementType !== "advance"
-    ) {
+    if (movementType !== "salary" && movementType !== "advance") {
       setError(
         "الحركة المالية متاحة للراتب والسلفة فقط. الخصم والإضافي وبدل الانتقال يتم تسجيلهم من جدول الحضور.",
       );
@@ -714,8 +601,13 @@ export default function WorkerDetailsPage() {
       return;
     }
 
-    const selectedCustodyPreview = custodies.find((item) => item.id === movementCustodyId);
-    if (selectedCustodyPreview?.type === "project" && selectedCustodyPreview.projectId !== movementProjectId) {
+    const selectedCustodyPreview = custodies.find(
+      (item) => item.id === movementCustodyId,
+    );
+    if (
+      selectedCustodyPreview?.type === "project" &&
+      selectedCustodyPreview.projectId !== movementProjectId
+    ) {
       setError("عهدة الموقع يجب أن تخصم الحركة من حساب العامل في نفس الموقع.");
       return;
     }
@@ -734,17 +626,11 @@ export default function WorkerDetailsPage() {
     }
 
     if (!movementCustodyId) {
-      setError(
-        "من فضلك اختر العهدة التي سيتم تسجيل الحركة عليها.",
-      );
+      setError("من فضلك اختر العهدة التي سيتم تسجيل الحركة عليها.");
       return;
     }
 
-    const custody =
-      custodies.find(
-        (item) =>
-          item.id === movementCustodyId,
-      );
+    const custody = custodies.find((item) => item.id === movementCustodyId);
 
     if (!custody) {
       setError("العهدة المختارة غير موجودة.");
@@ -755,8 +641,7 @@ export default function WorkerDetailsPage() {
      * الحركات التي تعتبر صرفًا فعليًا
      * تحتاج إلى رصيد متاح في العهدة.
      */
-    const cashOutMovement =
-      isCashOutMovement(movementType);
+    const cashOutMovement = isCashOutMovement(movementType);
 
     /*
      * عهدة "عهدتي أنا" فقط لازم تمنع الصرف عند تجاوز
@@ -780,25 +665,16 @@ export default function WorkerDetailsPage() {
       movementCustodyId === CENTRAL_CUSTODY_ID &&
       !movementFinancialAccountId
     ) {
-      setError(
-        "من فضلك اختر طريقة الدفع الفعلية التي سيتم الدفع منها.",
-      );
+      setError("من فضلك اختر طريقة الدفع الفعلية التي سيتم الدفع منها.");
       return;
     }
 
-    if (
-      movementFinancialAccountId
-    ) {
-      const account =
-        getCustodyFinancialAccountById(
-          movementFinancialAccountId,
-        );
+    if (movementFinancialAccountId) {
+      const account = getCustodyFinancialAccountById(
+        movementFinancialAccountId,
+      );
 
-      if (
-        account &&
-        cashOutMovement &&
-        Number(account.balance) < amount
-      ) {
+      if (account && cashOutMovement && Number(account.balance) < amount) {
         setError(
           `رصيد الحساب المالي غير كافٍ. الرصيد الحالي ${formatAmount(
             account.balance,
@@ -826,16 +702,10 @@ export default function WorkerDetailsPage() {
 
       setSuccess(
         movementType === "salary"
-          ? `تم صرف راتب ${formatAmount(
-              amount,
-            )} جنيه من مستحق العامل.`
+          ? `تم صرف راتب ${formatAmount(amount)} جنيه من مستحق العامل.`
           : movementType === "advance"
-            ? `تم تسجيل سلفة ${formatAmount(
-                amount,
-              )} جنيه على العامل.`
-            : `تم تسجيل ${getMovementLabel(
-                movementType,
-              )} بقيمة ${formatAmount(
+            ? `تم تسجيل سلفة ${formatAmount(amount)} جنيه على العامل.`
+            : `تم تسجيل ${getMovementLabel(movementType)} بقيمة ${formatAmount(
                 amount,
               )} جنيه.`,
       );
@@ -938,14 +808,23 @@ export default function WorkerDetailsPage() {
     const oldIsCashOut = isCashOutMovement(currentMovement.type);
     const nextIsCashOut = isCashOutMovement(editMovementType);
 
-    if (nextIsCashOut && editMovementCustodyId === CENTRAL_CUSTODY_ID && !editMovementFinancialAccountId) {
+    if (
+      nextIsCashOut &&
+      editMovementCustodyId === CENTRAL_CUSTODY_ID &&
+      !editMovementFinancialAccountId
+    ) {
       setError("من فضلك اختر طريقة الدفع الفعلية لعهدتي أنا.");
       return;
     }
 
     if (editMovementFinancialAccountId) {
-      const selectedAccount = getCustodyFinancialAccountById(editMovementFinancialAccountId);
-      if (!selectedAccount || selectedAccount.custodyId !== editMovementCustodyId) {
+      const selectedAccount = getCustodyFinancialAccountById(
+        editMovementFinancialAccountId,
+      );
+      if (
+        !selectedAccount ||
+        selectedAccount.custodyId !== editMovementCustodyId
+      ) {
         setError("وسيلة الدفع المختارة لا تتبع العهدة المحددة.");
         return;
       }
@@ -1001,14 +880,19 @@ export default function WorkerDetailsPage() {
       }
     }
 
-    if (targetCustody.type === "project" && targetCustody.projectId !== editMovementProjectId) {
+    if (
+      targetCustody.type === "project" &&
+      targetCustody.projectId !== editMovementProjectId
+    ) {
       setError("عهدة الموقع يجب أن تخصم الحركة من حساب العامل في نفس الموقع.");
       return;
     }
 
     const oldPayableBalance = getProjectPayableBalance(
       editMovementProjectId,
-      currentMovement.projectId === editMovementProjectId ? currentMovement.id : undefined,
+      currentMovement.projectId === editMovementProjectId
+        ? currentMovement.id
+        : undefined,
     );
 
     if (editMovementType === "salary" && amount > oldPayableBalance) {
@@ -1060,22 +944,22 @@ export default function WorkerDetailsPage() {
       },
       () => {
         setError("");
-    setSuccess("");
-    setIsSaving(true);
+        setSuccess("");
+        setIsSaving(true);
 
-    try {
-      deleteWorkerMovementWithPayment(movement.id);
-      setSuccess("تم حذف الحركة وعكس أثرها المالي بنجاح.");
-      loadData();
-    } catch (caughtError) {
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "حدث خطأ أثناء حذف الحركة المالية.",
-      );
-    } finally {
-      setIsSaving(false);
-    }
+        try {
+          deleteWorkerMovementWithPayment(movement.id);
+          setSuccess("تم حذف الحركة وعكس أثرها المالي بنجاح.");
+          loadData();
+        } catch (caughtError) {
+          setError(
+            caughtError instanceof Error
+              ? caughtError.message
+              : "حدث خطأ أثناء حذف الحركة المالية.",
+          );
+        } finally {
+          setIsSaving(false);
+        }
       },
     );
   };
@@ -1108,26 +992,36 @@ export default function WorkerDetailsPage() {
 
     projectIds.forEach((projectId) => {
       const existing = saved.find((item) => item.projectId === projectId);
-      next[projectId] =
-        existing ??
-        {
-          workerId: worker.id,
-          month: attendanceMonth,
-          projectId,
-          present: projectId === movementCurrentProjectId ? legacy?.present ?? 0 : 0,
-          absent: projectId === movementCurrentProjectId ? legacy?.absent ?? 0 : 0,
-          overtime: projectId === movementCurrentProjectId ? legacy?.overtime ?? 0 : 0,
-          deduction: projectId === movementCurrentProjectId ? legacy?.deduction ?? 0 : 0,
-          transport: projectId === movementCurrentProjectId ? legacy?.transport ?? 0 : 0,
-          notes: projectId === movementCurrentProjectId ? legacy?.notes ?? "" : "",
-          updatedAt: new Date().toISOString(),
-        };
+      next[projectId] = existing ?? {
+        workerId: worker.id,
+        month: attendanceMonth,
+        projectId,
+        present:
+          projectId === movementCurrentProjectId ? (legacy?.present ?? 0) : 0,
+        absent:
+          projectId === movementCurrentProjectId ? (legacy?.absent ?? 0) : 0,
+        overtime:
+          projectId === movementCurrentProjectId ? (legacy?.overtime ?? 0) : 0,
+        deduction:
+          projectId === movementCurrentProjectId ? (legacy?.deduction ?? 0) : 0,
+        transport:
+          projectId === movementCurrentProjectId ? (legacy?.transport ?? 0) : 0,
+        notes:
+          projectId === movementCurrentProjectId ? (legacy?.notes ?? "") : "",
+        updatedAt: new Date().toISOString(),
+      };
 
       if (!existing) saveWorkerMonthlyProjectPayrollSummary(next[projectId]);
     });
 
     setProjectPayrollInputs(next);
-  }, [worker, assignments, movements, attendanceMonth, movementCurrentProjectId]);
+  }, [
+    worker,
+    assignments,
+    movements,
+    attendanceMonth,
+    movementCurrentProjectId,
+  ]);
 
   const updateProjectPayrollInput = (
     projectId: string,
@@ -1138,20 +1032,18 @@ export default function WorkerDetailsPage() {
 
     const parsed = Number(value);
     const numericValue = Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
-    const current =
-      projectPayrollInputs[projectId] ??
-      {
-        workerId: worker.id,
-        month: attendanceMonth,
-        projectId,
-        present: 0,
-        absent: 0,
-        overtime: 0,
-        deduction: 0,
-        transport: 0,
-        notes: "",
-        updatedAt: new Date().toISOString(),
-      };
+    const current = projectPayrollInputs[projectId] ?? {
+      workerId: worker.id,
+      month: attendanceMonth,
+      projectId,
+      present: 0,
+      absent: 0,
+      overtime: 0,
+      deduction: 0,
+      transport: 0,
+      notes: "",
+      updatedAt: new Date().toISOString(),
+    };
 
     const next = {
       ...current,
@@ -1167,7 +1059,11 @@ export default function WorkerDetailsPage() {
     const current = projectPayrollInputs[projectId];
     if (!current) return;
 
-    const next = { ...current, notes: value, updatedAt: new Date().toISOString() };
+    const next = {
+      ...current,
+      notes: value,
+      updatedAt: new Date().toISOString(),
+    };
     setProjectPayrollInputs((items) => ({ ...items, [projectId]: next }));
   };
 
@@ -1187,12 +1083,15 @@ export default function WorkerDetailsPage() {
     setError("");
   };
 
-  function getProjectAssignment(projectId: string): WorkerSiteAssignment | undefined {
+  function getProjectAssignment(
+    projectId: string,
+  ): WorkerSiteAssignment | undefined {
     const monthStart = `${attendanceMonth}-01`;
     const [year, month] = attendanceMonth.split("-").map(Number);
-    const monthEnd = year && month
-      ? `${attendanceMonth}-${String(new Date(year, month, 0).getDate()).padStart(2, "0")}`
-      : `${attendanceMonth}-31`;
+    const monthEnd =
+      year && month
+        ? `${attendanceMonth}-${String(new Date(year, month, 0).getDate()).padStart(2, "0")}`
+        : `${attendanceMonth}-31`;
 
     return assignments
       .filter(
@@ -1215,8 +1114,12 @@ export default function WorkerDetailsPage() {
     const payroll = projectPayrollInputs[projectId];
     const assignment = getProjectAssignment(projectId);
     const payType = assignment?.payType ?? worker?.payType ?? "daily";
-    const monthlySalary = Number(assignment?.monthlySalary ?? worker?.monthlySalary ?? 0);
-    const division = Number(assignment?.monthlyDivision ?? worker?.monthlyDivision ?? 30);
+    const monthlySalary = Number(
+      assignment?.monthlySalary ?? worker?.monthlySalary ?? 0,
+    );
+    const division = Number(
+      assignment?.monthlyDivision ?? worker?.monthlyDivision ?? 30,
+    );
     const dailyRate =
       payType === "monthly"
         ? division > 0
@@ -1225,7 +1128,8 @@ export default function WorkerDetailsPage() {
         : Number(assignment?.dailyRate ?? worker?.dailyRate ?? 0);
 
     const baseSalary = Math.max(0, Number(payroll?.present || 0)) * dailyRate;
-    const salaryDeduction = Math.max(0, Number(payroll?.absent || 0)) * dailyRate;
+    const salaryDeduction =
+      Math.max(0, Number(payroll?.absent || 0)) * dailyRate;
     const netSalary = Math.max(
       0,
       baseSalary -
@@ -1257,14 +1161,21 @@ export default function WorkerDetailsPage() {
     return Object.values(projectPayrollInputs).map((payroll) => {
       const assignment = getProjectAssignment(payroll.projectId);
       const payType = assignment?.payType ?? worker?.payType ?? "daily";
-      const monthlySalary = Number(assignment?.monthlySalary ?? worker?.monthlySalary ?? 0);
-      const division = Number(assignment?.monthlyDivision ?? worker?.monthlyDivision ?? 30);
+      const monthlySalary = Number(
+        assignment?.monthlySalary ?? worker?.monthlySalary ?? 0,
+      );
+      const division = Number(
+        assignment?.monthlyDivision ?? worker?.monthlyDivision ?? 30,
+      );
       const dailyRate =
         payType === "monthly"
-          ? division > 0 ? monthlySalary / division : 0
+          ? division > 0
+            ? monthlySalary / division
+            : 0
           : Number(assignment?.dailyRate ?? worker?.dailyRate ?? 0);
       const baseSalary = Math.max(0, Number(payroll.present || 0)) * dailyRate;
-      const salaryDeduction = Math.max(0, Number(payroll.absent || 0)) * dailyRate;
+      const salaryDeduction =
+        Math.max(0, Number(payroll.absent || 0)) * dailyRate;
       const netSalary = Math.max(
         0,
         baseSalary -
@@ -1288,10 +1199,18 @@ export default function WorkerDetailsPage() {
         payable: Math.max(balance, 0),
         debt: Math.max(-balance, 0),
         advance: movements
-          .filter((movement) => movement.projectId === payroll.projectId && movement.type === "advance")
+          .filter(
+            (movement) =>
+              movement.projectId === payroll.projectId &&
+              movement.type === "advance",
+          )
           .reduce((sum, movement) => sum + Number(movement.amount), 0),
         salaryPaid: movements
-          .filter((movement) => movement.projectId === payroll.projectId && movement.type === "salary")
+          .filter(
+            (movement) =>
+              movement.projectId === payroll.projectId &&
+              movement.type === "salary",
+          )
           .reduce((sum, movement) => sum + Number(movement.amount), 0),
       };
     });
@@ -1313,22 +1232,31 @@ export default function WorkerDetailsPage() {
   );
 
   const totalProjectPayrollNet = useMemo(
-    () => projectPayrollSummaries.reduce((sum, item) => sum + item.netSalary, 0),
+    () =>
+      projectPayrollSummaries.reduce((sum, item) => sum + item.netSalary, 0),
     [projectPayrollSummaries],
   );
 
   const totalProjectMovementNet = useMemo(
-    () => projectPayrollSummaries.reduce((sum, item) => sum + item.movementNet, 0),
+    () =>
+      projectPayrollSummaries.reduce((sum, item) => sum + item.movementNet, 0),
     [projectPayrollSummaries],
   );
 
   const currentBalance = useMemo(() => {
     if (!worker) return 0;
-    return Number(worker.carriedSalary ?? 0) +
+    return (
+      Number(worker.carriedSalary ?? 0) +
       totalProjectPayrollNet +
       totalProjectMovementNet +
-      unallocatedMovementNet;
-  }, [worker, totalProjectPayrollNet, totalProjectMovementNet, unallocatedMovementNet]);
+      unallocatedMovementNet
+    );
+  }, [
+    worker,
+    totalProjectPayrollNet,
+    totalProjectMovementNet,
+    unallocatedMovementNet,
+  ]);
 
   const payableBalance = Math.max(currentBalance, 0);
   const workerDebt = Math.max(-currentBalance, 0);
@@ -1339,10 +1267,7 @@ export default function WorkerDetailsPage() {
    * نرجع تلقائيًا للسلفة.
    */
   useEffect(() => {
-    if (
-      movementType === "salary" &&
-      !canPaySalary
-    ) {
+    if (movementType === "salary" && !canPaySalary) {
       setMovementType("advance");
     }
   }, [movementType, canPaySalary]);
@@ -1369,10 +1294,7 @@ export default function WorkerDetailsPage() {
   if (!worker) {
     return (
       <AppShell>
-        <div
-          dir="rtl"
-          className="space-y-5"
-        >
+        <div dir="rtl" className="space-y-5">
           <Link
             href="/workers"
             className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 transition hover:text-slate-900"
@@ -1397,10 +1319,7 @@ export default function WorkerDetailsPage() {
 
   return (
     <AppShell>
-      <div
-        dir="rtl"
-        className="space-y-6 pb-10"
-      >
+      <div dir="rtl" className="space-y-6 pb-10">
         {/* رسائل النظام */}
         {(error || success) && (
           <div className="space-y-3">
@@ -1481,9 +1400,7 @@ export default function WorkerDetailsPage() {
                   setSuccess("");
                   setMovementProjectId(movementCurrentProjectId);
                   setMovementAllocation(
-                    movementCurrentProjectId
-                      ? "project"
-                      : "general",
+                    movementCurrentProjectId ? "project" : "general",
                   );
                   setIsMovementFormOpen((current) => !current);
                 }}
@@ -1513,9 +1430,12 @@ export default function WorkerDetailsPage() {
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 className="text-lg font-extrabold text-slate-900">حساب العامل حسب الموقع</h2>
+              <h2 className="text-lg font-extrabold text-slate-900">
+                حساب العامل حسب الموقع
+              </h2>
               <p className="mt-1 text-sm text-slate-500">
-                كل موقع له حضور ومستحقات وحركات مالية مستقلة، والإجمالي يجمع المواقع بدون خلط بينها.
+                كل موقع له حضور ومستحقات وحركات مالية مستقلة، والإجمالي يجمع
+                المواقع بدون خلط بينها.
               </p>
             </div>
             <input
@@ -1529,20 +1449,42 @@ export default function WorkerDetailsPage() {
 
           <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
-              <p className="text-[11px] font-bold text-slate-500">عدد المواقع</p>
-              <p className="mt-2 text-2xl font-extrabold text-slate-900">{projectPayrollSummaries.length}</p>
+              <p className="text-[11px] font-bold text-slate-500">
+                عدد المواقع
+              </p>
+              <p className="mt-2 text-2xl font-extrabold text-slate-900">
+                {projectPayrollSummaries.length}
+              </p>
             </div>
             <div className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4">
-              <p className="text-[11px] font-bold text-blue-600">إجمالي المستحق</p>
-              <p className="mt-2 text-2xl font-extrabold text-blue-600">{formatAmount(payableBalance)} <span className="text-xs">جنيه</span></p>
+              <p className="text-[11px] font-bold text-blue-600">
+                إجمالي المستحق
+              </p>
+              <p className="mt-2 text-2xl font-extrabold text-blue-600">
+                {formatAmount(payableBalance)}{" "}
+                <span className="text-xs">جنيه</span>
+              </p>
             </div>
             <div className="rounded-2xl border border-red-100 bg-red-50/50 p-4">
-              <p className="text-[11px] font-bold text-red-600">إجمالي المديونية</p>
-              <p className="mt-2 text-2xl font-extrabold text-red-600">{formatAmount(workerDebt)} <span className="text-xs">جنيه</span></p>
+              <p className="text-[11px] font-bold text-red-600">
+                إجمالي المديونية
+              </p>
+              <p className="mt-2 text-2xl font-extrabold text-red-600">
+                {formatAmount(workerDebt)} <span className="text-xs">جنيه</span>
+              </p>
             </div>
-            <div className={`rounded-2xl border p-4 ${currentBalance >= 0 ? "border-emerald-100 bg-emerald-50/50" : "border-red-100 bg-red-50/50"}`}>
-              <p className="text-[11px] font-bold text-slate-500">الرصيد الإجمالي الحالي</p>
-              <p className={`mt-2 text-2xl font-extrabold ${currentBalance >= 0 ? "text-emerald-600" : "text-red-600"}`}>{currentBalance > 0 ? "+" : ""}{formatAmount(currentBalance)} <span className="text-xs text-slate-400">جنيه</span>
+            <div
+              className={`rounded-2xl border p-4 ${currentBalance >= 0 ? "border-emerald-100 bg-emerald-50/50" : "border-red-100 bg-red-50/50"}`}
+            >
+              <p className="text-[11px] font-bold text-slate-500">
+                الرصيد الإجمالي الحالي
+              </p>
+              <p
+                className={`mt-2 text-2xl font-extrabold ${currentBalance >= 0 ? "text-emerald-600" : "text-red-600"}`}
+              >
+                {currentBalance > 0 ? "+" : ""}
+                {formatAmount(currentBalance)}{" "}
+                <span className="text-xs text-slate-400">جنيه</span>
               </p>
             </div>
           </div>
@@ -1558,72 +1500,135 @@ export default function WorkerDetailsPage() {
                   { field: "present" as const, label: "حضور", count: true },
                   { field: "absent" as const, label: "غياب", count: true },
                   { field: "overtime" as const, label: "إضافي", count: false },
-                  { field: "deduction" as const, label: "خصومات", count: false },
-                  { field: "transport" as const, label: "بدل انتقال", count: false },
+                  {
+                    field: "deduction" as const,
+                    label: "خصومات",
+                    count: false,
+                  },
+                  {
+                    field: "transport" as const,
+                    label: "بدل انتقال",
+                    count: false,
+                  },
                 ];
 
                 return (
-                  <div key={site.projectId} className="rounded-2xl border border-slate-200 bg-slate-50/40 p-4 sm:p-5">
+                  <div
+                    key={site.projectId}
+                    className="rounded-2xl border border-slate-200 bg-slate-50/40 p-4 sm:p-5"
+                  >
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="text-base font-extrabold text-slate-900">{site.project?.name ?? "موقع غير موجود"}</h3>
+                          <h3 className="text-base font-extrabold text-slate-900">
+                            {site.project?.name ?? "موقع غير موجود"}
+                          </h3>
                           {currentAssignment?.projectId === site.projectId && (
-                            <span className="rounded-lg bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-700">الموقع الحالي</span>
+                            <span className="rounded-lg bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-700">
+                              الموقع الحالي
+                            </span>
                           )}
                         </div>
                         <p className="mt-1 text-xs font-semibold text-slate-500">
-                          {site.project?.id ?? site.projectId} — الحساب المالي لهذا الموقع مستقل عن باقي المواقع.
+                          {site.project?.id ?? site.projectId} — الحساب المالي
+                          لهذا الموقع مستقل عن باقي المواقع.
                         </p>
                       </div>
-                      <div className={`rounded-xl px-4 py-2 text-right ${site.balance >= 0 ? "bg-emerald-50" : "bg-red-50"}`}>
-                        <p className="text-[10px] font-bold text-slate-500">مستحق هذا الموقع</p>
-                        <p className={`mt-1 text-lg font-extrabold ${site.balance >= 0 ? "text-emerald-600" : "text-red-600"}`}>{site.balance > 0 ? "+" : ""}{formatAmount(site.balance)} جنيه</p>
+                      <div
+                        className={`rounded-xl px-4 py-2 text-right ${site.balance >= 0 ? "bg-emerald-50" : "bg-red-50"}`}
+                      >
+                        <p className="text-[10px] font-bold text-slate-500">
+                          مستحق هذا الموقع
+                        </p>
+                        <p
+                          className={`mt-1 text-lg font-extrabold ${site.balance >= 0 ? "text-emerald-600" : "text-red-600"}`}
+                        >
+                          {site.balance > 0 ? "+" : ""}
+                          {formatAmount(site.balance)} جنيه
+                        </p>
                       </div>
                     </div>
 
                     <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
                       {fields.map((item) => (
-                        <label key={item.field} className="rounded-xl border border-slate-200 bg-white p-3">
-                          <span className="block text-[11px] font-bold text-slate-500">{item.label}</span>
+                        <label
+                          key={item.field}
+                          className="rounded-xl border border-slate-200 bg-white p-3"
+                        >
+                          <span className="block text-[11px] font-bold text-slate-500">
+                            {item.label}
+                          </span>
                           <input
                             type="number"
                             min="0"
                             step={item.count ? "1" : "0.01"}
                             value={site[item.field]}
-                            onChange={(event) => updateProjectPayrollInput(site.projectId, item.field, event.target.value)}
+                            onChange={(event) =>
+                              updateProjectPayrollInput(
+                                site.projectId,
+                                item.field,
+                                event.target.value,
+                              )
+                            }
                             className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-center text-lg font-extrabold text-slate-800 outline-none focus:border-slate-400"
                           />
-                          {!item.count && <span className="mt-1 block text-center text-[10px] font-medium text-slate-400">جنيه</span>}
+                          {!item.count && (
+                            <span className="mt-1 block text-center text-[10px] font-medium text-slate-400">
+                              جنيه
+                            </span>
+                          )}
                         </label>
                       ))}
                     </div>
 
                     <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
                       <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-3">
-                      <p className="text-[10px] font-bold text-slate-500">الأساسي</p>
-                      <p className="mt-1 text-lg font-extrabold text-blue-600">{formatAmount(site.baseSalary)} جنيه</p>
+                        <p className="text-[10px] font-bold text-slate-500">
+                          الأساسي
+                        </p>
+                        <p className="mt-1 text-lg font-extrabold text-blue-600">
+                          {formatAmount(site.baseSalary)} جنيه
+                        </p>
                       </div>
                       <div className="rounded-xl border border-red-100 bg-red-50/50 p-3">
-                      <p className="text-[10px] font-bold text-slate-500">خصم الغياب</p>
-                      <p className="mt-1 text-lg font-extrabold text-red-600">{formatAmount(site.salaryDeduction)} جنيه</p>
+                        <p className="text-[10px] font-bold text-slate-500">
+                          خصم الغياب
+                        </p>
+                        <p className="mt-1 text-lg font-extrabold text-red-600">
+                          {formatAmount(site.salaryDeduction)} جنيه
+                        </p>
                       </div>
                       <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-3">
-                      <p className="text-[10px] font-bold text-slate-500">السلف المصروفة</p>
-                      <p className="mt-1 text-lg font-extrabold text-amber-700">{formatAmount(site.advance)} جنيه</p>
+                        <p className="text-[10px] font-bold text-slate-500">
+                          السلف المصروفة
+                        </p>
+                        <p className="mt-1 text-lg font-extrabold text-amber-700">
+                          {formatAmount(site.advance)} جنيه
+                        </p>
                       </div>
                       <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-3">
-                      <p className="text-[10px] font-bold text-slate-500">الراتب المصروف</p>
-                      <p className="mt-1 text-lg font-extrabold text-emerald-600">{formatAmount(site.salaryPaid)} جنيه</p>
+                        <p className="text-[10px] font-bold text-slate-500">
+                          الراتب المصروف
+                        </p>
+                        <p className="mt-1 text-lg font-extrabold text-emerald-600">
+                          {formatAmount(site.salaryPaid)} جنيه
+                        </p>
                       </div>
                     </div>
 
                     <div className="mt-3 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold text-slate-600">ملاحظات الموقع / الشهر</p>
+                        <p className="text-xs font-bold text-slate-600">
+                          ملاحظات الموقع / الشهر
+                        </p>
                         <textarea
                           value={site.notes}
-                          onChange={(event) => updateProjectPayrollNotes(site.projectId, event.target.value)}
+                          onChange={(event) =>
+                            updateProjectPayrollNotes(
+                              site.projectId,
+                              event.target.value,
+                            )
+                          }
                           rows={2}
                           placeholder="اكتب أي تفاصيل خاصة بهذا الموقع في هذا الشهر..."
                           className="mt-2 w-full resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-slate-400"
@@ -1646,7 +1651,9 @@ export default function WorkerDetailsPage() {
 
           {unallocatedMovementNet !== 0 && (
             <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold text-amber-800">
-              توجد حركات مالية قديمة غير مرتبطة بموقع بقيمة صافية {formatAmount(unallocatedMovementNet)} جنيه، وتم إبقاؤها في الإجمالي حتى لا تضيع البيانات القديمة.
+              توجد حركات مالية قديمة غير مرتبطة بموقع بقيمة صافية{" "}
+              {formatAmount(unallocatedMovementNet)} جنيه، وتم إبقاؤها في
+              الإجمالي حتى لا تضيع البيانات القديمة.
             </div>
           )}
         </section>
@@ -1668,404 +1675,346 @@ export default function WorkerDetailsPage() {
               id="worker-movement-form"
               className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
             >
-          <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                <Plus className="h-5 w-5" />
-              </div>
+              <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                    <Plus className="h-5 w-5" />
+                  </div>
 
-              <div>
-                <h2
-                  id="worker-movement-modal-title"
-                  className="text-base font-extrabold text-slate-900"
-                >
-                  تسجيل حركة مالية
-                </h2>
+                  <div>
+                    <h2
+                      id="worker-movement-modal-title"
+                      className="text-base font-extrabold text-slate-900"
+                    >
+                      تسجيل حركة مالية
+                    </h2>
 
-                <p className="mt-1 text-xs text-slate-400">
-                  سجل الراتب أو السلفة فقط. الإضافي والخصم وبدل الانتقال يتم إدخالهم مباشرة في ملخص الشهر.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsMovementFormOpen(false)}
-                className="mr-auto inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
-                aria-label="إغلاق نافذة تسجيل الحركة"
-                title="إغلاق"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-
-          <div className="overflow-y-auto p-5 sm:p-6">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {/* نوع الحركة */}
-              <div>
-                <label
-                  htmlFor="movement-type"
-                  className="mb-1.5 block text-xs font-bold text-slate-600"
-                >
-                  نوع الحركة
-                </label>
-
-                <select
-                  id="movement-type"
-                  value={movementType}
-                  onChange={(event) =>
-                    setMovementType(
-                      event.target.value as WorkerFinancialMovementType,
-                    )
-                  }
-                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
-                >
-                  {canPaySalary && (
-                    <option value="salary">
-                      راتب
-                    </option>
-                  )}
-
-                  <option value="advance">
-                    سلفة
-                  </option>
-
-                </select>
-
-                {movementType ===
-                  "salary" && (
-                  <p className="mt-1.5 text-[11px] font-semibold text-blue-600">
-                    أقصى مبلغ يمكن صرفه:{" "}
-                    {formatAmount(
-                      payableBalance,
-                    )}{" "}
-                    جنيه
-                  </p>
-                )}
-
-                {!canPaySalary && (
-                  <p className="mt-1.5 text-[11px] font-semibold text-slate-400">
-                    لا يوجد مستحق حاليًا لصرف راتب.
-                  </p>
-                )}
-              </div>
-
-              {/* التاريخ */}
-              <div>
-                <label
-                  htmlFor="movement-date"
-                  className="mb-1.5 block text-xs font-bold text-slate-600"
-                >
-                  التاريخ
-                </label>
-
-                <DateInput
-                  id="movement-date"
-                  value={movementDate}
-                  onChange={(value) =>
-                    setMovementDate(
-                      value,
-                    )
-                  }
-                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
-                />
-              </div>
-
-              {/* المبلغ */}
-              <div>
-                <label
-                  htmlFor="movement-amount"
-                  className="mb-1.5 block text-xs font-bold text-slate-600"
-                >
-                  المبلغ
-                </label>
-
-                <input
-                  id="movement-amount"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  max={
-                    movementType ===
-                    "salary"
-                      ? payableBalance
-                      : undefined
-                  }
-                  value={movementAmount}
-                  onChange={(event) =>
-                    setMovementAmount(
-                      event.target.value,
-                    )
-                  }
-                  placeholder="0.00"
-                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
-                />
-              </div>
-
-              {/* البيان */}
-              <div className="md:col-span-2 xl:col-span-2">
-                <label
-                  htmlFor="movement-description"
-                  className="mb-1.5 block text-xs font-bold text-slate-600"
-                >
-                  البيان
-                </label>
-
-                <input
-                  id="movement-description"
-                  type="text"
-                  value={movementDescription}
-                  onChange={(event) =>
-                    setMovementDescription(
-                      event.target.value,
-                    )
-                  }
-                  placeholder={
-                    movementType ===
-                    "salary"
-                      ? "مثال: راتب شهر سبتمبر"
-                      : movementType ===
-                          "advance"
-                        ? "مثال: سلفة للعامل"
-                        : "اكتب بيان الحركة..."
-                  }
-                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
-                />
-              </div>
-
-              {/* العهدة */}
-              <div>
-                <label
-                  htmlFor="movement-custody"
-                  className="mb-1.5 block text-xs font-bold text-slate-600"
-                >
-                  العهدة
-                </label>
-
-                <select
-                  id="movement-custody"
-                  value={movementCustodyId}
-                  onChange={(event) => {
-                    const nextCustodyId = event.target.value;
-                    const nextCustody = custodies.find((item) => item.id === nextCustodyId);
-                    setMovementCustodyId(nextCustodyId);
-                    if (nextCustody?.type === "project" && nextCustody.projectId) {
-                      setMovementProjectId(nextCustody.projectId);
-                      setMovementAllocation("project");
-                    }
-                  }}
-                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
-                >
-                  <option value="">
-                    اختر العهدة
-                  </option>
-
-                  {custodies.map(
-                    (custody) => (
-                      <option
-                        key={custody.id}
-                        value={custody.id}
-                      >
-                        {custody.name} — رصيد {formatAmount(
-                          Number(custody.balance ?? 0),
-                        )} جنيه
-                      </option>
-                    ),
-                  )}
-                </select>
-              </div>
-
-              {/* طريقة الدفع الفعلية */}
-              {movementCustodyId === CENTRAL_CUSTODY_ID && (
-                <div>
-                  <label
-                    htmlFor="movement-financial-account"
-                    className="mb-1.5 block text-xs font-bold text-slate-600"
-                  >
-                    طريقة الدفع الفعلية
-                  </label>
-
-                  <select
-                    id="movement-financial-account"
-                    value={movementFinancialAccountId}
-                    onChange={(event) =>
-                      setMovementFinancialAccountId(
-                        event.target.value,
-                      )
-                    }
-                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
-                  >
-                    <option value="">
-                      اختر طريقة الدفع
-                    </option>
-
-                    {financialAccounts.map((account) => (
-                      <option
-                        key={account.id}
-                        value={account.id}
-                      >
-                        {account.name} — رصيد {formatAmount(
-                          Number(account.balance ?? 0),
-                        )} جنيه
-                      </option>
-                    ))}
-                  </select>
-
-                  {movementFinancialAccountId && (
-                    <p className="mt-1.5 text-[11px] font-bold text-slate-500">
-                      الرصيد المتاح: {formatAmount(
-                        Number(
-                          financialAccounts.find(
-                            (account) =>
-                              account.id === movementFinancialAccountId,
-                          )?.balance ?? 0,
-                        ),
-                      )} جنيه
+                    <p className="mt-1 text-xs text-slate-400">
+                      سجل الراتب أو السلفة فقط. الإضافي والخصم وبدل الانتقال يتم
+                      إدخالهم مباشرة في ملخص الشهر.
                     </p>
-                  )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsMovementFormOpen(false)}
+                    className="mr-auto inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+                    aria-label="إغلاق نافذة تسجيل الحركة"
+                    title="إغلاق"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
                 </div>
-              )}
+              </div>
 
-              {/* المشروع */}
-              <div>
-                <label
-                  htmlFor="movement-project"
-                  className="mb-1.5 block text-xs font-bold text-slate-600"
-                >
-                  المشروع / الموقع
-                </label>
+              <div className="overflow-y-auto p-5 sm:p-6">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {/* نوع الحركة */}
+                  <div>
+                    <label
+                      htmlFor="movement-type"
+                      className="mb-1.5 block text-xs font-bold text-slate-600"
+                    >
+                      نوع الحركة
+                    </label>
 
-                <select
-                  id="movement-project"
-                  value={movementProjectId}
-                  onChange={(event) => {
-                    const nextProjectId = event.target.value;
-                    setMovementProjectId(nextProjectId);
-                    setMovementAllocation(
-                      nextProjectId ? "project" : "general",
-                    );
-                  }}
-                  disabled={custodies.find((item) => item.id === movementCustodyId)?.type === "project"}
-                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100 disabled:bg-slate-50 disabled:text-slate-400"
-                >
-                  <option value="">
-                    اختر الموقع / المشروع
-                  </option>
+                    <select
+                      id="movement-type"
+                      value={movementType}
+                      onChange={(event) =>
+                        setMovementType(
+                          event.target.value as WorkerFinancialMovementType,
+                        )
+                      }
+                      className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                    >
+                      {canPaySalary && <option value="salary">راتب</option>}
 
-                  {projects.map(
-                    (project) => (
-                      <option
-                        key={project.id}
-                        value={project.id}
+                      <option value="advance">سلفة</option>
+                    </select>
+
+                    {movementType === "salary" && (
+                      <p className="mt-1.5 text-[11px] font-semibold text-blue-600">
+                        أقصى مبلغ يمكن صرفه: {formatAmount(payableBalance)} جنيه
+                      </p>
+                    )}
+
+                    {!canPaySalary && (
+                      <p className="mt-1.5 text-[11px] font-semibold text-slate-400">
+                        لا يوجد مستحق حاليًا لصرف راتب.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* التاريخ */}
+                  <div>
+                    <label
+                      htmlFor="movement-date"
+                      className="mb-1.5 block text-xs font-bold text-slate-600"
+                    >
+                      التاريخ
+                    </label>
+
+                    <DateInput
+                      id="movement-date"
+                      value={movementDate}
+                      onChange={(value) => setMovementDate(value)}
+                      className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                    />
+                  </div>
+
+                  {/* المبلغ */}
+                  <div>
+                    <label
+                      htmlFor="movement-amount"
+                      className="mb-1.5 block text-xs font-bold text-slate-600"
+                    >
+                      المبلغ
+                    </label>
+
+                    <input
+                      id="movement-amount"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      max={
+                        movementType === "salary" ? payableBalance : undefined
+                      }
+                      value={movementAmount}
+                      onChange={(event) =>
+                        setMovementAmount(event.target.value)
+                      }
+                      placeholder="0.00"
+                      className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 transition outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                    />
+                  </div>
+
+                  {/* البيان */}
+                  <div className="md:col-span-2 xl:col-span-2">
+                    <label
+                      htmlFor="movement-description"
+                      className="mb-1.5 block text-xs font-bold text-slate-600"
+                    >
+                      البيان
+                    </label>
+
+                    <input
+                      id="movement-description"
+                      type="text"
+                      value={movementDescription}
+                      onChange={(event) =>
+                        setMovementDescription(event.target.value)
+                      }
+                      placeholder={
+                        movementType === "salary"
+                          ? "مثال: راتب شهر سبتمبر"
+                          : movementType === "advance"
+                            ? "مثال: سلفة للعامل"
+                            : "اكتب بيان الحركة..."
+                      }
+                      className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                    />
+                  </div>
+
+                  {/* العهدة */}
+                  <div>
+                    <label
+                      htmlFor="movement-custody"
+                      className="mb-1.5 block text-xs font-bold text-slate-600"
+                    >
+                      العهدة
+                    </label>
+
+                    <select
+                      id="movement-custody"
+                      value={movementCustodyId}
+                      onChange={(event) => {
+                        const nextCustodyId = event.target.value;
+                        const nextCustody = custodies.find(
+                          (item) => item.id === nextCustodyId,
+                        );
+                        setMovementCustodyId(nextCustodyId);
+                        if (
+                          nextCustody?.type === "project" &&
+                          nextCustody.projectId
+                        ) {
+                          setMovementProjectId(nextCustody.projectId);
+                          setMovementAllocation("project");
+                        }
+                      }}
+                      className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                    >
+                      <option value="">اختر العهدة</option>
+
+                      {custodies.map((custody) => (
+                        <option key={custody.id} value={custody.id}>
+                          {custody.name} — رصيد{" "}
+                          {formatAmount(Number(custody.balance ?? 0))} جنيه
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* طريقة الدفع الفعلية */}
+                  {movementCustodyId === CENTRAL_CUSTODY_ID && (
+                    <div>
+                      <label
+                        htmlFor="movement-financial-account"
+                        className="mb-1.5 block text-xs font-bold text-slate-600"
                       >
-                        {project.name}
-                      </option>
-                    ),
+                        طريقة الدفع الفعلية
+                      </label>
+
+                      <select
+                        id="movement-financial-account"
+                        value={movementFinancialAccountId}
+                        onChange={(event) =>
+                          setMovementFinancialAccountId(event.target.value)
+                        }
+                        className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                      >
+                        <option value="">اختر طريقة الدفع</option>
+
+                        {financialAccounts.map((account) => (
+                          <option key={account.id} value={account.id}>
+                            {account.name} — رصيد{" "}
+                            {formatAmount(Number(account.balance ?? 0))} جنيه
+                          </option>
+                        ))}
+                      </select>
+
+                      {movementFinancialAccountId && (
+                        <p className="mt-1.5 text-[11px] font-bold text-slate-500">
+                          الرصيد المتاح:{" "}
+                          {formatAmount(
+                            Number(
+                              financialAccounts.find(
+                                (account) =>
+                                  account.id === movementFinancialAccountId,
+                              )?.balance ?? 0,
+                            ),
+                          )}{" "}
+                          جنيه
+                        </p>
+                      )}
+                    </div>
                   )}
-                </select>
+
+                  {/* المشروع */}
+                  <div>
+                    <label
+                      htmlFor="movement-project"
+                      className="mb-1.5 block text-xs font-bold text-slate-600"
+                    >
+                      المشروع / الموقع
+                    </label>
+
+                    <select
+                      id="movement-project"
+                      value={movementProjectId}
+                      onChange={(event) => {
+                        const nextProjectId = event.target.value;
+                        setMovementProjectId(nextProjectId);
+                        setMovementAllocation(
+                          nextProjectId ? "project" : "general",
+                        );
+                      }}
+                      disabled={
+                        custodies.find((item) => item.id === movementCustodyId)
+                          ?.type === "project"
+                      }
+                      className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 disabled:bg-slate-50 disabled:text-slate-400"
+                    >
+                      <option value="">اختر الموقع / المشروع</option>
+
+                      {projects.map((project) => (
+                        <option key={project.id} value={project.id}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* التصنيف */}
+                  <div>
+                    <label
+                      htmlFor="movement-allocation"
+                      className="mb-1.5 block text-xs font-bold text-slate-600"
+                    >
+                      تصنيف الحركة
+                    </label>
+
+                    <select
+                      id="movement-allocation"
+                      value={movementAllocation}
+                      onChange={(event) =>
+                        setMovementAllocation(
+                          event.target.value as "general" | "project",
+                        )
+                      }
+                      disabled
+
+                      className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100 disabled:bg-slate-50 disabled:text-slate-400"
+                    >
+                      <option value="general">عام</option>
+
+                      <option value="project">على المشروع</option>
+                    </select>
+                  </div>
+
+                  {/* ملاحظات */}
+                  <div className="md:col-span-2 xl:col-span-3">
+                    <label
+                      htmlFor="movement-notes"
+                      className="mb-1.5 block text-xs font-bold text-slate-600"
+                    >
+                      ملاحظات
+                    </label>
+
+                    <textarea
+                      id="movement-notes"
+                      value={movementNotes}
+                      onChange={(event) => setMovementNotes(event.target.value)}
+                      rows={3}
+                      placeholder="ملاحظات إضافية اختيارية..."
+                      className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 transition outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                    />
+                  </div>
+                </div>
+
+                {/* تنبيه الراتب */}
+                {movementType === "salary" && (
+                  <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+                    <p className="text-xs leading-6 font-bold text-blue-700">
+                      الراتب يعتبر صرفًا من مستحق العامل، لذلك سيتم تخفيض
+                      مستحقاته بقيمة الراتب، ولا يمكن صرف مبلغ أكبر من{" "}
+                      {formatAmount(payableBalance)} جنيه.
+                    </p>
+                  </div>
+                )}
+
+                {movementType === "advance" && (
+                  <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                    <p className="text-xs leading-6 font-bold text-amber-700">
+                      السلفة تقلل مستحق العامل وتزيد المبلغ المستحق على العامل
+                      للشركة.
+                    </p>
+                  </div>
+                )}
+
+                <div className="mt-5 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleMovementSubmit}
+                    disabled={isSaving}
+                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                  >
+                    <Plus className="h-4 w-4" />
+
+                    {isSaving ? "جاري الحفظ..." : "تسجيل الحركة"}
+                  </button>
+                </div>
               </div>
-
-              {/* التصنيف */}
-              <div>
-                <label
-                  htmlFor="movement-allocation"
-                  className="mb-1.5 block text-xs font-bold text-slate-600"
-                >
-                  تصنيف الحركة
-                </label>
-
-                <select
-                  id="movement-allocation"
-                  value={movementAllocation}
-                  onChange={(event) =>
-                    setMovementAllocation(
-                      event.target.value as
-                        | "general"
-                        | "project",
-                    )
-                  }
-                  disabled
-
-                  className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100 disabled:bg-slate-50 disabled:text-slate-400"
-                >
-                  <option value="general">
-                    عام
-                  </option>
-
-                  <option value="project">
-                    على المشروع
-                  </option>
-                </select>
-              </div>
-
-              {/* ملاحظات */}
-              <div className="md:col-span-2 xl:col-span-3">
-                <label
-                  htmlFor="movement-notes"
-                  className="mb-1.5 block text-xs font-bold text-slate-600"
-                >
-                  ملاحظات
-                </label>
-
-                <textarea
-                  id="movement-notes"
-                  value={movementNotes}
-                  onChange={(event) =>
-                    setMovementNotes(
-                      event.target.value,
-                    )
-                  }
-                  rows={3}
-                  placeholder="ملاحظات إضافية اختيارية..."
-                  className="w-full resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-semibold text-slate-700 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
-                />
-              </div>
-            </div>
-
-            {/* تنبيه الراتب */}
-            {movementType ===
-              "salary" && (
-              <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
-                <p className="text-xs font-bold leading-6 text-blue-700">
-                  الراتب يعتبر صرفًا من مستحق العامل،
-                  لذلك سيتم تخفيض مستحقاته بقيمة الراتب،
-                  ولا يمكن صرف مبلغ أكبر من{" "}
-                  {formatAmount(
-                    payableBalance,
-                  )}{" "}
-                  جنيه.
-                </p>
-              </div>
-            )}
-
-            {movementType ===
-              "advance" && (
-              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                <p className="text-xs font-bold leading-6 text-amber-700">
-                  السلفة تقلل مستحق العامل وتزيد
-                  المبلغ المستحق على العامل للشركة.
-                </p>
-              </div>
-            )}
-
-
-            <div className="mt-5 flex justify-end">
-              <button
-                type="button"
-                onClick={
-                  handleMovementSubmit
-                }
-                disabled={isSaving}
-                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-              >
-                <Plus className="h-4 w-4" />
-
-                {isSaving
-                  ? "جاري الحفظ..."
-                  : "تسجيل الحركة"}
-              </button>
-            </div>
-          </div>
             </section>
           </div>
         )}
@@ -2146,137 +2095,105 @@ export default function WorkerDetailsPage() {
                 </thead>
 
                 <tbody className="divide-y divide-slate-100">
-                  {movements.map(
-                    (movement) => {
-                      const project =
-                        movement.projectId
-                          ? projects.find(
-                              (item) =>
-                                item.id ===
-                                movement.projectId,
-                            )
-                          : undefined;
+                  {movements.map((movement) => {
+                    const project = movement.projectId
+                      ? projects.find((item) => item.id === movement.projectId)
+                      : undefined;
 
-                      const custody =
-                        movement.custodyId
-                          ? custodies.find(
-                              (item) =>
-                                item.id ===
-                                movement.custodyId,
-                            )
-                          : undefined;
+                    const custody = movement.custodyId
+                      ? custodies.find((item) => item.id === movement.custodyId)
+                      : undefined;
 
-                      return (
-                        <tr
-                          key={movement.id}
-                          className="transition-colors hover:bg-slate-50/70"
-                        >
-                          <td className="whitespace-nowrap px-5 py-4 text-xs font-semibold text-slate-500">
-                            {formatDate(
-                              movement.date,
-                            )}
-                          </td>
+                    return (
+                      <tr
+                        key={movement.id}
+                        className="transition-colors hover:bg-slate-50/70"
+                      >
+                        <td className="px-5 py-4 text-xs font-semibold whitespace-nowrap text-slate-500">
+                          {formatDate(movement.date)}
+                        </td>
 
-                          <td className="px-5 py-4">
-                            <span
-                              className={`inline-flex rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${getMovementClasses(
-                                movement.effect,
-                              )}`}
-                            >
-                              {getMovementLabel(
-                                movement.type,
-                              )}
-                            </span>
-                          </td>
+                        <td className="px-5 py-4">
+                          <span
+                            className={`inline-flex rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${getMovementClasses(
+                              movement.effect,
+                            )}`}
+                          >
+                            {getMovementLabel(movement.type)}
+                          </span>
+                        </td>
 
-                          <td className="px-5 py-4">
-                            <p className="max-w-[320px] text-sm font-bold leading-6 text-slate-800">
-                              {
-                                movement.description
-                              }
+                        <td className="px-5 py-4">
+                          <p className="max-w-[320px] text-sm leading-6 font-bold text-slate-800">
+                            {movement.description}
+                          </p>
+
+                          {movement.notes && (
+                            <p className="mt-1 max-w-[320px] text-xs leading-5 text-slate-400">
+                              {movement.notes}
                             </p>
+                          )}
+                        </td>
 
-                            {movement.notes && (
-                              <p className="mt-1 max-w-[320px] text-xs leading-5 text-slate-400">
-                                {
-                                  movement.notes
-                                }
-                              </p>
-                            )}
-                          </td>
+                        <td className="px-5 py-4 text-sm font-semibold text-slate-600">
+                          {project?.name ?? "عام"}
+                        </td>
 
-                          <td className="px-5 py-4 text-sm font-semibold text-slate-600">
-                            {project?.name ??
-                              "عام"}
-                          </td>
+                        <td className="px-5 py-4 text-sm font-semibold text-slate-600">
+                          {custody?.name ?? "غير محدد"}
+                        </td>
 
-                          <td className="px-5 py-4 text-sm font-semibold text-slate-600">
-                            {custody?.name ??
-                              "غير محدد"}
-                          </td>
+                        <td className="px-5 py-4">
+                          <span
+                            className={`text-xs font-bold ${
+                              movement.effect === "increase"
+                                ? "text-emerald-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {movement.effect === "increase"
+                              ? "يزيد المستحق"
+                              : "يقلل المستحق"}
+                          </span>
+                        </td>
 
-                          <td className="px-5 py-4">
-                            <span
-                              className={`text-xs font-bold ${
-                                movement.effect ===
-                                "increase"
-                                  ? "text-emerald-600"
-                                  : "text-red-600"
-                              }`}
+                        <td className="px-5 py-4 text-left whitespace-nowrap">
+                          <span
+                            className={`text-sm font-extrabold ${getMovementAmountClasses(
+                              movement.effect,
+                            )}`}
+                          >
+                            {movement.effect === "increase" ? "+" : "-"}
+                            {formatAmount(Math.abs(movement.amount))} جنيه
+                          </span>
+                        </td>
+
+                        <td className="px-5 py-4">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => openMovementEdit(movement)}
+                              disabled={isSaving}
+                              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
                             >
-                              {movement.effect ===
-                              "increase"
-                                ? "يزيد المستحق"
-                                : "يقلل المستحق"}
-                            </span>
-                          </td>
+                              <Edit3 className="h-3.5 w-3.5" />
+                              تعديل
+                            </button>
 
-                          <td className="whitespace-nowrap px-5 py-4 text-left">
-                            <span
-                              className={`text-sm font-extrabold ${getMovementAmountClasses(
-                                movement.effect,
-                              )}`}
+                            <button
+                              type="button"
+                              onClick={() => handleMovementDelete(movement)}
+                              disabled={isSaving}
+                              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 text-xs font-bold text-red-600 transition hover:bg-red-100 disabled:opacity-50"
                             >
-                              {movement.effect ===
-                              "increase"
-                                ? "+"
-                                : "-"}
-                              {formatAmount(
-                                Math.abs(
-                                  movement.amount,
-                                ),
-                              )}{" "}
-                              جنيه
-                            </span>
-                          </td>
-
-                          <td className="px-5 py-4">
-                            <div className="flex items-center justify-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => openMovementEdit(movement)}
-                                disabled={isSaving}
-                                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
-                              >
-                                <Edit3 className="h-3.5 w-3.5" />
-                                تعديل
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => handleMovementDelete(movement)}
-                                disabled={isSaving}
-                                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 text-xs font-bold text-red-600 transition hover:bg-red-100 disabled:opacity-50"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                                حذف
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    },
-                  )}
+                              <Trash2 className="h-3.5 w-3.5" />
+                              حذف
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -2340,83 +2257,59 @@ export default function WorkerDetailsPage() {
                   {assignments
                     .slice()
                     .reverse()
-                    .map(
-                      (
-                        assignment,
-                      ) => {
-                        const project =
-                          projects.find(
-                            (item) =>
-                              item.id ===
-                              assignment.projectId,
-                          );
+                    .map((assignment) => {
+                      const project = projects.find(
+                        (item) => item.id === assignment.projectId,
+                      );
 
-                        const isCurrent =
-                          !assignment.endDate;
+                      const isCurrent = !assignment.endDate;
 
-                        return (
-                          <tr
-                            key={
-                              assignment.id
-                            }
-                            className="hover:bg-slate-50/70"
-                          >
-                            <td className="px-5 py-4">
-                              <p className="text-sm font-extrabold text-slate-800">
-                                {project?.name ??
-                                  "مشروع غير معروف"}
-                              </p>
-                            </td>
+                      return (
+                        <tr
+                          key={assignment.id}
+                          className="hover:bg-slate-50/70"
+                        >
+                          <td className="px-5 py-4">
+                            <p className="text-sm font-extrabold text-slate-800">
+                              {project?.name ?? "مشروع غير معروف"}
+                            </p>
+                          </td>
 
-                            <td className="px-5 py-4 text-xs font-semibold text-slate-500">
-                              {formatDate(
-                                assignment.startDate,
-                              )}
-                            </td>
+                          <td className="px-5 py-4 text-xs font-semibold text-slate-500">
+                            {formatDate(assignment.startDate)}
+                          </td>
 
-                            <td className="px-5 py-4 text-xs font-semibold text-slate-500">
-                              {assignment.endDate
-                                ? formatDate(
-                                    assignment.endDate,
-                                  )
-                                : "حتى الآن"}
-                            </td>
+                          <td className="px-5 py-4 text-xs font-semibold text-slate-500">
+                            {assignment.endDate
+                              ? formatDate(assignment.endDate)
+                              : "حتى الآن"}
+                          </td>
 
-                            <td className="px-5 py-4 text-sm font-extrabold text-slate-700">
-                              {assignment.payType ===
-                              "daily"
-                                ? `يومية ${formatAmount(
-                                    Number(
-                                      assignment.dailyRate ??
-                                        0,
-                                    ),
-                                  )}`
-                                : `شهرية ${formatAmount(
-                                    Number(
-                                      assignment.monthlySalary ??
-                                        0,
-                                    ),
-                                  )}`}
-                              {" جنيه"}
-                            </td>
+                          <td className="px-5 py-4 text-sm font-extrabold text-slate-700">
+                            {assignment.payType === "daily"
+                              ? `يومية ${formatAmount(
+                                  Number(assignment.dailyRate ?? 0),
+                                )}`
+                              : `شهرية ${formatAmount(
+                                  Number(assignment.monthlySalary ?? 0),
+                                )}`}
+                            {" جنيه"}
+                          </td>
 
-                            <td className="px-5 py-4">
-                              <span
-                                className={`inline-flex rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${
-                                  isCurrent
-                                    ? "bg-emerald-50 text-emerald-600"
-                                    : "bg-slate-100 text-slate-500"
-                                }`}
-                              >
-                                {isCurrent
-                                  ? "حالي"
-                                  : "منتهية"}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      },
-                    )}
+                          <td className="px-5 py-4">
+                            <span
+                              className={`inline-flex rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${
+                                isCurrent
+                                  ? "bg-emerald-50 text-emerald-600"
+                                  : "bg-slate-100 text-slate-500"
+                              }`}
+                            >
+                              {isCurrent ? "حالي" : "منتهية"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                 </tbody>
               </table>
             </div>
@@ -2446,11 +2339,7 @@ export default function WorkerDetailsPage() {
                   <input
                     type="text"
                     value={editName}
-                    onChange={(event) =>
-                      setEditName(
-                        event.target.value,
-                      )
-                    }
+                    onChange={(event) => setEditName(event.target.value)}
                     className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-slate-400"
                   />
                 </div>
@@ -2458,9 +2347,7 @@ export default function WorkerDetailsPage() {
                 <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <button
                     type="button"
-                    onClick={() =>
-                      setIsEditOpen(false)
-                    }
+                    onClick={() => setIsEditOpen(false)}
                     className="h-11 rounded-xl border border-slate-200 px-5 text-sm font-bold text-slate-600 hover:bg-slate-50"
                   >
                     إلغاء
@@ -2468,15 +2355,11 @@ export default function WorkerDetailsPage() {
 
                   <button
                     type="button"
-                    onClick={
-                      handleEditWorker
-                    }
+                    onClick={handleEditWorker}
                     disabled={isSaving}
                     className="h-11 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white hover:bg-slate-800 disabled:opacity-50"
                   >
-                    {isSaving
-                      ? "جاري الحفظ..."
-                      : "حفظ التعديلات"}
+                    {isSaving ? "جاري الحفظ..." : "حفظ التعديلات"}
                   </button>
                 </div>
               </div>
@@ -2493,16 +2376,23 @@ export default function WorkerDetailsPage() {
                   تعديل الحركة المالية
                 </h2>
                 <p className="mt-1 text-xs leading-5 text-slate-400">
-                  تعديل الحركة سيعكس أثرها القديم على العهدة ووسيلة الدفع ثم يطبق الأثر الجديد.
+                  تعديل الحركة سيعكس أثرها القديم على العهدة ووسيلة الدفع ثم
+                  يطبق الأثر الجديد.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2 sm:p-6">
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold text-slate-600">نوع الحركة</label>
+                  <label className="mb-1.5 block text-xs font-bold text-slate-600">
+                    نوع الحركة
+                  </label>
                   <select
                     value={editMovementType}
-                    onChange={(event) => setEditMovementType(event.target.value as WorkerFinancialMovementType)}
+                    onChange={(event) =>
+                      setEditMovementType(
+                        event.target.value as WorkerFinancialMovementType,
+                      )
+                    }
                     className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700"
                   >
                     <option value="salary">راتب</option>
@@ -2512,7 +2402,9 @@ export default function WorkerDetailsPage() {
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold text-slate-600">التاريخ</label>
+                  <label className="mb-1.5 block text-xs font-bold text-slate-600">
+                    التاريخ
+                  </label>
                   <DateInput
                     value={editMovementDate}
                     onChange={(value) => setEditMovementDate(value)}
@@ -2521,27 +2413,38 @@ export default function WorkerDetailsPage() {
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold text-slate-600">المبلغ</label>
+                  <label className="mb-1.5 block text-xs font-bold text-slate-600">
+                    المبلغ
+                  </label>
                   <input
                     type="number"
                     min="0"
                     step="0.01"
                     value={editMovementAmount}
-                    onChange={(event) => setEditMovementAmount(event.target.value)}
+                    onChange={(event) =>
+                      setEditMovementAmount(event.target.value)
+                    }
                     className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold text-slate-600">العهدة</label>
+                  <label className="mb-1.5 block text-xs font-bold text-slate-600">
+                    العهدة
+                  </label>
                   <select
                     value={editMovementCustodyId}
                     onChange={(event) => {
                       const nextCustodyId = event.target.value;
-                      const nextCustody = custodies.find((item) => item.id === nextCustodyId);
+                      const nextCustody = custodies.find(
+                        (item) => item.id === nextCustodyId,
+                      );
                       setEditMovementCustodyId(nextCustodyId);
                       setEditMovementFinancialAccountId("");
-                      if (nextCustody?.type === "project" && nextCustody.projectId) {
+                      if (
+                        nextCustody?.type === "project" &&
+                        nextCustody.projectId
+                      ) {
                         setEditMovementProjectId(nextCustody.projectId);
                         setEditMovementAllocation("project");
                       }
@@ -2558,31 +2461,45 @@ export default function WorkerDetailsPage() {
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold text-slate-600">وسيلة الدفع</label>
+                  <label className="mb-1.5 block text-xs font-bold text-slate-600">
+                    وسيلة الدفع
+                  </label>
                   <select
                     value={editMovementFinancialAccountId}
-                    onChange={(event) => setEditMovementFinancialAccountId(event.target.value)}
+                    onChange={(event) =>
+                      setEditMovementFinancialAccountId(event.target.value)
+                    }
                     disabled={!editMovementCustodyId}
                     className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold disabled:bg-slate-50"
                   >
                     <option value="">بدون وسيلة دفع محددة</option>
-                    {getCustodyFinancialAccounts(editMovementCustodyId).map((account) => (
-                      <option key={account.id} value={account.id}>
-                        {account.name}
-                      </option>
-                    ))}
+                    {getCustodyFinancialAccounts(editMovementCustodyId).map(
+                      (account) => (
+                        <option key={account.id} value={account.id}>
+                          {account.name}
+                        </option>
+                      ),
+                    )}
                   </select>
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold text-slate-600">المشروع / الموقع</label>
+                  <label className="mb-1.5 block text-xs font-bold text-slate-600">
+                    المشروع / الموقع
+                  </label>
                   <select
                     value={editMovementProjectId}
                     onChange={(event) => {
                       setEditMovementProjectId(event.target.value);
-                      setEditMovementAllocation(event.target.value ? "project" : "general");
+                      setEditMovementAllocation(
+                        event.target.value ? "project" : "general",
+                      );
                     }}
-                    disabled={custodies.find((item) => item.id === editMovementCustodyId)?.type === "project"}
+                    disabled={
+                      custodies.find(
+                        (item) => item.id === editMovementCustodyId,
+                      )?.type === "project"
+                    }
                     className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold disabled:bg-slate-50"
                   >
                     <option value="">اختر الموقع / المشروع</option>
@@ -2595,10 +2512,16 @@ export default function WorkerDetailsPage() {
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold text-slate-600">تصنيف الحركة</label>
+                  <label className="mb-1.5 block text-xs font-bold text-slate-600">
+                    تصنيف الحركة
+                  </label>
                   <select
                     value={editMovementAllocation}
-                    onChange={(event) => setEditMovementAllocation(event.target.value as "general" | "project")}
+                    onChange={(event) =>
+                      setEditMovementAllocation(
+                        event.target.value as "general" | "project",
+                      )
+                    }
                     disabled
                     className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold disabled:bg-slate-50"
                   >
@@ -2608,20 +2531,28 @@ export default function WorkerDetailsPage() {
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="mb-1.5 block text-xs font-bold text-slate-600">البيان</label>
+                  <label className="mb-1.5 block text-xs font-bold text-slate-600">
+                    البيان
+                  </label>
                   <input
                     type="text"
                     value={editMovementDescription}
-                    onChange={(event) => setEditMovementDescription(event.target.value)}
+                    onChange={(event) =>
+                      setEditMovementDescription(event.target.value)
+                    }
                     className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold"
                   />
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="mb-1.5 block text-xs font-bold text-slate-600">ملاحظات</label>
+                  <label className="mb-1.5 block text-xs font-bold text-slate-600">
+                    ملاحظات
+                  </label>
                   <textarea
                     value={editMovementNotes}
-                    onChange={(event) => setEditMovementNotes(event.target.value)}
+                    onChange={(event) =>
+                      setEditMovementNotes(event.target.value)
+                    }
                     rows={3}
                     className="w-full resize-none rounded-xl border border-slate-200 px-3 py-3 text-sm font-semibold"
                   />
@@ -2682,13 +2613,19 @@ export default function WorkerDetailsPage() {
                     <option value="">اختر الموقع</option>
                     {sites.map((site) => (
                       <option key={site.id} value={site.id}>
-                        {site.name} — {projects.find((project) => project.id === site.projectId)?.name ?? "مشروع غير موجود"}
+                        {site.name} —{" "}
+                        {projects.find(
+                          (project) => project.id === site.projectId,
+                        )?.name ?? "مشروع غير موجود"}
                       </option>
                     ))}
                   </select>
                   {transferSiteId && transferProjectId && (
                     <p className="mt-1.5 text-[11px] font-bold text-slate-400">
-                      المشروع المرتبط: {projects.find((project) => project.id === transferProjectId)?.name ?? "-"}
+                      المشروع المرتبط:{" "}
+                      {projects.find(
+                        (project) => project.id === transferProjectId,
+                      )?.name ?? "-"}
                     </p>
                   )}
                 </div>
@@ -2700,11 +2637,7 @@ export default function WorkerDetailsPage() {
 
                   <DateInput
                     value={transferDate}
-                    onChange={(value) =>
-                      setTransferDate(
-                        value,
-                      )
-                    }
+                    onChange={(value) => setTransferDate(value)}
                     className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-slate-400"
                   />
                 </div>
@@ -2718,31 +2651,24 @@ export default function WorkerDetailsPage() {
                     type="number"
                     min="0"
                     step="0.01"
-                    value={
-                      transferSalary
-                    }
-                    onChange={(event) =>
-                      setTransferSalary(
-                        event.target.value,
-                      )
-                    }
+                    value={transferSalary}
+                    onChange={(event) => setTransferSalary(event.target.value)}
                     placeholder="اتركه فارغًا إذا لم يتغير"
                     className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-slate-400"
                   />
                 </div>
 
                 <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                  <p className="text-xs font-bold leading-6 text-amber-700">
-                    الراتب الذي تم تسجيله للفترة السابقة سيظل كما هو، والراتب الجديد سيطبق فقط على الفترة الجديدة.
+                  <p className="text-xs leading-6 font-bold text-amber-700">
+                    الراتب الذي تم تسجيله للفترة السابقة سيظل كما هو، والراتب
+                    الجديد سيطبق فقط على الفترة الجديدة.
                   </p>
                 </div>
 
                 <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                   <button
                     type="button"
-                    onClick={() =>
-                      setIsTransferOpen(false)
-                    }
+                    onClick={() => setIsTransferOpen(false)}
                     className="h-11 rounded-xl border border-slate-200 px-5 text-sm font-bold text-slate-600 hover:bg-slate-50"
                   >
                     إلغاء
@@ -2750,15 +2676,11 @@ export default function WorkerDetailsPage() {
 
                   <button
                     type="button"
-                    onClick={
-                      handleTransferWorker
-                    }
+                    onClick={handleTransferWorker}
                     disabled={isSaving}
                     className="h-11 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white hover:bg-slate-800 disabled:opacity-50"
                   >
-                    {isSaving
-                      ? "جاري النقل..."
-                      : "تأكيد النقل"}
+                    {isSaving ? "جاري النقل..." : "تأكيد النقل"}
                   </button>
                 </div>
               </div>

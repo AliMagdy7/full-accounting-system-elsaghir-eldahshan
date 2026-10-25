@@ -10,7 +10,10 @@ interface RouteGuardProps {
   permission?: Permission;
 }
 
-export default function RouteGuard({ children, permission = "view" }: RouteGuardProps) {
+export default function RouteGuard({
+  children,
+  permission = "view",
+}: RouteGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [authorized] = useState(() => {

@@ -84,7 +84,10 @@ function readUsers(): SystemUser[] {
   try {
     const raw = window.localStorage.getItem(USERS_STORAGE_KEY);
     if (!raw) {
-      window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(DEFAULT_USERS));
+      window.localStorage.setItem(
+        USERS_STORAGE_KEY,
+        JSON.stringify(DEFAULT_USERS),
+      );
       return DEFAULT_USERS;
     }
 
@@ -120,7 +123,10 @@ export function saveUsers(users: SystemUser[]) {
   dispatchAuthUpdated();
 }
 
-export function updateUserRole(userId: string, role: UserRole): SystemUser | undefined {
+export function updateUserRole(
+  userId: string,
+  role: UserRole,
+): SystemUser | undefined {
   assertCurrentUserPermission("manage_users");
   const users = getUsers();
   const index = users.findIndex((user) => user.id === userId);
@@ -140,7 +146,10 @@ export function updateUserRole(userId: string, role: UserRole): SystemUser | und
   return users[index];
 }
 
-export function setUserActive(userId: string, active: boolean): SystemUser | undefined {
+export function setUserActive(
+  userId: string,
+  active: boolean,
+): SystemUser | undefined {
   assertCurrentUserPermission("manage_users");
   const users = getUsers();
   const index = users.findIndex((user) => user.id === userId);
@@ -242,7 +251,9 @@ export function changeCurrentUserPassword(
   return true;
 }
 
-export function updateCurrentAdminUsername(username: string): SystemUser | undefined {
+export function updateCurrentAdminUsername(
+  username: string,
+): SystemUser | undefined {
   return updateCurrentAdminCredentials(username);
 }
 
@@ -284,7 +295,9 @@ export function updateCurrentAdminCredentials(
   users[index] = nextUser;
   window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
 
-  const rememberMe = Boolean(window.localStorage.getItem(LOCAL_SESSION_STORAGE_KEY));
+  const rememberMe = Boolean(
+    window.localStorage.getItem(LOCAL_SESSION_STORAGE_KEY),
+  );
   writeSession(
     { ...session, username: nextUser.username, userName: nextUser.name },
     rememberMe,
@@ -300,7 +313,11 @@ export function updateCurrentAdminCredentials(
     users[index] = previousUser;
     window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
     writeSession(
-      { ...session, username: previousUser.username, userName: previousUser.name },
+      {
+        ...session,
+        username: previousUser.username,
+        userName: previousUser.name,
+      },
       rememberMe,
     );
     throw new Error("تعذر حفظ بيانات الدخول. لم يتم تطبيق التغيير.");
@@ -312,9 +329,10 @@ export function updateCurrentAdminCredentials(
     action: "update",
     entity: "user",
     entityId: session.userId,
-    description: password !== undefined
-      ? `تم تحديث اسم المستخدم وكلمة مرور المدير إلى ${nextUsername}.`
-      : `تم تغيير اسم مستخدم المدير إلى ${nextUsername}.`,
+    description:
+      password !== undefined
+        ? `تم تحديث اسم المستخدم وكلمة مرور المدير إلى ${nextUsername}.`
+        : `تم تغيير اسم مستخدم المدير إلى ${nextUsername}.`,
     notificationTitle: "تحديث بيانات الدخول",
     notificationType: "success",
     notificationHref: "/profile",
@@ -356,11 +374,14 @@ export function updateUserCredentials(
 
   const currentSession = getCurrentSession();
   if (currentSession?.userId === userId) {
-    writeSession({
-      ...currentSession,
-      username: nextUsername,
-      userName: users[index].name,
-    }, Boolean(window.localStorage.getItem(LOCAL_SESSION_STORAGE_KEY)));
+    writeSession(
+      {
+        ...currentSession,
+        username: nextUsername,
+        userName: users[index].name,
+      },
+      Boolean(window.localStorage.getItem(LOCAL_SESSION_STORAGE_KEY)),
+    );
   }
 
   addAuditLog({
@@ -376,7 +397,10 @@ export function updateUserCredentials(
   return users[index];
 }
 
-export function setUserPassword(userId: string, password: string): SystemUser | undefined {
+export function setUserPassword(
+  userId: string,
+  password: string,
+): SystemUser | undefined {
   assertCurrentUserPermission("manage_users");
   const users = getUsers();
   const index = users.findIndex((user) => user.id === userId);
@@ -408,7 +432,12 @@ export function getCurrentSession(): UserSession | null {
     if (!raw) return null;
 
     const session = JSON.parse(raw) as UserSession;
-    if (!session.userId || !session.userName || !session.username || !session.role) {
+    if (
+      !session.userId ||
+      !session.userName ||
+      !session.username ||
+      !session.role
+    ) {
       return null;
     }
 
@@ -443,9 +472,12 @@ function writeSession(session: UserSession, rememberMe = true) {
 export function authenticateUser(
   username: string,
   password: string,
-): { success: true; user: SystemUser; session: UserSession } | { success: false; reason: "invalid" | "inactive" } {
+):
+  | { success: true; user: SystemUser; session: UserSession }
+  | { success: false; reason: "invalid" | "inactive" } {
   const user = getUserByUsername(username);
-  if (!user || user.password !== password) return { success: false, reason: "invalid" };
+  if (!user || user.password !== password)
+    return { success: false, reason: "invalid" };
   if (!user.active) return { success: false, reason: "inactive" };
 
   return {
@@ -501,7 +533,11 @@ export function clearCurrentSession() {
       action: "system",
       entity: "system",
       description: `تم تسجيل خروج المستخدم ${session.userName}.`,
-      actor: { userId: session.userId, userName: session.userName, role: session.role },
+      actor: {
+        userId: session.userId,
+        userName: session.userName,
+        role: session.role,
+      },
       notify: false,
     });
   }

@@ -2,18 +2,9 @@
 
 import DateInput from "@/lib/date-input";
 
-import {
-  SubmitEvent,
-  Suspense,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { SubmitEvent, Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import {
-  useRouter,
-  useSearchParams,
-} from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeftRight,
   ArrowRight,
@@ -24,10 +15,7 @@ import {
 
 import AppShell from "@/components/layout/AppShell";
 
-import {
-  getCustodies,
-} from "@/lib/data/custodies";
-
+import { getCustodies } from "@/lib/data/custodies";
 
 import type { Custody } from "@/types/custody";
 import { createCustodyTransfer } from "@/lib/data/financial-transactions";
@@ -43,23 +31,20 @@ function NewTransferPageContent() {
    * "تحويل من عهدتي"
    * نحدد عهدتي أنا تلقائيًا.
    */
-  const fromQuery =
-    searchParams.get("from") ?? "";
+  const fromQuery = searchParams.get("from") ?? "";
 
-  const [custodies, setCustodies] =
-    useState<Custody[]>([]);
+  const [custodies, setCustodies] = useState<Custody[]>([]);
 
-  const [isLoaded, setIsLoaded] =
-    useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  const [fromCustodyId, setFromCustodyId] =
-    useState("");
+  const [fromCustodyId, setFromCustodyId] = useState("");
 
-  const [toCustodyId, setToCustodyId] =
-    useState("");
+  const [toCustodyId, setToCustodyId] = useState("");
 
   const [fromFinancialAccountId, setFromFinancialAccountId] = useState("");
-  const [fromFinancialAccounts, setFromFinancialAccounts] = useState<CustodyFinancialAccount[]>([]);
+  const [fromFinancialAccounts, setFromFinancialAccounts] = useState<
+    CustodyFinancialAccount[]
+  >([]);
 
   /*
    * مصدر التمويل:
@@ -70,28 +55,21 @@ function NewTransferPageContent() {
    * external
    * = المبلغ جاي من جهة خارجية
    */
-  const [fundingMode, setFundingMode] =
-    useState<"central" | "external">(
-      "central",
-    );
+  const [fundingMode, setFundingMode] = useState<"central" | "external">(
+    "central",
+  );
 
-  const [externalSource, setExternalSource] =
-    useState("");
+  const [externalSource, setExternalSource] = useState("");
 
-  const [date, setDate] =
-    useState("");
+  const [date, setDate] = useState("");
 
-  const [amount, setAmount] =
-    useState("");
+  const [amount, setAmount] = useState("");
 
-  const [description, setDescription] =
-    useState("");
+  const [description, setDescription] = useState("");
 
-  const [error, setError] =
-    useState("");
+  const [error, setError] = useState("");
 
-  const [isSaving, setIsSaving] =
-    useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   /*
    * ============================================================
@@ -100,17 +78,11 @@ function NewTransferPageContent() {
    */
 
   useEffect(() => {
-    const loadedCustodies =
-      getCustodies();
+    const loadedCustodies = getCustodies();
 
-    setCustodies(
-      loadedCustodies,
-    );
+    setCustodies(loadedCustodies);
 
-    const today =
-      new Date()
-        .toISOString()
-        .split("T")[0];
+    const today = new Date().toISOString().split("T")[0];
 
     setDate(today);
 
@@ -119,16 +91,12 @@ function NewTransferPageContent() {
      * "تحويل من عهدتي"
      */
     if (fromQuery === "central") {
-      const central =
-        loadedCustodies.find(
-          (custody) =>
-            custody.id === "central",
-        );
+      const central = loadedCustodies.find(
+        (custody) => custody.id === "central",
+      );
 
       if (central) {
-        setFromCustodyId(
-          central.id,
-        );
+        setFromCustodyId(central.id);
       }
     }
 
@@ -141,19 +109,10 @@ function NewTransferPageContent() {
    * ============================================================
    */
 
-  const fromCustody =
-    useMemo(
-      () =>
-        custodies.find(
-          (custody) =>
-            custody.id ===
-            fromCustodyId,
-        ),
-      [
-        custodies,
-        fromCustodyId,
-      ],
-    );
+  const fromCustody = useMemo(
+    () => custodies.find((custody) => custody.id === fromCustodyId),
+    [custodies, fromCustodyId],
+  );
 
   /*
    * ============================================================
@@ -161,19 +120,10 @@ function NewTransferPageContent() {
    * ============================================================
    */
 
-  const toCustody =
-    useMemo(
-      () =>
-        custodies.find(
-          (custody) =>
-            custody.id ===
-            toCustodyId,
-        ),
-      [
-        custodies,
-        toCustodyId,
-      ],
-    );
+  const toCustody = useMemo(
+    () => custodies.find((custody) => custody.id === toCustodyId),
+    [custodies, toCustodyId],
+  );
 
   /*
    * ============================================================
@@ -181,8 +131,7 @@ function NewTransferPageContent() {
    * ============================================================
    */
 
-  const isCentralTransfer =
-    fromCustody?.id === "central";
+  const isCentralTransfer = fromCustody?.id === "central";
 
   /*
    * ============================================================
@@ -216,17 +165,13 @@ function NewTransferPageContent() {
 
     // هذه الصفحة مخصصة للتحويلات بين العهد فقط.
     // التحويل الداخلي بين وسائل الدفع داخل عهدتي أنا له شاشة مستقلة.
-    return custodies.filter(
-      (custody) => custody.id !== fromCustodyId,
-    );
+    return custodies.filter((custody) => custody.id !== fromCustodyId);
   }, [custodies, fromCustodyId]);
 
-  const showFundingSource =
-    isCentralTransfer;
+  const showFundingSource = isCentralTransfer;
 
   const showSourceFinancialAccount =
     isCentralTransfer && fundingMode === "central";
-
 
   useEffect(() => {
     setFromFinancialAccounts(
@@ -235,23 +180,17 @@ function NewTransferPageContent() {
     setFromFinancialAccountId("");
   }, [fromCustodyId]);
 
-
   /*
    * ============================================================
    * تنسيق المبلغ
    * ============================================================
    */
 
-  const formatAmount = (
-    value: number,
-  ) =>
-    value.toLocaleString(
-      "en-US",
-      {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-      },
-    );
+  const formatAmount = (value: number) =>
+    value.toLocaleString("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    });
 
   /*
    * ============================================================
@@ -259,21 +198,14 @@ function NewTransferPageContent() {
    * ============================================================
    */
 
-  const handleFromCustodyChange = (
-    custodyId: string,
-  ) => {
-    setFromCustodyId(
-      custodyId,
-    );
+  const handleFromCustodyChange = (custodyId: string) => {
+    setFromCustodyId(custodyId);
 
     /*
      * منع اختيار نفس العهدة
      * كمستلم.
      */
-    if (
-      custodyId === toCustodyId &&
-      custodyId !== "central"
-    ) {
+    if (custodyId === toCustodyId && custodyId !== "central") {
       setToCustodyId("");
     }
 
@@ -283,9 +215,7 @@ function NewTransferPageContent() {
      * مصدر خارجي خاص بعهدتي أنا فقط.
      */
     if (custodyId !== "central") {
-      setFundingMode(
-        "central",
-      );
+      setFundingMode("central");
 
       setExternalSource("");
     }
@@ -297,12 +227,8 @@ function NewTransferPageContent() {
    * ============================================================
    */
 
-  const handleToCustodyChange = (
-    custodyId: string,
-  ) => {
-    setToCustodyId(
-      custodyId,
-    );
+  const handleToCustodyChange = (custodyId: string) => {
+    setToCustodyId(custodyId);
 
     setError("");
   };
@@ -313,9 +239,7 @@ function NewTransferPageContent() {
    * ============================================================
    */
 
-  const handleSubmit = (
-    event: SubmitEvent<HTMLFormElement>,
-  ) => {
+  const handleSubmit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     /*
@@ -325,9 +249,7 @@ function NewTransferPageContent() {
      */
 
     if (!fromCustody) {
-      setError(
-        "من فضلك اختر العهدة المرسلة.",
-      );
+      setError("من فضلك اختر العهدة المرسلة.");
 
       return;
     }
@@ -339,9 +261,7 @@ function NewTransferPageContent() {
      */
 
     if (!toCustody) {
-      setError(
-        "من فضلك اختر العهدة المستلمة.",
-      );
+      setError("من فضلك اختر العهدة المستلمة.");
 
       return;
     }
@@ -367,9 +287,7 @@ function NewTransferPageContent() {
      */
 
     if (!date) {
-      setError(
-        "من فضلك اختر تاريخ التحويل.",
-      );
+      setError("من فضلك اختر تاريخ التحويل.");
 
       return;
     }
@@ -380,19 +298,10 @@ function NewTransferPageContent() {
      * ----------------------------------------------------------
      */
 
-    const numericAmount =
-      Number(amount);
+    const numericAmount = Number(amount);
 
-    if (
-      !amount ||
-      !Number.isFinite(
-        numericAmount,
-      ) ||
-      numericAmount <= 0
-    ) {
-      setError(
-        "من فضلك أدخل مبلغًا صحيحًا أكبر من صفر.",
-      );
+    if (!amount || !Number.isFinite(numericAmount) || numericAmount <= 0) {
+      setError("من فضلك أدخل مبلغًا صحيحًا أكبر من صفر.");
 
       return;
     }
@@ -403,13 +312,10 @@ function NewTransferPageContent() {
      * ----------------------------------------------------------
      */
 
-    const trimmedDescription =
-      description.trim();
+    const trimmedDescription = description.trim();
 
     if (!trimmedDescription) {
-      setError(
-        "من فضلك أدخل بيان التحويل.",
-      );
+      setError("من فضلك أدخل بيان التحويل.");
 
       return;
     }
@@ -420,37 +326,24 @@ function NewTransferPageContent() {
      * ----------------------------------------------------------
      */
 
-    const isExternalFunding =
-      showFundingSource &&
-      fundingMode ===
-        "external";
+    const isExternalFunding = showFundingSource && fundingMode === "external";
 
-    const trimmedExternalSource =
-      externalSource.trim();
+    const trimmedExternalSource = externalSource.trim();
 
     /*
      * لو المصدر خارجي لازم نكتب المصدر.
      */
 
-    if (
-      isExternalFunding &&
-      !trimmedExternalSource
-    ) {
-      setError(
-        "من فضلك اكتب مصدر الأموال الخارجي.",
-      );
+    if (isExternalFunding && !trimmedExternalSource) {
+      setError("من فضلك اكتب مصدر الأموال الخارجي.");
 
       return;
     }
 
     const needsSourceFinancialAccount =
-      isCentralTransfer &&
-      fundingMode === "central";
+      isCentralTransfer && fundingMode === "central";
 
-    if (
-      needsSourceFinancialAccount &&
-      !fromFinancialAccountId
-    ) {
+    if (needsSourceFinancialAccount && !fromFinancialAccountId) {
       setError("من فضلك اختر وسيلة الدفع التي سيتم الخصم منها.");
       return;
     }
@@ -465,7 +358,9 @@ function NewTransferPageContent() {
         amount: numericAmount,
         date,
         description: trimmedDescription,
-        financialAccountId: needsSourceFinancialAccount ? fromFinancialAccountId || undefined : undefined,
+        financialAccountId: needsSourceFinancialAccount
+          ? fromFinancialAccountId || undefined
+          : undefined,
         externalFunding: isExternalFunding,
         externalSource: isExternalFunding ? trimmedExternalSource : undefined,
       });
@@ -484,15 +379,12 @@ function NewTransferPageContent() {
   return (
     <AppShell>
       <div className="app-page mx-auto w-full max-w-4xl space-y-6">
-
         {/* ================================================== */}
         {/* Page Header */}
         {/* ================================================== */}
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-
             <Link
               href="/transfers"
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-slate-900"
@@ -502,9 +394,7 @@ function NewTransferPageContent() {
             </Link>
 
             <div className="min-w-0">
-
               <div className="mb-2 flex flex-wrap items-center gap-2">
-
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                   <ArrowLeftRight className="h-5 w-5" />
                 </div>
@@ -516,7 +406,6 @@ function NewTransferPageContent() {
                 <span className="rounded-lg bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-600">
                   حركة بين العهد
                 </span>
-
               </div>
 
               <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
@@ -524,13 +413,11 @@ function NewTransferPageContent() {
               </h1>
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                نقل مبلغ من عهدة فعلية إلى عهدة فعلية أخرى مع الاحتفاظ بمصدر الأموال وتحديث الأرصدة تلقائيًا.
+                نقل مبلغ من عهدة فعلية إلى عهدة فعلية أخرى مع الاحتفاظ بمصدر
+                الأموال وتحديث الأرصدة تلقائيًا.
               </p>
-
             </div>
-
           </div>
-
         </section>
 
         {/* ================================================== */}
@@ -541,238 +428,166 @@ function NewTransferPageContent() {
           onSubmit={handleSubmit}
           className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
         >
-
           {/* Form Header */}
 
           <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
-
             <div className="flex items-center gap-3">
-
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
                 <ArrowLeftRight className="h-5 w-5" />
               </div>
 
               <div>
-
                 <h2 className="text-base font-extrabold text-slate-900">
                   بيانات التحويل
                 </h2>
 
                 <p className="mt-1 text-xs leading-5 text-slate-400">
-                  اختر العهد الحقيقية المسجلة في النظام، وليس أسماء أشخاص منفصلة.
+                  اختر العهد الحقيقية المسجلة في النظام، وليس أسماء أشخاص
+                  منفصلة.
                 </p>
-
               </div>
-
             </div>
-
           </div>
 
           {!isLoaded ? (
             <div className="flex min-h-80 items-center justify-center p-6">
-
               <div className="text-center">
-
                 <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
 
                 <p className="mt-4 text-sm font-semibold text-slate-500">
                   جاري تحميل العهد...
                 </p>
-
               </div>
-
             </div>
           ) : (
             <>
-
               <div className="space-y-6 p-5 sm:p-6">
-
                 {/* ================================================== */}
                 {/* From / To */}
                 {/* ================================================== */}
 
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-
                   {/* From Custody */}
 
                   <div>
-
                     <label
                       htmlFor="from-custody"
                       className="mb-2 block text-sm font-bold text-slate-700"
                     >
                       من عهدة
-                      <span className="mr-1 text-red-500">
-                        *
-                      </span>
+                      <span className="mr-1 text-red-500">*</span>
                     </label>
 
                     <div className="relative">
-
-                      <WalletCards className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                      <WalletCards className="pointer-events-none absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2 text-slate-400" />
 
                       <select
                         id="from-custody"
                         value={fromCustodyId}
                         onChange={(event) =>
-                          handleFromCustodyChange(
-                            event.target.value,
-                          )
+                          handleFromCustodyChange(event.target.value)
                         }
-                        className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm font-semibold text-slate-800 outline-none transition-all hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                        className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm font-semibold text-slate-800 transition-all outline-none hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                       >
+                        <option value="">اختر العهدة المرسلة</option>
 
-                        <option value="">
-                          اختر العهدة المرسلة
-                        </option>
-
-                        {custodies.map(
-                          (custody) => (
-                            <option
-                              key={custody.id}
-                              value={custody.id}
-                            >
-                              {custody.name}
-                            </option>
-                          ),
-                        )}
-
+                        {custodies.map((custody) => (
+                          <option key={custody.id} value={custody.id}>
+                            {custody.name}
+                          </option>
+                        ))}
                       </select>
-
                     </div>
 
                     {fromCustody && (
                       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold">
-
-                        <span className="text-slate-400">
-                          الرصيد الحالي:
-                        </span>
+                        <span className="text-slate-400">الرصيد الحالي:</span>
 
                         <span
                           className={
-                            fromCustody.balance <
-                            0
+                            fromCustody.balance < 0
                               ? "text-red-600"
-                              : fromCustody.balance >
-                                  0
+                              : fromCustody.balance > 0
                                 ? "text-emerald-600"
                                 : "text-slate-600"
                           }
                         >
-                          {formatAmount(
-                            fromCustody.balance,
-                          )}{" "}
-                          جنيه
+                          {formatAmount(fromCustody.balance)} جنيه
                         </span>
 
-                        {fromCustody.type ===
-                          "project" &&
+                        {fromCustody.type === "project" &&
                           fromCustody.responsiblePerson && (
                             <span className="text-slate-400">
                               المسؤول:{" "}
                               <span className="font-bold text-slate-600">
-                                {
-                                  fromCustody.responsiblePerson
-                                }
+                                {fromCustody.responsiblePerson}
                               </span>
                             </span>
                           )}
-
                       </div>
                     )}
-
                   </div>
 
                   {/* To Custody */}
 
                   <div>
-
                     <label
                       htmlFor="to-custody"
                       className="mb-2 block text-sm font-bold text-slate-700"
                     >
                       إلى عهدة
-                      <span className="mr-1 text-red-500">
-                        *
-                      </span>
+                      <span className="mr-1 text-red-500">*</span>
                     </label>
 
                     <div className="relative">
-
-                      <WalletCards className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                      <WalletCards className="pointer-events-none absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2 text-slate-400" />
 
                       <select
                         id="to-custody"
                         value={toCustodyId}
                         onChange={(event) =>
-                          handleToCustodyChange(
-                            event.target.value,
-                          )
+                          handleToCustodyChange(event.target.value)
                         }
-                        className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm font-semibold text-slate-800 outline-none transition-all hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                        className="h-12 w-full cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm font-semibold text-slate-800 transition-all outline-none hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                       >
+                        <option value="">اختر العهدة المستلمة</option>
 
-                        <option value="">
-                          اختر العهدة المستلمة
-                        </option>
-
-                        {destinationCustodies.map(
-                          (custody) => (
-                            <option
-                              key={custody.id}
-                              value={custody.id}
-                            >
-                              {custody.name}
-                            </option>
-                          ),
-                        )}
-
+                        {destinationCustodies.map((custody) => (
+                          <option key={custody.id} value={custody.id}>
+                            {custody.name}
+                          </option>
+                        ))}
                       </select>
-
                     </div>
 
                     {toCustody && (
                       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold">
-
-                        <span className="text-slate-400">
-                          الرصيد الحالي:
-                        </span>
+                        <span className="text-slate-400">الرصيد الحالي:</span>
 
                         <span
                           className={
-                            toCustody.balance <
-                            0
+                            toCustody.balance < 0
                               ? "text-red-600"
-                              : toCustody.balance >
-                                  0
+                              : toCustody.balance > 0
                                 ? "text-emerald-600"
                                 : "text-slate-600"
                           }
                         >
-                          {formatAmount(
-                            toCustody.balance,
-                          )}{" "}
-                          جنيه
+                          {formatAmount(toCustody.balance)} جنيه
                         </span>
 
-                        {toCustody.type ===
-                          "project" &&
+                        {toCustody.type === "project" &&
                           toCustody.responsiblePerson && (
                             <span className="text-slate-400">
                               المسؤول:{" "}
                               <span className="font-bold text-slate-600">
-                                {
-                                  toCustody.responsiblePerson
-                                }
+                                {toCustody.responsiblePerson}
                               </span>
                             </span>
                           )}
-
                       </div>
                     )}
-
                   </div>
-
                 </div>
 
                 {showSourceFinancialAccount && (
@@ -800,7 +615,8 @@ function NewTransferPageContent() {
                         <option value="">اختر وسيلة الدفع</option>
                         {fromFinancialAccounts.map((account) => (
                           <option key={account.id} value={account.id}>
-                            {account.name} — {formatAmount(account.balance)} جنيه
+                            {account.name} — {formatAmount(account.balance)}{" "}
+                            جنيه
                           </option>
                         ))}
                       </select>
@@ -820,48 +636,36 @@ function NewTransferPageContent() {
 
                 {showFundingSource && (
                   <section className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4 sm:p-5">
-
                     <div className="mb-4">
-
                       <h3 className="text-sm font-extrabold text-slate-800">
                         مصدر الأموال
                       </h3>
 
                       <p className="mt-1 text-xs leading-5 text-slate-500">
-                        حدد هل المبلغ خارج فعلًا من عهدتي أنا، أم أن الأموال جايه من جهة خارجية وسيتم تمريرها إلى العهدة المستلمة.
+                        حدد هل المبلغ خارج فعلًا من عهدتي أنا، أم أن الأموال
+                        جايه من جهة خارجية وسيتم تمريرها إلى العهدة المستلمة.
                       </p>
-
                     </div>
 
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-
                       {/* Own Money */}
 
                       <label
                         className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-all ${
-                          fundingMode ===
-                          "central"
+                          fundingMode === "central"
                             ? "border-blue-300 bg-white shadow-sm"
                             : "border-slate-200 bg-white/70 hover:border-slate-300 hover:bg-white"
                         }`}
                       >
-
                         <input
                           type="radio"
                           name="funding-mode"
                           value="central"
-                          checked={
-                            fundingMode ===
-                            "central"
-                          }
+                          checked={fundingMode === "central"}
                           onChange={() => {
-                            setFundingMode(
-                              "central",
-                            );
+                            setFundingMode("central");
 
-                            setExternalSource(
-                              "",
-                            );
+                            setExternalSource("");
 
                             setError("");
                           }}
@@ -869,42 +673,33 @@ function NewTransferPageContent() {
                         />
 
                         <span className="min-w-0">
-
                           <span className="block text-sm font-bold text-slate-800">
                             من عهدتي أنا
                           </span>
 
                           <span className="mt-1 block text-xs leading-5 text-slate-500">
-                            المبلغ موجود فعلًا في عهدتي، وسيقل رصيدي عند التحويل.
+                            المبلغ موجود فعلًا في عهدتي، وسيقل رصيدي عند
+                            التحويل.
                           </span>
-
                         </span>
-
                       </label>
 
                       {/* External Money */}
 
                       <label
                         className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-all ${
-                          fundingMode ===
-                          "external"
+                          fundingMode === "external"
                             ? "border-blue-300 bg-white shadow-sm"
                             : "border-slate-200 bg-white/70 hover:border-slate-300 hover:bg-white"
                         }`}
                       >
-
                         <input
                           type="radio"
                           name="funding-mode"
                           value="external"
-                          checked={
-                            fundingMode ===
-                            "external"
-                          }
+                          checked={fundingMode === "external"}
                           onChange={() => {
-                            setFundingMode(
-                              "external",
-                            );
+                            setFundingMode("external");
 
                             setError("");
                           }}
@@ -912,61 +707,48 @@ function NewTransferPageContent() {
                         />
 
                         <span className="min-w-0">
-
                           <span className="block text-sm font-bold text-slate-800">
                             من جهة خارجية
                           </span>
 
                           <span className="mt-1 block text-xs leading-5 text-slate-500">
-                            المبلغ ليس خارجًا من رصيدي أنا، وإنما من مصدر خارجي مثل الحاج نبيل أو الحاج رمضان.
+                            المبلغ ليس خارجًا من رصيدي أنا، وإنما من مصدر خارجي
+                            مثل الحاج نبيل أو الحاج رمضان.
                           </span>
-
                         </span>
-
                       </label>
-
                     </div>
 
                     {/* External Source */}
 
-                    {fundingMode ===
-                      "external" && (
+                    {fundingMode === "external" && (
                       <div className="mt-4">
-
                         <label
                           htmlFor="external-source"
                           className="mb-2 block text-sm font-bold text-slate-700"
                         >
                           مصدر الأموال
-                          <span className="mr-1 text-red-500">
-                            *
-                          </span>
+                          <span className="mr-1 text-red-500">*</span>
                         </label>
 
                         <input
                           id="external-source"
                           type="text"
-                          value={
-                            externalSource
-                          }
+                          value={externalSource}
                           onChange={(event) => {
-                            setExternalSource(
-                              event.target.value,
-                            );
+                            setExternalSource(event.target.value);
 
                             setError("");
                           }}
                           placeholder="مثال: الحاج نبيل"
-                          className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-800 outline-none transition-all placeholder:text-slate-300 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                          className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-800 transition-all outline-none placeholder:text-slate-300 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                         />
 
                         <p className="mt-2 text-xs leading-5 text-slate-500">
                           اكتب اسم الجهة التي جاء منها المبلغ فعليًا.
                         </p>
-
                       </div>
                     )}
-
                   </section>
                 )}
 
@@ -976,15 +758,12 @@ function NewTransferPageContent() {
 
                 {toCustody && (
                   <section className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 sm:p-5">
-
                     <div className="flex items-start gap-3">
-
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm">
                         <WalletCards className="h-5 w-5" />
                       </div>
 
                       <div className="min-w-0">
-
                         <p className="text-sm font-extrabold text-slate-800">
                           العهدة المستلمة
                         </p>
@@ -994,9 +773,7 @@ function NewTransferPageContent() {
                         </p>
 
                         <div className="mt-2 space-y-1">
-
-                          {toCustody.type ===
-                            "project" && (
+                          {toCustody.type === "project" && (
                             <p className="text-xs leading-5 text-slate-500">
                               نوع العهدة:{" "}
                               <span className="font-bold text-slate-700">
@@ -1005,8 +782,7 @@ function NewTransferPageContent() {
                             </p>
                           )}
 
-                          {toCustody.type ===
-                            "person" && (
+                          {toCustody.type === "person" && (
                             <p className="text-xs leading-5 text-slate-500">
                               نوع العهدة:{" "}
                               <span className="font-bold text-slate-700">
@@ -1015,8 +791,7 @@ function NewTransferPageContent() {
                             </p>
                           )}
 
-                          {toCustody.type ===
-                            "worker" && (
+                          {toCustody.type === "worker" && (
                             <p className="text-xs leading-5 text-slate-500">
                               نوع العهدة:{" "}
                               <span className="font-bold text-slate-700">
@@ -1029,19 +804,13 @@ function NewTransferPageContent() {
                             <p className="text-xs leading-5 text-slate-500">
                               المسؤول:{" "}
                               <span className="font-bold text-slate-700">
-                                {
-                                  toCustody.responsiblePerson
-                                }
+                                {toCustody.responsiblePerson}
                               </span>
                             </p>
                           )}
-
                         </div>
-
                       </div>
-
                     </div>
-
                   </section>
                 )}
 
@@ -1050,36 +819,28 @@ function NewTransferPageContent() {
                 {/* ================================================== */}
 
                 <div>
-
                   <label
                     htmlFor="transfer-date"
                     className="mb-2 block text-sm font-bold text-slate-700"
                   >
                     تاريخ التحويل
-                    <span className="mr-1 text-red-500">
-                      *
-                    </span>
+                    <span className="mr-1 text-red-500">*</span>
                   </label>
 
                   <div className="relative">
-
-                    <CalendarDays className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                    <CalendarDays className="pointer-events-none absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2 text-slate-400" />
 
                     <DateInput
                       id="transfer-date"
                       value={date}
                       onChange={(value) => {
-                        setDate(
-                          value,
-                        );
+                        setDate(value);
 
                         setError("");
                       }}
-                      className="h-12 w-full cursor-pointer rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm text-slate-800 outline-none transition-all hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                      className="h-12 w-full cursor-pointer rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm text-slate-800 transition-all outline-none hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                     />
-
                   </div>
-
                 </div>
 
                 {/* ================================================== */}
@@ -1087,20 +848,16 @@ function NewTransferPageContent() {
                 {/* ================================================== */}
 
                 <div>
-
                   <label
                     htmlFor="transfer-amount"
                     className="mb-2 block text-sm font-bold text-slate-700"
                   >
                     المبلغ
-                    <span className="mr-1 text-red-500">
-                      *
-                    </span>
+                    <span className="mr-1 text-red-500">*</span>
                   </label>
 
                   <div className="relative">
-
-                    <WalletCards className="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                    <WalletCards className="pointer-events-none absolute top-1/2 right-4 h-5 w-5 -translate-y-1/2 text-slate-400" />
 
                     <input
                       id="transfer-amount"
@@ -1109,18 +866,14 @@ function NewTransferPageContent() {
                       step="0.01"
                       value={amount}
                       onChange={(event) => {
-                        setAmount(
-                          event.target.value,
-                        );
+                        setAmount(event.target.value);
 
                         setError("");
                       }}
                       placeholder="مثال: 5000"
-                      className="h-12 w-full rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm text-slate-800 outline-none transition-all placeholder:text-slate-300 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                      className="h-12 w-full rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm text-slate-800 transition-all outline-none placeholder:text-slate-300 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                     />
-
                   </div>
-
                 </div>
 
                 {/* ================================================== */}
@@ -1128,159 +881,122 @@ function NewTransferPageContent() {
                 {/* ================================================== */}
 
                 <div>
-
                   <label
                     htmlFor="transfer-description"
                     className="mb-2 block text-sm font-bold text-slate-700"
                   >
                     بيان التحويل
-                    <span className="mr-1 text-red-500">
-                      *
-                    </span>
+                    <span className="mr-1 text-red-500">*</span>
                   </label>
 
                   <div className="relative">
-
-                    <FileText className="pointer-events-none absolute right-4 top-4 h-5 w-5 text-slate-400" />
+                    <FileText className="pointer-events-none absolute top-4 right-4 h-5 w-5 text-slate-400" />
 
                     <textarea
                       id="transfer-description"
                       value={description}
                       onChange={(event) => {
-                        setDescription(
-                          event.target.value,
-                        );
+                        setDescription(event.target.value);
 
                         setError("");
                       }}
                       rows={4}
                       placeholder={
-                        fromCustody &&
-                        toCustody
+                        fromCustody && toCustody
                           ? `تحويل من ${fromCustody.name} إلى ${toCustody.name}`
                           : "مثال: تحويل عهدة إلى سيوة"
                       }
-                      className="w-full resize-y rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm leading-6 text-slate-800 outline-none transition-all placeholder:text-slate-300 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                      className="w-full resize-y rounded-xl border border-slate-200 bg-white py-3 pr-12 pl-4 text-sm leading-6 text-slate-800 transition-all outline-none placeholder:text-slate-300 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                     />
-
                   </div>
-
                 </div>
 
                 {/* ================================================== */}
                 {/* Preview */}
                 {/* ================================================== */}
 
-                {fromCustody &&
-                  toCustody &&
-                  amount && (
-                    <section className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4 sm:p-5">
-
-                      <div className="flex items-start gap-3">
-
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm">
-                          <ArrowLeftRight className="h-5 w-5" />
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-
-                          <p className="text-sm font-extrabold text-slate-800">
-                            ملخص العملية
-                          </p>
-
-                          <p className="mt-1 text-xs leading-6 text-slate-500 sm:text-sm">
-
-                            سيتم تحويل{" "}
-
-                            <span className="font-extrabold text-slate-800">
-                              {formatAmount(
-                                Number(
-                                  amount,
-                                ) || 0,
-                              )}{" "}
-                              جنيه
-                            </span>
-
-                            {" "}من{" "}
-
-                            <span className="font-extrabold text-slate-800">
-                              {
-                                fromCustody.name
-                              }
-                            </span>
-
-                            {" "}إلى{" "}
-
-                            <span className="font-extrabold text-slate-800">
-                              {
-                                toCustody.name
-                              }
-                            </span>
-
-                            .
-
-                          </p>
-
-                          {/* External Source Preview */}
-
-                          {isCentralTransfer &&
-                            fundingMode ===
-                              "external" && (
-                              <div className="mt-3 rounded-xl border border-blue-100 bg-white/80 p-3">
-
-                                <p className="text-xs font-bold text-slate-500">
-                                  مصدر المبلغ الأصلي
-                                </p>
-
-                                <p className="mt-1 text-sm font-extrabold text-blue-700">
-                                  {externalSource.trim() ||
-                                    "لم يتم تحديد المصدر بعد"}
-                                </p>
-
-                                <p className="mt-2 text-xs leading-5 text-slate-500">
-                                  سيتم تسجيل مصدر المبلغ كجهة خارجية ثم إضافته مباشرة إلى العهدة المستلمة، دون اعتباره رصيدًا فعليًا دخل إحدى وسائل الدفع الخاصة بعهدتي أنا.
-                                </p>
-
-                              </div>
-                            )}
-
-                          {/* Normal Funding Preview */}
-
-                          {isCentralTransfer &&
-                            fundingMode ===
-                              "central" && (
-                              <p className="mt-3 text-xs leading-6 text-slate-500">
-                                {fromCustody.id === toCustody.id
-                                  ? "سيتم نقل المبلغ بين وسائل الدفع داخل عهدتي أنا، لذلك إجمالي رصيد العهدة لن يتغير."
-                                  : "المبلغ خارج فعليًا من عهدتي أنا، وسيتم خصمه من وسيلة الدفع التي اخترتها، بينما تظل طريقة استلام العهدة الأخرى غير مطلوبة."}
-                              </p>
-                            )}
-
-                          {/* Non Central Preview */}
-
-                          {!isCentralTransfer && (
-                            <p className="mt-3 text-xs leading-6 text-slate-500">
-                              سيتم خصم المبلغ من العهدة المرسلة وإضافته إلى العهدة المستلمة. لا نحتاج إلى تحديد وسيلة الدفع التي ستستلم بها العهدة الأخرى.
-                            </p>
-                          )}
-
-                        </div>
-
+                {fromCustody && toCustody && amount && (
+                  <section className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4 sm:p-5">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm">
+                        <ArrowLeftRight className="h-5 w-5" />
                       </div>
 
-                    </section>
-                  )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-extrabold text-slate-800">
+                          ملخص العملية
+                        </p>
+
+                        <p className="mt-1 text-xs leading-6 text-slate-500 sm:text-sm">
+                          سيتم تحويل{" "}
+                          <span className="font-extrabold text-slate-800">
+                            {formatAmount(Number(amount) || 0)} جنيه
+                          </span>{" "}
+                          من{" "}
+                          <span className="font-extrabold text-slate-800">
+                            {fromCustody.name}
+                          </span>{" "}
+                          إلى{" "}
+                          <span className="font-extrabold text-slate-800">
+                            {toCustody.name}
+                          </span>
+                          .
+                        </p>
+
+                        {/* External Source Preview */}
+
+                        {isCentralTransfer && fundingMode === "external" && (
+                          <div className="mt-3 rounded-xl border border-blue-100 bg-white/80 p-3">
+                            <p className="text-xs font-bold text-slate-500">
+                              مصدر المبلغ الأصلي
+                            </p>
+
+                            <p className="mt-1 text-sm font-extrabold text-blue-700">
+                              {externalSource.trim() ||
+                                "لم يتم تحديد المصدر بعد"}
+                            </p>
+
+                            <p className="mt-2 text-xs leading-5 text-slate-500">
+                              سيتم تسجيل مصدر المبلغ كجهة خارجية ثم إضافته
+                              مباشرة إلى العهدة المستلمة، دون اعتباره رصيدًا
+                              فعليًا دخل إحدى وسائل الدفع الخاصة بعهدتي أنا.
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Normal Funding Preview */}
+
+                        {isCentralTransfer && fundingMode === "central" && (
+                          <p className="mt-3 text-xs leading-6 text-slate-500">
+                            {fromCustody.id === toCustody.id
+                              ? "سيتم نقل المبلغ بين وسائل الدفع داخل عهدتي أنا، لذلك إجمالي رصيد العهدة لن يتغير."
+                              : "المبلغ خارج فعليًا من عهدتي أنا، وسيتم خصمه من وسيلة الدفع التي اخترتها، بينما تظل طريقة استلام العهدة الأخرى غير مطلوبة."}
+                          </p>
+                        )}
+
+                        {/* Non Central Preview */}
+
+                        {!isCentralTransfer && (
+                          <p className="mt-3 text-xs leading-6 text-slate-500">
+                            سيتم خصم المبلغ من العهدة المرسلة وإضافته إلى العهدة
+                            المستلمة. لا نحتاج إلى تحديد وسيلة الدفع التي ستستلم
+                            بها العهدة الأخرى.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </section>
+                )}
 
                 {/* ================================================== */}
                 {/* Error */}
                 {/* ================================================== */}
 
                 {error && (
-                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold leading-6 text-red-700">
+                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 font-semibold text-red-700">
                     {error}
                   </div>
                 )}
-
               </div>
 
               {/* ================================================== */}
@@ -1288,7 +1004,6 @@ function NewTransferPageContent() {
               {/* ================================================== */}
 
               <div className="flex flex-col-reverse gap-3 border-t border-slate-100 bg-slate-50/70 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-
                 <Link
                   href="/transfers"
                   className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-slate-900"
@@ -1301,22 +1016,14 @@ function NewTransferPageContent() {
                   disabled={isSaving}
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-
                   <ArrowLeftRight className="h-4 w-4" />
 
-                  {isSaving
-                    ? "جاري تسجيل التحويل..."
-                    : "حفظ التحويل"}
-
+                  {isSaving ? "جاري تسجيل التحويل..." : "حفظ التحويل"}
                 </button>
-
               </div>
-
             </>
           )}
-
         </form>
-
       </div>
     </AppShell>
   );

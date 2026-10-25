@@ -16,9 +16,7 @@ import PermissionLink from "@/components/auth/PermissionLink";
 
 import { getCustodies } from "@/lib/data/custodies";
 
-import {
-  getCustodyTransactions,
-} from "@/lib/data/custody-transactions";
+import { getCustodyTransactions } from "@/lib/data/custody-transactions";
 
 import {
   getExpensesByProjectId,
@@ -40,109 +38,73 @@ function formatDate(date: string) {
 }
 
 export default function CustodiesPage() {
-  const [custodies, setCustodies] =
-    useState<Custody[]>([]);
+  const [custodies, setCustodies] = useState<Custody[]>([]);
 
-  const [transactions, setTransactions] =
-    useState<CustodyTransaction[]>([]);
+  const [transactions, setTransactions] = useState<CustodyTransaction[]>([]);
 
-  const [
-    showProjectCustodies,
-    setShowProjectCustodies,
-  ] = useState(false);
+  const [showProjectCustodies, setShowProjectCustodies] = useState(false);
 
-  const [
-    selectedProjectCustodyId,
-    setSelectedProjectCustodyId,
-  ] = useState("");
+  const [selectedProjectCustodyId, setSelectedProjectCustodyId] = useState("");
 
-  const [
-    showPersonCustodies,
-    setShowPersonCustodies,
-  ] = useState(false);
+  const [showPersonCustodies, setShowPersonCustodies] = useState(false);
 
-  const [
-    selectedPersonCustodyId,
-    setSelectedPersonCustodyId,
-  ] = useState("");
+  const [selectedPersonCustodyId, setSelectedPersonCustodyId] = useState("");
 
-  const [uiStateLoaded, setUiStateLoaded] =
-    useState(false);
+  const [uiStateLoaded, setUiStateLoaded] = useState(false);
 
   const loadData = () => {
-    const allCustodies =
-      getCustodies();
+    const allCustodies = getCustodies();
 
-    const allTransactions =
-      getCustodyTransactions();
+    const allTransactions = getCustodyTransactions();
 
     setCustodies(allCustodies);
 
     setTransactions(
-      [...allTransactions].sort(
-        (a, b) => {
-          const dateCompare =
-            b.date.localeCompare(
-              a.date,
-            );
+      [...allTransactions].sort((a, b) => {
+        const dateCompare = b.date.localeCompare(a.date);
 
-          if (dateCompare !== 0) {
-            return dateCompare;
-          }
+        if (dateCompare !== 0) {
+          return dateCompare;
+        }
 
-          return b.createdAt.localeCompare(
-            a.createdAt,
-          );
-        },
-      ),
+        return b.createdAt.localeCompare(a.createdAt);
+      }),
     );
   };
 
   useEffect(() => {
     loadData();
 
-    const savedShowProjectCustodies =
-      window.localStorage.getItem(
-        "custodies-show-project-custodies",
-      );
+    const savedShowProjectCustodies = window.localStorage.getItem(
+      "custodies-show-project-custodies",
+    );
 
-    const savedSelectedProjectCustodyId =
-      window.localStorage.getItem(
-        "custodies-selected-project-custody-id",
-      );
+    const savedSelectedProjectCustodyId = window.localStorage.getItem(
+      "custodies-selected-project-custody-id",
+    );
 
-    const savedShowPersonCustodies =
-      window.localStorage.getItem(
-        "custodies-show-person-custodies",
-      );
+    const savedShowPersonCustodies = window.localStorage.getItem(
+      "custodies-show-person-custodies",
+    );
 
-    const savedSelectedPersonCustodyId =
-      window.localStorage.getItem(
-        "custodies-selected-person-custody-id",
-      );
+    const savedSelectedPersonCustodyId = window.localStorage.getItem(
+      "custodies-selected-person-custody-id",
+    );
 
     if (savedShowProjectCustodies !== null) {
-      setShowProjectCustodies(
-        savedShowProjectCustodies === "true",
-      );
+      setShowProjectCustodies(savedShowProjectCustodies === "true");
     }
 
     if (savedSelectedProjectCustodyId) {
-      setSelectedProjectCustodyId(
-        savedSelectedProjectCustodyId,
-      );
+      setSelectedProjectCustodyId(savedSelectedProjectCustodyId);
     }
 
     if (savedShowPersonCustodies !== null) {
-      setShowPersonCustodies(
-        savedShowPersonCustodies === "true",
-      );
+      setShowPersonCustodies(savedShowPersonCustodies === "true");
     }
 
     if (savedSelectedPersonCustodyId) {
-      setSelectedPersonCustodyId(
-        savedSelectedPersonCustodyId,
-      );
+      setSelectedPersonCustodyId(savedSelectedPersonCustodyId);
     }
 
     setUiStateLoaded(true);
@@ -180,84 +142,42 @@ export default function CustodiesPage() {
     selectedPersonCustodyId,
   ]);
 
-  const centralCustody =
-    useMemo(
-      () =>
-        custodies.find(
-          (custody) =>
-            custody.id ===
-            "central",
-        ),
-      [custodies],
-    );
-
-  const personCustodies =
-    useMemo(
-      () =>
-        custodies.filter(
-          (custody) =>
-            custody.type ===
-            "person",
-        ),
-      [custodies],
-    );
-
-  const projectCustodies =
-    useMemo(
-      () =>
-        custodies.filter(
-          (custody) =>
-            custody.type ===
-            "project",
-        ),
-      [custodies],
-    );
-
-  const workerCustodies =
-    useMemo(
-      () =>
-        custodies.filter(
-          (custody) =>
-            custody.type ===
-            "worker",
-        ),
-      [custodies],
-    );
-
-  const totalBalance =
-    useMemo(
-      () =>
-        custodies.reduce(
-          (total, custody) =>
-            total +
-            custody.balance,
-          0,
-        ),
-      [custodies],
-    );
-
-  const totalIn =
-    useMemo(
-    () =>
-      custodies.reduce(
-        (total, custody) => total + custody.totalIn,
-        0,
-      ),
+  const centralCustody = useMemo(
+    () => custodies.find((custody) => custody.id === "central"),
     [custodies],
   );
 
-  const totalOut =
-    useMemo(
-     () =>
-      custodies.reduce(
-        (total, custody) => total + custody.totalOut,
-        0,
-      ),
-       [custodies],
+  const personCustodies = useMemo(
+    () => custodies.filter((custody) => custody.type === "person"),
+    [custodies],
   );
 
-  const latestTransactions =
-    transactions.slice(0, 8);
+  const projectCustodies = useMemo(
+    () => custodies.filter((custody) => custody.type === "project"),
+    [custodies],
+  );
+
+  const workerCustodies = useMemo(
+    () => custodies.filter((custody) => custody.type === "worker"),
+    [custodies],
+  );
+
+  const totalBalance = useMemo(
+    () => custodies.reduce((total, custody) => total + custody.balance, 0),
+    [custodies],
+  );
+
+  const totalIn = useMemo(
+    () => custodies.reduce((total, custody) => total + custody.totalIn, 0),
+    [custodies],
+  );
+
+  const totalOut = useMemo(
+    () => custodies.reduce((total, custody) => total + custody.totalOut, 0),
+    [custodies],
+  );
+
+  const latestTransactions = transactions.slice(0, 8);
 
   /*
    * ================================
@@ -265,103 +185,63 @@ export default function CustodiesPage() {
    * ================================
    */
 
-  const selectedProjectCustody =
-    useMemo(
-      () =>
-        projectCustodies.find(
-          (custody) =>
-            custody.id ===
-            selectedProjectCustodyId,
-        ),
-      [
-        projectCustodies,
-        selectedProjectCustodyId,
-      ],
+  const selectedProjectCustody = useMemo(
+    () =>
+      projectCustodies.find(
+        (custody) => custody.id === selectedProjectCustodyId,
+      ),
+    [projectCustodies, selectedProjectCustodyId],
+  );
+
+  const selectedProjectIncoming = useMemo(() => {
+    if (!selectedProjectCustody) {
+      return [];
+    }
+
+    return transactions
+      .filter(
+        (transaction) =>
+          transaction.custodyId === selectedProjectCustody.id &&
+          transaction.type === "in",
+      )
+      .sort((a, b) => {
+        const dateCompare = b.date.localeCompare(a.date);
+
+        if (dateCompare !== 0) {
+          return dateCompare;
+        }
+
+        return b.createdAt.localeCompare(a.createdAt);
+      });
+  }, [selectedProjectCustody, transactions]);
+
+  const selectedProjectExpenses = useMemo(() => {
+    if (!selectedProjectCustody?.projectId) {
+      return [];
+    }
+
+    return getExpensesByProjectId(selectedProjectCustody.projectId).sort(
+      (a, b) => {
+        const dateCompare = b.date.localeCompare(a.date);
+
+        if (dateCompare !== 0) {
+          return dateCompare;
+        }
+
+        return b.createdAt.localeCompare(a.createdAt);
+      },
     );
+  }, [selectedProjectCustody]);
 
-  const selectedProjectIncoming =
-    useMemo(() => {
-      if (!selectedProjectCustody) {
-        return [];
-      }
+  const selectedProjectIncomingTotal = selectedProjectIncoming.reduce(
+    (total, transaction) => total + transaction.amount,
+    0,
+  );
 
-      return transactions
-        .filter(
-          (transaction) =>
-            transaction.custodyId ===
-              selectedProjectCustody.id &&
-            transaction.type ===
-              "in",
-        )
-        .sort(
-          (a, b) => {
-            const dateCompare =
-              b.date.localeCompare(
-                a.date,
-              );
-
-            if (
-              dateCompare !== 0
-            ) {
-              return dateCompare;
-            }
-
-            return b.createdAt.localeCompare(
-              a.createdAt,
-            );
-          },
-        );
-    }, [
-      selectedProjectCustody,
-      transactions,
-    ]);
-
-  const selectedProjectExpenses =
-    useMemo(() => {
-      if (
-        !selectedProjectCustody?.projectId
-      ) {
-        return [];
-      }
-
-      return getExpensesByProjectId(
-        selectedProjectCustody.projectId,
-      ).sort(
-        (a, b) => {
-          const dateCompare =
-            b.date.localeCompare(
-              a.date,
-            );
-
-          if (
-            dateCompare !== 0
-          ) {
-            return dateCompare;
-          }
-
-          return b.createdAt.localeCompare(
-            a.createdAt,
-          );
-        },
-      );
-    }, [
-      selectedProjectCustody,
-    ]);
-
-  const selectedProjectIncomingTotal =
-    selectedProjectIncoming.reduce(
-      (total, transaction) =>
-        total +
-        transaction.amount,
-      0,
-    );
-
-  const selectedProjectExpensesTotal =
-    selectedProjectExpenses.reduce(
-      (total, expense) =>
-        total + expense.amount,
-      0,
-    );
+  const selectedProjectExpensesTotal = selectedProjectExpenses.reduce(
+    (total, expense) => total + expense.amount,
+    0,
+  );
 
   /*
    * ================================
@@ -369,59 +249,36 @@ export default function CustodiesPage() {
    * ================================
    */
 
-  const selectedPersonCustody =
-    useMemo(
-      () =>
-        personCustodies.find(
-          (custody) =>
-            custody.id ===
-            selectedPersonCustodyId,
-        ),
-      [
-        personCustodies,
-        selectedPersonCustodyId,
-      ],
-    );
+  const selectedPersonCustody = useMemo(
+    () =>
+      personCustodies.find((custody) => custody.id === selectedPersonCustodyId),
+    [personCustodies, selectedPersonCustodyId],
+  );
 
   /*
    * الوارد الفعلي للشخص.
    */
-  const selectedPersonIncoming =
-    useMemo(() => {
-      if (!selectedPersonCustody) {
-        return [];
-      }
+  const selectedPersonIncoming = useMemo(() => {
+    if (!selectedPersonCustody) {
+      return [];
+    }
 
-      return transactions
-        .filter(
-          (transaction) =>
-            transaction.custodyId ===
-              selectedPersonCustody.id &&
-            transaction.type ===
-              "in",
-        )
-        .sort(
-          (a, b) => {
-            const dateCompare =
-              b.date.localeCompare(
-                a.date,
-              );
+    return transactions
+      .filter(
+        (transaction) =>
+          transaction.custodyId === selectedPersonCustody.id &&
+          transaction.type === "in",
+      )
+      .sort((a, b) => {
+        const dateCompare = b.date.localeCompare(a.date);
 
-            if (
-              dateCompare !== 0
-            ) {
-              return dateCompare;
-            }
+        if (dateCompare !== 0) {
+          return dateCompare;
+        }
 
-            return b.createdAt.localeCompare(
-              a.createdAt,
-            );
-          },
-        );
-    }, [
-      selectedPersonCustody,
-      transactions,
-    ]);
+        return b.createdAt.localeCompare(a.createdAt);
+      });
+  }, [selectedPersonCustody, transactions]);
 
   /*
    * المصروفات الفعلية المدفوعة
@@ -431,156 +288,94 @@ export default function CustodiesPage() {
    * لأن المصروف نفسه مرتبط بالعهدة
    * التي دفعته.
    */
-  const selectedPersonExpenses =
-    useMemo(() => {
-      if (!selectedPersonCustody) {
-        return [];
+  const selectedPersonExpenses = useMemo(() => {
+    if (!selectedPersonCustody) {
+      return [];
+    }
+
+    return getExpensesByCustodyId(selectedPersonCustody.id).sort((a, b) => {
+      const dateCompare = b.date.localeCompare(a.date);
+
+      if (dateCompare !== 0) {
+        return dateCompare;
       }
 
-      return getExpensesByCustodyId(
-        selectedPersonCustody.id,
-      ).sort(
-        (a, b) => {
-          const dateCompare =
-            b.date.localeCompare(
-              a.date,
-            );
+      return b.createdAt.localeCompare(a.createdAt);
+    });
+  }, [selectedPersonCustody]);
 
-          if (
-            dateCompare !== 0
-          ) {
-            return dateCompare;
-          }
+  const selectedPersonIncomingTotal = selectedPersonIncoming.reduce(
+    (total, transaction) => total + transaction.amount,
+    0,
+  );
 
-          return b.createdAt.localeCompare(
-            a.createdAt,
-          );
-        },
-      );
-    }, [
-      selectedPersonCustody,
-    ]);
-
-  const selectedPersonIncomingTotal =
-    selectedPersonIncoming.reduce(
-      (total, transaction) =>
-        total +
-        transaction.amount,
-      0,
-    );
-
-  const selectedPersonExpensesTotal =
-    selectedPersonExpenses.reduce(
-      (total, expense) =>
-        total + expense.amount,
-      0,
-    );
+  const selectedPersonExpensesTotal = selectedPersonExpenses.reduce(
+    (total, expense) => total + expense.amount,
+    0,
+  );
 
   const custodyTypes = [
     {
       title: "العهدة المركزية",
-      description:
-        "العهدة الرئيسية الخاصة بالإدارة",
-      balance:
-        centralCustody?.balance ??
-        0,
-      incoming:
-        centralCustody?.totalIn ??
-        0,
-      outgoing:
-        centralCustody?.totalOut ??
-        0,
-      count: centralCustody
-        ? 1
-        : 0,
-      href:
-        "/custodies/central",
+      description: "العهدة الرئيسية الخاصة بالإدارة",
+      balance: centralCustody?.balance ?? 0,
+      incoming: centralCustody?.totalIn ?? 0,
+      outgoing: centralCustody?.totalOut ?? 0,
+      count: centralCustody ? 1 : 0,
+      href: "/custodies/central",
     },
     {
       title: "عهد المواقع",
-      description:
-        "العهد المرتبطة بالمشاريع والمواقع",
-      balance:
-        projectCustodies.reduce(
-          (total, custody) =>
-            total +
-            custody.balance,
-          0,
-        ),
-      incoming:
-        projectCustodies.reduce(
-          (total, custody) =>
-            total +
-            custody.totalIn,
-          0,
-        ),
-      outgoing:
-        projectCustodies.reduce(
-          (total, custody) =>
-            total +
-            custody.totalOut,
-          0,
-        ),
-      count:
-        projectCustodies.length,
+      description: "العهد المرتبطة بالمشاريع والمواقع",
+      balance: projectCustodies.reduce(
+        (total, custody) => total + custody.balance,
+        0,
+      ),
+      incoming: projectCustodies.reduce(
+        (total, custody) => total + custody.totalIn,
+        0,
+      ),
+      outgoing: projectCustodies.reduce(
+        (total, custody) => total + custody.totalOut,
+        0,
+      ),
+      count: projectCustodies.length,
       href: "/custodies",
     },
     {
       title: "عهد الأشخاص",
-      description:
-        "العهد المسلمة للموزعين والأفراد",
-      balance:
-        personCustodies.reduce(
-          (total, custody) =>
-            total +
-            custody.balance,
-          0,
-        ),
-      incoming:
-        personCustodies.reduce(
-          (total, custody) =>
-            total +
-            custody.totalIn,
-          0,
-        ),
-      outgoing:
-        personCustodies.reduce(
-          (total, custody) =>
-            total +
-            custody.totalOut,
-          0,
-        ),
-      count:
-        personCustodies.length,
+      description: "العهد المسلمة للموزعين والأفراد",
+      balance: personCustodies.reduce(
+        (total, custody) => total + custody.balance,
+        0,
+      ),
+      incoming: personCustodies.reduce(
+        (total, custody) => total + custody.totalIn,
+        0,
+      ),
+      outgoing: personCustodies.reduce(
+        (total, custody) => total + custody.totalOut,
+        0,
+      ),
+      count: personCustodies.length,
       href: "/custodies",
     },
     {
       title: "عهد العمال",
-      description:
-        "العهد المخصصة للعمال بشكل منفصل عن الأجور والسلف",
-      balance:
-        workerCustodies.reduce(
-          (total, custody) =>
-            total +
-            custody.balance,
-          0,
-        ),
-      incoming:
-        workerCustodies.reduce(
-          (total, custody) =>
-            total +
-            custody.totalIn,
-          0,
-        ),
-      outgoing:
-        workerCustodies.reduce(
-          (total, custody) =>
-            total +
-            custody.totalOut,
-          0,
-        ),
-      count:
-        workerCustodies.length,
+      description: "العهد المخصصة للعمال بشكل منفصل عن الأجور والسلف",
+      balance: workerCustodies.reduce(
+        (total, custody) => total + custody.balance,
+        0,
+      ),
+      incoming: workerCustodies.reduce(
+        (total, custody) => total + custody.totalIn,
+        0,
+      ),
+      outgoing: workerCustodies.reduce(
+        (total, custody) => total + custody.totalOut,
+        0,
+      ),
+      count: workerCustodies.length,
       href: "/custodies",
     },
   ];
@@ -588,7 +383,6 @@ export default function CustodiesPage() {
   return (
     <AppShell>
       <div className="app-page space-y-6">
-
         {/* Page Header */}
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
@@ -621,14 +415,14 @@ export default function CustodiesPage() {
                 وسائل الدفع
               </Link>
 
-            <PermissionLink
-              permission="create"
-              href="/custodies/central/new"
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 active:scale-[0.98]"
-            >
-              <Plus className="h-4 w-4" />
-              إضافة حركة عهدة
-            </PermissionLink>
+              <PermissionLink
+                permission="create"
+                href="/custodies/central/new"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 active:scale-[0.98]"
+              >
+                <Plus className="h-4 w-4" />
+                إضافة حركة عهدة
+              </PermissionLink>
             </div>
           </div>
         </section>
@@ -645,19 +439,13 @@ export default function CustodiesPage() {
               <div className="mt-2 flex flex-wrap items-baseline gap-2">
                 <span
                   className={`text-3xl font-extrabold tracking-tight sm:text-4xl ${
-                    totalBalance < 0
-                      ? "text-red-300"
-                      : "text-white"
+                    totalBalance < 0 ? "text-red-300" : "text-white"
                   }`}
                 >
-                  {formatAmount(
-                    totalBalance,
-                  )}
+                  {formatAmount(totalBalance)}
                 </span>
 
-                <span className="text-sm font-medium text-slate-400">
-                  جنيه
-                </span>
+                <span className="text-sm font-medium text-slate-400">جنيه</span>
               </div>
 
               <p className="mt-2 text-xs text-slate-400">
@@ -677,24 +465,34 @@ export default function CustodiesPage() {
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-bold text-slate-400">إجمالي الداخل</p>
             <p className="mt-2 text-2xl font-extrabold text-emerald-600">
-              {formatAmount(totalIn,)}
-              <span className="mr-2 text-xs font-medium text-slate-400">جنيه</span>
+              {formatAmount(totalIn)}
+              <span className="mr-2 text-xs font-medium text-slate-400">
+                جنيه
+              </span>
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-bold text-slate-400">إجمالي الخارج</p>
             <p className="mt-2 text-2xl font-extrabold text-red-600">
-              {formatAmount(totalOut,)}
-              <span className="mr-2 text-xs font-medium text-slate-400">جنيه</span>
+              {formatAmount(totalOut)}
+              <span className="mr-2 text-xs font-medium text-slate-400">
+                جنيه
+              </span>
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-xs font-bold text-slate-400">صافي الأرصدة الحالية</p>
-            <p className={`mt-2 text-2xl font-extrabold ${totalBalance < 0 ? "text-red-600" : "text-slate-900"}`}>
+            <p className="text-xs font-bold text-slate-400">
+              صافي الأرصدة الحالية
+            </p>
+            <p
+              className={`mt-2 text-2xl font-extrabold ${totalBalance < 0 ? "text-red-600" : "text-slate-900"}`}
+            >
               {formatAmount(totalBalance)}
-              <span className="mr-2 text-xs font-medium text-slate-400">جنيه</span>
+              <span className="mr-2 text-xs font-medium text-slate-400">
+                جنيه
+              </span>
             </p>
           </div>
         </section>
@@ -713,144 +511,116 @@ export default function CustodiesPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {custodyTypes.map(
-              (custody) => (
-                <div
-                  key={custody.title}
-                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-base font-extrabold text-slate-900">
-                        {custody.title}
-                      </h3>
+            {custodyTypes.map((custody) => (
+              <div
+                key={custody.title}
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-base font-extrabold text-slate-900">
+                      {custody.title}
+                    </h3>
 
-                      <p className="mt-1 text-xs leading-5 text-slate-400">
-                        {custody.description}
-                      </p>
-                    </div>
-
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-                      <Wallet className="h-5 w-5" />
-                    </div>
-                  </div>
-
-                  <div className="mt-6">
-                    <p className="text-xs font-semibold text-slate-400">
-                      الرصيد الحالي
+                    <p className="mt-1 text-xs leading-5 text-slate-400">
+                      {custody.description}
                     </p>
-
-                    <div className="mt-1 flex items-baseline gap-2">
-                      <span
-                        className={`text-2xl font-extrabold ${
-                          custody.balance < 0
-                            ? "text-red-600"
-                            : "text-slate-900"
-                        }`}
-                      >
-                        {formatAmount(
-                          custody.balance,
-                        )}
-                      </span>
-
-                      <span className="text-xs text-slate-400">
-                        جنيه
-                      </span>
-                    </div>
                   </div>
 
-                  <div className="mt-5 grid grid-cols-2 gap-3">
-                    <div className="rounded-xl bg-emerald-50 p-3">
-                      <div className="flex items-center gap-2">
-                        <ArrowDownLeft className="h-4 w-4 text-emerald-600" />
-
-                        <span className="text-xs font-semibold text-emerald-700">
-                          الداخل
-                        </span>
-                      </div>
-
-                      <p className="mt-2 text-sm font-extrabold text-slate-900">
-                        {formatAmount(
-                          custody.incoming,
-                        )}
-                      </p>
-                    </div>
-
-                    <div className="rounded-xl bg-red-50 p-3">
-                      <div className="flex items-center gap-2">
-                        <ArrowUpRight className="h-4 w-4 text-red-600" />
-
-                        <span className="text-xs font-semibold text-red-700">
-                          الخارج
-                        </span>
-                      </div>
-
-                      <p className="mt-2 text-sm font-extrabold text-slate-900">
-                        {formatAmount(
-                          custody.outgoing,
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
-                  {custody.title ===
-                  "العهدة المركزية" ? (
-                    <Link
-                      href="/custodies/central"
-                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
-                    >
-                      عرض التفاصيل
-                      <ArrowLeft className="h-3.5 w-3.5" />
-                    </Link>
-                  ) : custody.title ===
-                    "عهد المواقع" ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowProjectCustodies(
-                          (current) =>
-                            !current,
-                        );
-
-                        setSelectedProjectCustodyId(
-                          "",
-                        );
-                      }}
-                      className="mt-4 w-full cursor-pointer rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
-                    >
-                      {showProjectCustodies
-                        ? "إخفاء المواقع"
-                        : "عرض المواقع"}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowPersonCustodies(
-                          (current) =>
-                            !current,
-                        );
-
-                        setSelectedPersonCustodyId(
-                          "",
-                        );
-                      }}
-                      className="mt-4 w-full cursor-pointer rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
-                    >
-                      {showPersonCustodies
-                        ? "إخفاء الأشخاص"
-                        : "عرض الأشخاص"}
-                    </button>
-                  )}
-
-                  <div className="mt-3 text-center">
-                    <span className="text-[11px] font-semibold text-slate-400">
-                      {custody.count} عهدة مسجلة
-                    </span>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                    <Wallet className="h-5 w-5" />
                   </div>
                 </div>
-              ),
-            )}
+
+                <div className="mt-6">
+                  <p className="text-xs font-semibold text-slate-400">
+                    الرصيد الحالي
+                  </p>
+
+                  <div className="mt-1 flex items-baseline gap-2">
+                    <span
+                      className={`text-2xl font-extrabold ${
+                        custody.balance < 0 ? "text-red-600" : "text-slate-900"
+                      }`}
+                    >
+                      {formatAmount(custody.balance)}
+                    </span>
+
+                    <span className="text-xs text-slate-400">جنيه</span>
+                  </div>
+                </div>
+
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <div className="rounded-xl bg-emerald-50 p-3">
+                    <div className="flex items-center gap-2">
+                      <ArrowDownLeft className="h-4 w-4 text-emerald-600" />
+
+                      <span className="text-xs font-semibold text-emerald-700">
+                        الداخل
+                      </span>
+                    </div>
+
+                    <p className="mt-2 text-sm font-extrabold text-slate-900">
+                      {formatAmount(custody.incoming)}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl bg-red-50 p-3">
+                    <div className="flex items-center gap-2">
+                      <ArrowUpRight className="h-4 w-4 text-red-600" />
+
+                      <span className="text-xs font-semibold text-red-700">
+                        الخارج
+                      </span>
+                    </div>
+
+                    <p className="mt-2 text-sm font-extrabold text-slate-900">
+                      {formatAmount(custody.outgoing)}
+                    </p>
+                  </div>
+                </div>
+
+                {custody.title === "العهدة المركزية" ? (
+                  <Link
+                    href="/custodies/central"
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                  >
+                    عرض التفاصيل
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                  </Link>
+                ) : custody.title === "عهد المواقع" ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowProjectCustodies((current) => !current);
+
+                      setSelectedProjectCustodyId("");
+                    }}
+                    className="mt-4 w-full cursor-pointer rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                  >
+                    {showProjectCustodies ? "إخفاء المواقع" : "عرض المواقع"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPersonCustodies((current) => !current);
+
+                      setSelectedPersonCustodyId("");
+                    }}
+                    className="mt-4 w-full cursor-pointer rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                  >
+                    {showPersonCustodies ? "إخفاء الأشخاص" : "عرض الأشخاص"}
+                  </button>
+                )}
+
+                <div className="mt-3 text-center">
+                  <span className="text-[11px] font-semibold text-slate-400">
+                    {custody.count} عهدة مسجلة
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -863,29 +633,24 @@ export default function CustodiesPage() {
             <div className="border-b border-slate-100 bg-slate-50/70 p-5 sm:p-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-xs font-bold text-blue-600">
-                    عهد المواقع
-                  </p>
+                  <p className="text-xs font-bold text-blue-600">عهد المواقع</p>
 
                   <h2 className="mt-1 text-xl font-extrabold text-slate-900">
                     اختر الموقع
                   </h2>
 
                   <p className="mt-1 text-sm text-slate-500">
-                    اختر موقعًا موجودًا فعليًا لعرض ملخص الوارد والمصروفات الخاصة به.
+                    اختر موقعًا موجودًا فعليًا لعرض ملخص الوارد والمصروفات
+                    الخاصة به.
                   </p>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => {
-                    setShowProjectCustodies(
-                      false,
-                    );
+                    setShowProjectCustodies(false);
 
-                    setSelectedProjectCustodyId(
-                      "",
-                    );
+                    setSelectedProjectCustodyId("");
                   }}
                   className="inline-flex h-10 cursor-pointer items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-600 hover:bg-slate-100"
                 >
@@ -893,8 +658,7 @@ export default function CustodiesPage() {
                 </button>
               </div>
 
-              {projectCustodies.length ===
-              0 ? (
+              {projectCustodies.length === 0 ? (
                 <div className="mt-5 rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center">
                   <p className="text-sm font-bold text-slate-600">
                     لا توجد عهد مواقع مسجلة فعليًا.
@@ -902,72 +666,54 @@ export default function CustodiesPage() {
                 </div>
               ) : (
                 <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {projectCustodies.map(
-                    (custody) => (
-                      <button
-                        key={custody.id}
-                        type="button"
-                        onClick={() =>
-                          setSelectedProjectCustodyId(
-                            custody.id,
-                          )
-                        }
-                        className={`cursor-pointer rounded-xl border p-4 text-right transition-all hover:-translate-y-0.5 hover:shadow-sm ${
-                          selectedProjectCustodyId ===
-                          custody.id
-                            ? "border-slate-900 bg-slate-900 text-white"
-                            : "border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
+                  {projectCustodies.map((custody) => (
+                    <button
+                      key={custody.id}
+                      type="button"
+                      onClick={() => setSelectedProjectCustodyId(custody.id)}
+                      className={`cursor-pointer rounded-xl border p-4 text-right transition-all hover:-translate-y-0.5 hover:shadow-sm ${
+                        selectedProjectCustodyId === custody.id
+                          ? "border-slate-900 bg-slate-900 text-white"
+                          : "border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
+                      }`}
+                    >
+                      <p className="truncate text-sm font-extrabold">
+                        {custody.name.replace(/^عهدة\s*/, "")}
+                      </p>
+
+                      <p
+                        className={`mt-1 text-[11px] ${
+                          selectedProjectCustodyId === custody.id
+                            ? "text-slate-300"
+                            : "text-slate-400"
                         }`}
                       >
-                        <p className="truncate text-sm font-extrabold">
-                          {custody.name.replace(
-                            /^عهدة\s*/,
-                            "",
-                          )}
-                        </p>
+                        المسؤول: {custody.responsiblePerson || "غير محدد"}
+                      </p>
 
-                        <p
-                          className={`mt-1 text-[11px] ${
-                            selectedProjectCustodyId ===
-                            custody.id
+                      <p
+                        className={`mt-3 text-lg font-extrabold ${
+                          selectedProjectCustodyId === custody.id
+                            ? "text-white"
+                            : custody.balance < 0
+                              ? "text-red-600"
+                              : "text-slate-900"
+                        }`}
+                      >
+                        {formatAmount(custody.balance)}
+
+                        <span
+                          className={`mr-1 text-[10px] font-medium ${
+                            selectedProjectCustodyId === custody.id
                               ? "text-slate-300"
                               : "text-slate-400"
                           }`}
                         >
-                          المسؤول:{" "}
-                          {custody.responsiblePerson ||
-                            "غير محدد"}
-                        </p>
-
-                        <p
-                          className={`mt-3 text-lg font-extrabold ${
-                            selectedProjectCustodyId ===
-                            custody.id
-                              ? "text-white"
-                              : custody.balance <
-                                  0
-                                ? "text-red-600"
-                                : "text-slate-900"
-                          }`}
-                        >
-                          {formatAmount(
-                            custody.balance,
-                          )}
-
-                          <span
-                            className={`mr-1 text-[10px] font-medium ${
-                              selectedProjectCustodyId ===
-                              custody.id
-                                ? "text-slate-300"
-                                : "text-slate-400"
-                            }`}
-                          >
-                            جنيه رصيد
-                          </span>
-                        </p>
-                      </button>
-                    ),
-                  )}
+                          جنيه رصيد
+                        </span>
+                      </p>
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
@@ -982,10 +728,7 @@ export default function CustodiesPage() {
                       </p>
 
                       <h3 className="mt-1 text-lg font-extrabold text-slate-900">
-                        {selectedProjectCustody.name.replace(
-                          /^عهدة\s*/,
-                          "",
-                        )}
+                        {selectedProjectCustody.name.replace(/^عهدة\s*/, "")}
                       </h3>
                     </div>
 
@@ -996,16 +739,12 @@ export default function CustodiesPage() {
 
                       <p
                         className={`mt-1 text-lg font-extrabold ${
-                          selectedProjectCustody.balance <
-                          0
+                          selectedProjectCustody.balance < 0
                             ? "text-red-600"
                             : "text-slate-900"
                         }`}
                       >
-                        {formatAmount(
-                          selectedProjectCustody.balance,
-                        )}{" "}
-                        جنيه
+                        {formatAmount(selectedProjectCustody.balance)} جنيه
                       </p>
                     </div>
                   </div>
@@ -1025,68 +764,50 @@ export default function CustodiesPage() {
                       </div>
 
                       <span className="text-sm font-extrabold text-emerald-700">
-                        {formatAmount(
-                          selectedProjectIncomingTotal,
-                        )}{" "}
-                        جنيه
+                        {formatAmount(selectedProjectIncomingTotal)} جنيه
                       </span>
                     </div>
 
-                    {selectedProjectIncoming.length ===
-                    0 ? (
+                    {selectedProjectIncoming.length === 0 ? (
                       <div className="px-4 py-8 text-center text-xs font-semibold text-slate-400">
                         لا يوجد وارد لهذا الموقع حتى الآن.
                       </div>
                     ) : (
                       <div className="divide-y divide-slate-100">
-                        {selectedProjectIncoming.map(
-                          (transaction) => {
-                            const sourceCustody =
-                              transaction.relatedCustodyId
-                                ? custodies.find(
-                                    (custody) =>
-                                      custody.id ===
-                                      transaction.relatedCustodyId,
-                                  )
-                                : undefined;
+                        {selectedProjectIncoming.map((transaction) => {
+                          const sourceCustody = transaction.relatedCustodyId
+                            ? custodies.find(
+                                (custody) =>
+                                  custody.id === transaction.relatedCustodyId,
+                              )
+                            : undefined;
 
-                            return (
-                              <div
-                                key={transaction.id}
-                                className="px-4 py-3"
-                              >
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="min-w-0">
-                                    <p className="text-sm font-bold text-slate-800">
-                                      {transaction.description ||
-                                        "وارد عهدة"}
-                                    </p>
+                          return (
+                            <div key={transaction.id} className="px-4 py-3">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="text-sm font-bold text-slate-800">
+                                    {transaction.description || "وارد عهدة"}
+                                  </p>
 
-                                    <p className="mt-1 text-[11px] text-slate-400">
-                                      {formatDate(
-                                        transaction.date,
-                                      )}
+                                  <p className="mt-1 text-[11px] text-slate-400">
+                                    {formatDate(transaction.date)}
 
-                                      {sourceCustody
-                                        ? ` • من ${sourceCustody.name}`
-                                        : transaction.source
-                                          ? ` • من ${transaction.source}`
-                                          : ""}
-                                    </p>
-                                  </div>
-
-                                  <span className="shrink-0 text-sm font-extrabold text-emerald-600">
-                                    +
-                                    {formatAmount(
-                                      transaction.amount,
-                                    )}{" "}
-                                    جنيه
-                                  </span>
+                                    {sourceCustody
+                                      ? ` • من ${sourceCustody.name}`
+                                      : transaction.source
+                                        ? ` • من ${transaction.source}`
+                                        : ""}
+                                  </p>
                                 </div>
+
+                                <span className="shrink-0 text-sm font-extrabold text-emerald-600">
+                                  +{formatAmount(transaction.amount)} جنيه
+                                </span>
                               </div>
-                            );
-                          },
-                        )}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -1104,68 +825,49 @@ export default function CustodiesPage() {
                       </div>
 
                       <span className="text-sm font-extrabold text-red-700">
-                        {formatAmount(
-                          selectedProjectExpensesTotal,
-                        )}{" "}
-                        جنيه
+                        {formatAmount(selectedProjectExpensesTotal)} جنيه
                       </span>
                     </div>
 
-                    {selectedProjectExpenses.length ===
-                    0 ? (
+                    {selectedProjectExpenses.length === 0 ? (
                       <div className="px-4 py-8 text-center text-xs font-semibold text-slate-400">
                         لا توجد مصروفات لهذا الموقع حتى الآن.
                       </div>
                     ) : (
                       <div className="divide-y divide-slate-100">
-                        {selectedProjectExpenses.map(
-                          (expense) => {
-                            const payerCustody =
-                              custodies.find(
-                                (custody) =>
-                                  custody.id ===
-                                  expense.custodyId,
-                              );
+                        {selectedProjectExpenses.map((expense) => {
+                          const payerCustody = custodies.find(
+                            (custody) => custody.id === expense.custodyId,
+                          );
 
-                            return (
-                              <div
-                                key={expense.id}
-                                className="px-4 py-3"
-                              >
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="min-w-0">
-                                    <p className="text-sm font-bold text-slate-800">
-                                      {expense.description ||
-                                        "مصروف"}
-                                    </p>
+                          return (
+                            <div key={expense.id} className="px-4 py-3">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="text-sm font-bold text-slate-800">
+                                    {expense.description || "مصروف"}
+                                  </p>
 
-                                    <p className="mt-1 text-[11px] text-slate-400">
-                                      {formatDate(
-                                        expense.date,
-                                      )}
+                                  <p className="mt-1 text-[11px] text-slate-400">
+                                    {formatDate(expense.date)}
 
-                                      {expense.category
-                                        ? ` • ${expense.category}`
-                                        : ""}
+                                    {expense.category
+                                      ? ` • ${expense.category}`
+                                      : ""}
 
-                                      {payerCustody
-                                        ? ` • الدافع: ${payerCustody.name}`
-                                        : ""}
-                                    </p>
-                                  </div>
-
-                                  <span className="shrink-0 text-sm font-extrabold text-red-600">
-                                    -
-                                    {formatAmount(
-                                      expense.amount,
-                                    )}{" "}
-                                    جنيه
-                                  </span>
+                                    {payerCustody
+                                      ? ` • الدافع: ${payerCustody.name}`
+                                      : ""}
+                                  </p>
                                 </div>
+
+                                <span className="shrink-0 text-sm font-extrabold text-red-600">
+                                  -{formatAmount(expense.amount)} جنيه
+                                </span>
                               </div>
-                            );
-                          },
-                        )}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -1184,29 +886,24 @@ export default function CustodiesPage() {
             <div className="border-b border-slate-100 bg-slate-50/70 p-5 sm:p-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-xs font-bold text-blue-600">
-                    عهد الأشخاص
-                  </p>
+                  <p className="text-xs font-bold text-blue-600">عهد الأشخاص</p>
 
                   <h2 className="mt-1 text-xl font-extrabold text-slate-900">
                     اختر الشخص
                   </h2>
 
                   <p className="mt-1 text-sm text-slate-500">
-                    اختر عهدة شخص موجودة فعليًا لعرض ملخص الوارد والمصروفات الخاصة بها.
+                    اختر عهدة شخص موجودة فعليًا لعرض ملخص الوارد والمصروفات
+                    الخاصة بها.
                   </p>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => {
-                    setShowPersonCustodies(
-                      false,
-                    );
+                    setShowPersonCustodies(false);
 
-                    setSelectedPersonCustodyId(
-                      "",
-                    );
+                    setSelectedPersonCustodyId("");
                   }}
                   className="inline-flex h-10 cursor-pointer items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-xs font-bold text-slate-600 hover:bg-slate-100"
                 >
@@ -1214,8 +911,7 @@ export default function CustodiesPage() {
                 </button>
               </div>
 
-              {personCustodies.length ===
-              0 ? (
+              {personCustodies.length === 0 ? (
                 <div className="mt-5 rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center">
                   <p className="text-sm font-bold text-slate-600">
                     لا توجد عهد أشخاص مسجلة فعليًا.
@@ -1223,67 +919,54 @@ export default function CustodiesPage() {
                 </div>
               ) : (
                 <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {personCustodies.map(
-                    (custody) => (
-                      <button
-                        key={custody.id}
-                        type="button"
-                        onClick={() =>
-                          setSelectedPersonCustodyId(
-                            custody.id,
-                          )
-                        }
-                        className={`cursor-pointer rounded-xl border p-4 text-right transition-all hover:-translate-y-0.5 hover:shadow-sm ${
-                          selectedPersonCustodyId ===
-                          custody.id
-                            ? "border-slate-900 bg-slate-900 text-white"
-                            : "border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
+                  {personCustodies.map((custody) => (
+                    <button
+                      key={custody.id}
+                      type="button"
+                      onClick={() => setSelectedPersonCustodyId(custody.id)}
+                      className={`cursor-pointer rounded-xl border p-4 text-right transition-all hover:-translate-y-0.5 hover:shadow-sm ${
+                        selectedPersonCustodyId === custody.id
+                          ? "border-slate-900 bg-slate-900 text-white"
+                          : "border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
+                      }`}
+                    >
+                      <p className="truncate text-sm font-extrabold">
+                        {custody.name}
+                      </p>
+
+                      <p
+                        className={`mt-1 text-[11px] ${
+                          selectedPersonCustodyId === custody.id
+                            ? "text-slate-300"
+                            : "text-slate-400"
                         }`}
                       >
-                        <p className="truncate text-sm font-extrabold">
-                          {custody.name}
-                        </p>
+                        عهدة شخصية
+                      </p>
 
-                        <p
-                          className={`mt-1 text-[11px] ${
-                            selectedPersonCustodyId ===
-                            custody.id
+                      <p
+                        className={`mt-3 text-lg font-extrabold ${
+                          selectedPersonCustodyId === custody.id
+                            ? "text-white"
+                            : custody.balance < 0
+                              ? "text-red-600"
+                              : "text-slate-900"
+                        }`}
+                      >
+                        {formatAmount(custody.balance)}
+
+                        <span
+                          className={`mr-1 text-[10px] font-medium ${
+                            selectedPersonCustodyId === custody.id
                               ? "text-slate-300"
                               : "text-slate-400"
                           }`}
                         >
-                          عهدة شخصية
-                        </p>
-
-                        <p
-                          className={`mt-3 text-lg font-extrabold ${
-                            selectedPersonCustodyId ===
-                            custody.id
-                              ? "text-white"
-                              : custody.balance <
-                                  0
-                                ? "text-red-600"
-                                : "text-slate-900"
-                          }`}
-                        >
-                          {formatAmount(
-                            custody.balance,
-                          )}
-
-                          <span
-                            className={`mr-1 text-[10px] font-medium ${
-                              selectedPersonCustodyId ===
-                              custody.id
-                                ? "text-slate-300"
-                                : "text-slate-400"
-                            }`}
-                          >
-                            جنيه رصيد
-                          </span>
-                        </p>
-                      </button>
-                    ),
-                  )}
+                          جنيه رصيد
+                        </span>
+                      </p>
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
@@ -1311,16 +994,12 @@ export default function CustodiesPage() {
 
                       <p
                         className={`mt-1 text-lg font-extrabold ${
-                          selectedPersonCustody.balance <
-                          0
+                          selectedPersonCustody.balance < 0
                             ? "text-red-600"
                             : "text-slate-900"
                         }`}
                       >
-                        {formatAmount(
-                          selectedPersonCustody.balance,
-                        )}{" "}
-                        جنيه
+                        {formatAmount(selectedPersonCustody.balance)} جنيه
                       </p>
                     </div>
                   </div>
@@ -1329,7 +1008,6 @@ export default function CustodiesPage() {
                 {/* Person Incoming + Expenses */}
 
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-
                   {/* Incoming */}
 
                   <div className="overflow-hidden rounded-2xl border border-emerald-100 bg-white">
@@ -1345,68 +1023,50 @@ export default function CustodiesPage() {
                       </div>
 
                       <span className="text-sm font-extrabold text-emerald-700">
-                        {formatAmount(
-                          selectedPersonIncomingTotal,
-                        )}{" "}
-                        جنيه
+                        {formatAmount(selectedPersonIncomingTotal)} جنيه
                       </span>
                     </div>
 
-                    {selectedPersonIncoming.length ===
-                    0 ? (
+                    {selectedPersonIncoming.length === 0 ? (
                       <div className="px-4 py-8 text-center text-xs font-semibold text-slate-400">
                         لا يوجد وارد لهذه العهدة حتى الآن.
                       </div>
                     ) : (
                       <div className="divide-y divide-slate-100">
-                        {selectedPersonIncoming.map(
-                          (transaction) => {
-                            const sourceCustody =
-                              transaction.relatedCustodyId
-                                ? custodies.find(
-                                    (custody) =>
-                                      custody.id ===
-                                      transaction.relatedCustodyId,
-                                  )
-                                : undefined;
+                        {selectedPersonIncoming.map((transaction) => {
+                          const sourceCustody = transaction.relatedCustodyId
+                            ? custodies.find(
+                                (custody) =>
+                                  custody.id === transaction.relatedCustodyId,
+                              )
+                            : undefined;
 
-                            return (
-                              <div
-                                key={transaction.id}
-                                className="px-4 py-3"
-                              >
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="min-w-0">
-                                    <p className="text-sm font-bold text-slate-800">
-                                      {transaction.description ||
-                                        "وارد عهدة"}
-                                    </p>
+                          return (
+                            <div key={transaction.id} className="px-4 py-3">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="text-sm font-bold text-slate-800">
+                                    {transaction.description || "وارد عهدة"}
+                                  </p>
 
-                                    <p className="mt-1 text-[11px] text-slate-400">
-                                      {formatDate(
-                                        transaction.date,
-                                      )}
+                                  <p className="mt-1 text-[11px] text-slate-400">
+                                    {formatDate(transaction.date)}
 
-                                      {sourceCustody
-                                        ? ` • من ${sourceCustody.name}`
-                                        : transaction.source
-                                          ? ` • من ${transaction.source}`
-                                          : ""}
-                                    </p>
-                                  </div>
-
-                                  <span className="shrink-0 text-sm font-extrabold text-emerald-600">
-                                    +
-                                    {formatAmount(
-                                      transaction.amount,
-                                    )}{" "}
-                                    جنيه
-                                  </span>
+                                    {sourceCustody
+                                      ? ` • من ${sourceCustody.name}`
+                                      : transaction.source
+                                        ? ` • من ${transaction.source}`
+                                        : ""}
+                                  </p>
                                 </div>
+
+                                <span className="shrink-0 text-sm font-extrabold text-emerald-600">
+                                  +{formatAmount(transaction.amount)} جنيه
+                                </span>
                               </div>
-                            );
-                          },
-                        )}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -1426,59 +1086,43 @@ export default function CustodiesPage() {
                       </div>
 
                       <span className="text-sm font-extrabold text-red-700">
-                        {formatAmount(
-                          selectedPersonExpensesTotal,
-                        )}{" "}
-                        جنيه
+                        {formatAmount(selectedPersonExpensesTotal)} جنيه
                       </span>
                     </div>
 
-                    {selectedPersonExpenses.length ===
-                    0 ? (
+                    {selectedPersonExpenses.length === 0 ? (
                       <div className="px-4 py-8 text-center text-xs font-semibold text-slate-400">
                         لا توجد مصروفات لهذه العهدة حتى الآن.
                       </div>
                     ) : (
                       <div className="divide-y divide-slate-100">
-                        {selectedPersonExpenses.map(
-                          (expense) => (
-                            <div
-                              key={expense.id}
-                              className="px-4 py-3"
-                            >
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0">
-                                  <p className="text-sm font-bold text-slate-800">
-                                    {expense.description ||
-                                      "مصروف"}
-                                  </p>
+                        {selectedPersonExpenses.map((expense) => (
+                          <div key={expense.id} className="px-4 py-3">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="text-sm font-bold text-slate-800">
+                                  {expense.description || "مصروف"}
+                                </p>
 
-                                  <p className="mt-1 text-[11px] text-slate-400">
-                                    {formatDate(
-                                      expense.date,
-                                    )}
+                                <p className="mt-1 text-[11px] text-slate-400">
+                                  {formatDate(expense.date)}
 
-                                    {expense.category
-                                      ? ` • ${expense.category}`
-                                      : ""}
+                                  {expense.category
+                                    ? ` • ${expense.category}`
+                                    : ""}
 
-                                    {expense.projectId
-                                      ? ` • الموقع: ${expense.projectId}`
-                                      : ""}
-                                  </p>
-                                </div>
-
-                                <span className="shrink-0 text-sm font-extrabold text-red-600">
-                                  -
-                                  {formatAmount(
-                                    expense.amount,
-                                  )}{" "}
-                                  جنيه
-                                </span>
+                                  {expense.projectId
+                                    ? ` • الموقع: ${expense.projectId}`
+                                    : ""}
+                                </p>
                               </div>
+
+                              <span className="shrink-0 text-sm font-extrabold text-red-600">
+                                -{formatAmount(expense.amount)} جنيه
+                              </span>
                             </div>
-                          ),
-                        )}
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -1512,8 +1156,7 @@ export default function CustodiesPage() {
             </PermissionLink>
           </div>
 
-          {personCustodies.length ===
-          0 ? (
+          {personCustodies.length === 0 ? (
             <div className="flex min-h-60 items-center justify-center px-5 py-10">
               <div className="text-center">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
@@ -1539,87 +1182,76 @@ export default function CustodiesPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">
-              {personCustodies.map(
-                (custody) => (
-                  <div
-                    key={custody.id}
-                    className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <h3 className="truncate text-base font-extrabold text-slate-900">
-                          {custody.name}
-                        </h3>
+              {personCustodies.map((custody) => (
+                <div
+                  key={custody.id}
+                  className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="truncate text-base font-extrabold text-slate-900">
+                        {custody.name}
+                      </h3>
 
-                        <p className="mt-1 text-[11px] font-semibold text-slate-400">
-                          عهدة شخصية
-                        </p>
-                      </div>
-
-                      <span className="shrink-0 rounded-lg bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-600">
-                        نشطة
-                      </span>
-                    </div>
-
-                    <div className="mt-5">
-                      <p className="text-xs font-semibold text-slate-400">
-                        الرصيد الحالي
-                      </p>
-
-                      <p
-                        className={`mt-1 text-2xl font-extrabold ${
-                          custody.balance <
-                          0
-                            ? "text-red-600"
-                            : "text-slate-900"
-                        }`}
-                      >
-                        {formatAmount(
-                          custody.balance,
-                        )}
-
-                        <span className="mr-2 text-xs font-medium text-slate-400">
-                          جنيه
-                        </span>
+                      <p className="mt-1 text-[11px] font-semibold text-slate-400">
+                        عهدة شخصية
                       </p>
                     </div>
 
-                    <div className="mt-5 grid grid-cols-2 gap-3">
-                      <div className="rounded-xl bg-emerald-50 p-3">
-                        <p className="text-xs font-semibold text-emerald-700">
-                          الداخل
-                        </p>
-
-                        <p className="mt-2 text-sm font-extrabold text-slate-900">
-                          {formatAmount(
-                            custody.totalIn,
-                          )}
-                        </p>
-                      </div>
-
-                      <div className="rounded-xl bg-red-50 p-3">
-                        <p className="text-xs font-semibold text-red-700">
-                          الخارج
-                        </p>
-
-                        <p className="mt-2 text-sm font-extrabold text-slate-900">
-                          {formatAmount(
-                            custody.totalOut,
-                          )}
-                        </p>
-                      </div>
-                    </div>
-
-                    <Link
-                      href={`/custodies/person/${custody.id}`}
-                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
-                    >
-                      عرض كشف العهدة
-                      <ArrowLeft className="h-3.5 w-3.5" />
-                    </Link>
+                    <span className="shrink-0 rounded-lg bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-600">
+                      نشطة
+                    </span>
                   </div>
-                ),
-              )}
+
+                  <div className="mt-5">
+                    <p className="text-xs font-semibold text-slate-400">
+                      الرصيد الحالي
+                    </p>
+
+                    <p
+                      className={`mt-1 text-2xl font-extrabold ${
+                        custody.balance < 0 ? "text-red-600" : "text-slate-900"
+                      }`}
+                    >
+                      {formatAmount(custody.balance)}
+
+                      <span className="mr-2 text-xs font-medium text-slate-400">
+                        جنيه
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-2 gap-3">
+                    <div className="rounded-xl bg-emerald-50 p-3">
+                      <p className="text-xs font-semibold text-emerald-700">
+                        الداخل
+                      </p>
+
+                      <p className="mt-2 text-sm font-extrabold text-slate-900">
+                        {formatAmount(custody.totalIn)}
+                      </p>
+                    </div>
+
+                    <div className="rounded-xl bg-red-50 p-3">
+                      <p className="text-xs font-semibold text-red-700">
+                        الخارج
+                      </p>
+
+                      <p className="mt-2 text-sm font-extrabold text-slate-900">
+                        {formatAmount(custody.totalOut)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Link
+                    href={`/custodies/person/${custody.id}`}
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                  >
+                    عرض كشف العهدة
+                    <ArrowLeft className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              ))}
             </div>
           )}
         </section>
@@ -1634,7 +1266,8 @@ export default function CustodiesPage() {
               </h2>
 
               <p className="mt-1 text-xs leading-5 text-slate-400">
-                عهد العمال منفصلة عن حسابات الأجور والسلف، ويمكن متابعة أرصدتها من هنا.
+                عهد العمال منفصلة عن حسابات الأجور والسلف، ويمكن متابعة أرصدتها
+                من هنا.
               </p>
             </div>
 
@@ -1669,8 +1302,7 @@ export default function CustodiesPage() {
             </span>
           </div>
 
-          {latestTransactions.length ===
-          0 ? (
+          {latestTransactions.length === 0 ? (
             <div className="flex min-h-60 items-center justify-center px-5 py-10">
               <div className="text-center">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
@@ -1682,7 +1314,8 @@ export default function CustodiesPage() {
                 </h3>
 
                 <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-slate-400">
-                  عند تسجيل أول حركة، ستظهر تفاصيلها هنا مع مصدر المبلغ والجهة المستلمة والرصيد الناتج.
+                  عند تسجيل أول حركة، ستظهر تفاصيلها هنا مع مصدر المبلغ والجهة
+                  المستلمة والرصيد الناتج.
                 </p>
 
                 <Link
@@ -1718,82 +1351,59 @@ export default function CustodiesPage() {
                 </thead>
 
                 <tbody>
-                  {latestTransactions.map(
-                    (transaction) => {
-                      const isIn =
-                        transaction.type ===
-                        "in";
+                  {latestTransactions.map((transaction) => {
+                    const isIn = transaction.type === "in";
 
-                      const isTransfer =
-                        transaction.type ===
-                        "transfer";
+                    const isTransfer = transaction.type === "transfer";
 
-                      return (
-                        <tr
-                          key={
-                            transaction.id
-                          }
-                          className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/70"
-                        >
-                          <td className="whitespace-nowrap px-5 py-4 text-xs font-semibold text-slate-500">
-                            {formatDate(
-                              transaction.date,
-                            )}
-                          </td>
+                    return (
+                      <tr
+                        key={transaction.id}
+                        className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/70"
+                      >
+                        <td className="px-5 py-4 text-xs font-semibold whitespace-nowrap text-slate-500">
+                          {formatDate(transaction.date)}
+                        </td>
 
-                          <td className="px-5 py-4">
-                            <span
-                              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${
-                                isIn
-                                  ? "bg-emerald-50 text-emerald-700"
-                                  : isTransfer
-                                    ? "bg-blue-50 text-blue-700"
-                                    : "bg-red-50 text-red-700"
-                              }`}
-                            >
-                              {isIn ? (
-                                <ArrowDownLeft className="h-3.5 w-3.5" />
-                              ) : (
-                                <ArrowUpRight className="h-3.5 w-3.5" />
-                              )}
-
-                              {isIn
-                                ? "وارد"
+                        <td className="px-5 py-4">
+                          <span
+                            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${
+                              isIn
+                                ? "bg-emerald-50 text-emerald-700"
                                 : isTransfer
-                                  ? "تحويل"
-                                  : "خارج"}
-                            </span>
-                          </td>
+                                  ? "bg-blue-50 text-blue-700"
+                                  : "bg-red-50 text-red-700"
+                            }`}
+                          >
+                            {isIn ? (
+                              <ArrowDownLeft className="h-3.5 w-3.5" />
+                            ) : (
+                              <ArrowUpRight className="h-3.5 w-3.5" />
+                            )}
 
-                          <td className="max-w-[420px] px-5 py-4">
-                            <p className="truncate text-sm font-bold text-slate-800">
-                              {
-                                transaction.description
-                              }
-                            </p>
-                          </td>
+                            {isIn ? "وارد" : isTransfer ? "تحويل" : "خارج"}
+                          </span>
+                        </td>
 
-                          <td className="whitespace-nowrap px-5 py-4">
-                            <span
-                              className={`text-sm font-extrabold ${
-                                isIn
-                                  ? "text-emerald-600"
-                                  : "text-red-600"
-                              }`}
-                            >
-                              {isIn
-                                ? "+"
-                                : "-"}
-                              {formatAmount(
-                                transaction.amount,
-                              )}{" "}
-                              جنيه
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    },
-                  )}
+                        <td className="max-w-[420px] px-5 py-4">
+                          <p className="truncate text-sm font-bold text-slate-800">
+                            {transaction.description}
+                          </p>
+                        </td>
+
+                        <td className="px-5 py-4 whitespace-nowrap">
+                          <span
+                            className={`text-sm font-extrabold ${
+                              isIn ? "text-emerald-600" : "text-red-600"
+                            }`}
+                          >
+                            {isIn ? "+" : "-"}
+                            {formatAmount(transaction.amount)} جنيه
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

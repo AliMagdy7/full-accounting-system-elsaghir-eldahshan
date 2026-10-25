@@ -9,15 +9,14 @@ import type {
   WorkerSiteAssignment,
 } from "@/types/worker";
 
-const WORKERS_STORAGE_KEY =
-  "elsaghir-eldahshan-workers";
+const WORKERS_STORAGE_KEY = "elsaghir-eldahshan-workers";
 
 function notifyDataUpdated() {
-  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
+  if (typeof window !== "undefined")
+    window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
 }
 
-const ASSIGNMENTS_STORAGE_KEY =
-  "elsaghir-eldahshan-worker-site-assignments";
+const ASSIGNMENTS_STORAGE_KEY = "elsaghir-eldahshan-worker-site-assignments";
 
 function readWorkers(): Worker[] {
   if (typeof window === "undefined") {
@@ -25,10 +24,7 @@ function readWorkers(): Worker[] {
   }
 
   try {
-    const raw =
-      window.localStorage.getItem(
-        WORKERS_STORAGE_KEY,
-      );
+    const raw = window.localStorage.getItem(WORKERS_STORAGE_KEY);
 
     if (!raw) {
       return [];
@@ -38,9 +34,16 @@ function readWorkers(): Worker[] {
 
     if (!Array.isArray(parsed)) return [];
 
-    let assignments: Array<{ workerId?: string; siteId?: string; projectId?: string; endDate?: string }> = [];
+    let assignments: Array<{
+      workerId?: string;
+      siteId?: string;
+      projectId?: string;
+      endDate?: string;
+    }> = [];
     try {
-      const assignmentRaw = window.localStorage.getItem(ASSIGNMENTS_STORAGE_KEY);
+      const assignmentRaw = window.localStorage.getItem(
+        ASSIGNMENTS_STORAGE_KEY,
+      );
       const assignmentParsed = assignmentRaw ? JSON.parse(assignmentRaw) : [];
       assignments = Array.isArray(assignmentParsed) ? assignmentParsed : [];
     } catch {
@@ -52,13 +55,15 @@ function readWorkers(): Worker[] {
       const record = worker as Worker;
       if (record.currentSiteId) return record;
       const currentAssignment = assignments.find(
-        (assignment) => assignment.workerId === record.id && !assignment.endDate,
+        (assignment) =>
+          assignment.workerId === record.id && !assignment.endDate,
       );
       if (!currentAssignment?.siteId) return record;
       return {
         ...record,
         currentSiteId: currentAssignment.siteId,
-        currentProjectId: currentAssignment.projectId || record.currentProjectId,
+        currentProjectId:
+          currentAssignment.projectId || record.currentProjectId,
       };
     });
   } catch {
@@ -66,19 +71,13 @@ function readWorkers(): Worker[] {
   }
 }
 
-function saveWorkers(
-  workers: Worker[],
-) {
+function saveWorkers(workers: Worker[]) {
   if (typeof window === "undefined") {
     return;
   }
 
-  window.localStorage.setItem(
-    WORKERS_STORAGE_KEY,
-    JSON.stringify(workers),
-  );
+  window.localStorage.setItem(WORKERS_STORAGE_KEY, JSON.stringify(workers));
   notifyDataUpdated();
-
 }
 
 function readAssignments(): WorkerSiteAssignment[] {
@@ -87,10 +86,7 @@ function readAssignments(): WorkerSiteAssignment[] {
   }
 
   try {
-    const raw =
-      window.localStorage.getItem(
-        ASSIGNMENTS_STORAGE_KEY,
-      );
+    const raw = window.localStorage.getItem(ASSIGNMENTS_STORAGE_KEY);
 
     if (!raw) {
       return [];
@@ -98,17 +94,13 @@ function readAssignments(): WorkerSiteAssignment[] {
 
     const parsed = JSON.parse(raw);
 
-    return Array.isArray(parsed)
-      ? parsed
-      : [];
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
 }
 
-function saveAssignments(
-  assignments: WorkerSiteAssignment[],
-) {
+function saveAssignments(assignments: WorkerSiteAssignment[]) {
   if (typeof window === "undefined") {
     return;
   }
@@ -118,93 +110,49 @@ function saveAssignments(
     JSON.stringify(assignments),
   );
   notifyDataUpdated();
-
 }
 
-function normalizeName(
-  name: string,
-) {
-  return name
-    .trim()
-    .toLocaleLowerCase();
+function normalizeName(name: string) {
+  return name.trim().toLocaleLowerCase();
 }
 
-function generateWorkerId(
-  workers: Worker[],
-) {
+function generateWorkerId(workers: Worker[]) {
   const numbers = workers
     .map((worker) => {
-      const match =
-        worker.id.match(
-          /^W-(\d+)$/,
-        );
+      const match = worker.id.match(/^W-(\d+)$/);
 
-      return match
-        ? Number(match[1])
-        : 0;
+      return match ? Number(match[1]) : 0;
     })
-    .filter(
-      (number) =>
-        Number.isFinite(number),
-    );
+    .filter((number) => Number.isFinite(number));
 
-  const nextNumber =
-    numbers.length > 0
-      ? Math.max(...numbers) + 1
-      : 1;
+  const nextNumber = numbers.length > 0 ? Math.max(...numbers) + 1 : 1;
 
-  return `W-${String(
-    nextNumber,
-  ).padStart(4, "0")}`;
+  return `W-${String(nextNumber).padStart(4, "0")}`;
 }
 
 export function getWorkers() {
-  return readWorkers().sort(
-    (a, b) =>
-      a.name.localeCompare(
-        b.name,
-        "ar",
-      ),
-  );
+  return readWorkers().sort((a, b) => a.name.localeCompare(b.name, "ar"));
 }
 
-export function getWorkerById(
-  id: string,
-) {
-  return readWorkers().find(
-    (worker) =>
-      worker.id === id,
-  );
+export function getWorkerById(id: string) {
+  return readWorkers().find((worker) => worker.id === id);
 }
 
-export function getWorkerByName(
-  name: string,
-) {
-  const normalized =
-    normalizeName(name);
+export function getWorkerByName(name: string) {
+  const normalized = normalizeName(name);
 
   return readWorkers().find(
-    (worker) =>
-      normalizeName(
-        worker.name,
-      ) === normalized,
+    (worker) => normalizeName(worker.name) === normalized,
   );
 }
 
-export function workerNameExists(
-  name: string,
-  excludeWorkerId?: string,
-) {
-  const normalized =
-    normalizeName(name);
+export function workerNameExists(name: string, excludeWorkerId?: string) {
+  const normalized = normalizeName(name);
 
   return readWorkers().some(
     (worker) =>
-      worker.id !==
-        excludeWorkerId &&
-      normalizeName(
-        worker.name,
-      ) === normalized,
+      worker.id !== excludeWorkerId &&
+      normalizeName(worker.name) === normalized,
   );
 }
 
@@ -228,23 +176,16 @@ export function addWorker(input: {
   carriedSalary?: number;
 }) {
   assertCurrentUserPermission("create");
-  const workers =
-    readWorkers();
+  const workers = readWorkers();
 
-  const name =
-    input.name.trim();
+  const name = input.name.trim();
 
   if (!name) {
-    throw new Error(
-      "اسم العامل مطلوب.",
-    );
+    throw new Error("اسم العامل مطلوب.");
   }
 
-  if (
-    workerNameExists(name)
-  ) {
-    const existing =
-      getWorkerByName(name);
+  if (workerNameExists(name)) {
+    const existing = getWorkerByName(name);
 
     throw new Error(
       `العامل "${existing?.name ?? name}" موجود بالفعل في النظام.`,
@@ -261,161 +202,96 @@ export function addWorker(input: {
   }
 
   if (!input.startDate) {
-    throw new Error(
-      "تاريخ بداية العمل مطلوب.",
-    );
+    throw new Error("تاريخ بداية العمل مطلوب.");
   }
 
-  if (
-    input.payType ===
-    "daily"
-  ) {
-    const rate =
-      Number(
-        input.dailyRate ?? 0,
-      );
+  if (input.payType === "daily") {
+    const rate = Number(input.dailyRate ?? 0);
 
-    if (
-      !Number.isFinite(rate) ||
-      rate <= 0
-    ) {
-      throw new Error(
-        "الأجر اليومي يجب أن يكون أكبر من صفر.",
-      );
+    if (!Number.isFinite(rate) || rate <= 0) {
+      throw new Error("الأجر اليومي يجب أن يكون أكبر من صفر.");
     }
   }
 
-  if (
-    input.payType ===
-    "monthly"
-  ) {
-    const salary =
-      Number(
-        input.monthlySalary ?? 0,
-      );
+  if (input.payType === "monthly") {
+    const salary = Number(input.monthlySalary ?? 0);
 
-    if (
-      !Number.isFinite(
-        salary,
-      ) ||
-      salary <= 0
-    ) {
-      throw new Error(
-        "المرتب الشهري يجب أن يكون أكبر من صفر.",
-      );
+    if (!Number.isFinite(salary) || salary <= 0) {
+      throw new Error("المرتب الشهري يجب أن يكون أكبر من صفر.");
     }
 
     if (
-      input.monthlyDivision !==
-        30 &&
-      input.monthlyDivision !==
-        26 &&
-      input.monthlyDivision !==
-        24
+      input.monthlyDivision !== 30 &&
+      input.monthlyDivision !== 26 &&
+      input.monthlyDivision !== 24
     ) {
-      throw new Error(
-        "اختر طريقة تقسيم المرتب الشهري.",
-      );
+      throw new Error("اختر طريقة تقسيم المرتب الشهري.");
     }
   }
 
-  const now =
-    new Date().toISOString();
+  const now = new Date().toISOString();
 
   const worker: Worker = {
-    id: generateWorkerId(
-      workers,
-    ),
+    id: generateWorkerId(workers),
 
     name,
 
-    currentProjectId:
-      input.currentProjectId,
+    currentProjectId: input.currentProjectId,
 
-    currentSiteId:
-      input.currentSiteId,
+    currentSiteId: input.currentSiteId,
 
-    startDate:
-      input.startDate,
+    startDate: input.startDate,
 
-    payType:
-      input.payType,
+    payType: input.payType,
 
-    ...(input.payType ===
-    "daily"
+    ...(input.payType === "daily"
       ? {
-          dailyRate:
-            Number(
-              input.dailyRate,
-            ),
+          dailyRate: Number(input.dailyRate),
         }
       : {
-          monthlySalary:
-            Number(
-              input.monthlySalary,
-            ),
+          monthlySalary: Number(input.monthlySalary),
 
-          monthlyDivision:
-            input.monthlyDivision,
+          monthlyDivision: input.monthlyDivision,
         }),
 
-    carriedSalary:
-      Number(
-        input.carriedSalary ?? 0,
-      ),
+    carriedSalary: Number(input.carriedSalary ?? 0),
 
     createdAt: now,
 
     updatedAt: now,
   };
 
-  saveWorkers([
-    ...workers,
-    worker,
-  ]);
+  saveWorkers([...workers, worker]);
 
-  const assignment: WorkerSiteAssignment =
-    {
-      id: crypto.randomUUID(),
+  const assignment: WorkerSiteAssignment = {
+    id: crypto.randomUUID(),
 
-      workerId:
-        worker.id,
+    workerId: worker.id,
 
-      projectId:
-        worker.currentProjectId,
+    projectId: worker.currentProjectId,
 
-      siteId:
-        worker.currentSiteId,
+    siteId: worker.currentSiteId,
 
-      startDate:
-        worker.startDate,
+    startDate: worker.startDate,
 
-      payType:
-        worker.payType,
+    payType: worker.payType,
 
-      ...(worker.payType ===
-      "daily"
-        ? {
-            dailyRate:
-              worker.dailyRate,
-          }
-        : {
-            monthlySalary:
-              worker.monthlySalary,
+    ...(worker.payType === "daily"
+      ? {
+          dailyRate: worker.dailyRate,
+        }
+      : {
+          monthlySalary: worker.monthlySalary,
 
-            monthlyDivision:
-              worker.monthlyDivision,
-          }),
+          monthlyDivision: worker.monthlyDivision,
+        }),
 
-      createdAt: now,
+    createdAt: now,
 
-      updatedAt: now,
-    };
+    updatedAt: now,
+  };
 
-  saveAssignments([
-    ...readAssignments(),
-    assignment,
-  ]);
+  saveAssignments([...readAssignments(), assignment]);
 
   addAuditLog({
     action: "create",
@@ -432,46 +308,24 @@ export function addWorker(input: {
 
 export function updateWorker(
   id: string,
-  updates: Partial<
-    Omit<
-      Worker,
-      "id" | "createdAt"
-    >
-  >,
+  updates: Partial<Omit<Worker, "id" | "createdAt">>,
   options?: {
-  audit?: boolean },
+    audit?: boolean;
+  },
 ) {
   assertCurrentUserPermission("update");
-  const workers =
-    readWorkers();
+  const workers = readWorkers();
 
-  const index =
-    workers.findIndex(
-      (worker) =>
-        worker.id === id,
-    );
+  const index = workers.findIndex((worker) => worker.id === id);
 
   if (index === -1) {
-    throw new Error(
-      "العامل غير موجود.",
-    );
+    throw new Error("العامل غير موجود.");
   }
 
-  const current =
-    workers[index];
+  const current = workers[index];
 
-  if (
-    updates.name !==
-      undefined &&
-    workerNameExists(
-      updates.name,
-      id,
-    )
-  ) {
-    const existing =
-      getWorkerByName(
-        updates.name,
-      );
+  if (updates.name !== undefined && workerNameExists(updates.name, id)) {
+    const existing = getWorkerByName(updates.name);
 
     throw new Error(
       `العامل "${existing?.name ?? updates.name}" موجود بالفعل في النظام.`,
@@ -481,21 +335,13 @@ export function updateWorker(
   const next: Worker = {
     ...current,
     ...updates,
-    name:
-      updates.name !==
-      undefined
-        ? updates.name.trim()
-        : current.name,
-    updatedAt:
-      new Date().toISOString(),
+    name: updates.name !== undefined ? updates.name.trim() : current.name,
+    updatedAt: new Date().toISOString(),
   };
 
-  workers[index] =
-    next;
+  workers[index] = next;
 
-  saveWorkers(
-    workers,
-  );
+  saveWorkers(workers);
 
   if (options?.audit !== false) {
     addAuditLog({
@@ -513,21 +359,10 @@ export function updateWorker(
   return next;
 }
 
-export function getWorkerSiteAssignments(
-  workerId: string,
-) {
+export function getWorkerSiteAssignments(workerId: string) {
   return readAssignments()
-    .filter(
-      (assignment) =>
-        assignment.workerId ===
-        workerId,
-    )
-    .sort(
-      (a, b) =>
-        b.startDate.localeCompare(
-          a.startDate,
-        ),
-    );
+    .filter((assignment) => assignment.workerId === workerId)
+    .sort((a, b) => b.startDate.localeCompare(a.startDate));
 }
 
 export function getWorkerSiteAssignmentsBySiteId(siteId: string) {
@@ -536,56 +371,41 @@ export function getWorkerSiteAssignmentsBySiteId(siteId: string) {
     .sort((a, b) => b.startDate.localeCompare(a.startDate));
 }
 
-export function getCurrentWorkerSiteAssignment(
-  workerId: string,
-) {
+export function getCurrentWorkerSiteAssignment(workerId: string) {
   return (
-    getWorkerSiteAssignments(
-      workerId,
-    ).find(
-      (assignment) =>
-        !assignment.endDate,
-    ) ??
-    undefined
+    getWorkerSiteAssignments(workerId).find(
+      (assignment) => !assignment.endDate,
+    ) ?? undefined
   );
 }
 
-export function moveWorkerToProject(
-  input: {
-    workerId: string;
+export function moveWorkerToProject(input: {
+  workerId: string;
 
-    projectId: string;
+  projectId: string;
 
-    siteId?: string;
+  siteId?: string;
 
-    startDate: string;
+  startDate: string;
 
-    keepSalary: boolean;
+  keepSalary: boolean;
 
-    payType?: WorkerPayType;
+  payType?: WorkerPayType;
 
-    dailyRate?: number;
+  dailyRate?: number;
 
-    monthlySalary?: number;
+  monthlySalary?: number;
 
-    monthlyDivision?: WorkerMonthlyDivision;
-  },
-) {
-  const worker =
-    getWorkerById(
-      input.workerId,
-    );
+  monthlyDivision?: WorkerMonthlyDivision;
+}) {
+  const worker = getWorkerById(input.workerId);
 
   if (!worker) {
-    throw new Error(
-      "العامل غير موجود.",
-    );
+    throw new Error("العامل غير موجود.");
   }
 
   if (!input.projectId) {
-    throw new Error(
-      "المشروع المطلوب غير محدد.",
-    );
+    throw new Error("المشروع المطلوب غير محدد.");
   }
 
   if (input.siteId) {
@@ -596,33 +416,23 @@ export function moveWorkerToProject(
   }
 
   if (!input.startDate) {
-    throw new Error(
-      "تاريخ الانتقال مطلوب.",
-    );
+    throw new Error("تاريخ الانتقال مطلوب.");
   }
 
-  const assignments =
-    readAssignments();
+  const assignments = readAssignments();
 
-  const now =
-    new Date().toISOString();
+  const now = new Date().toISOString();
 
   /*
    * نحدد التعيين الحالي المفتوح.
    */
 
-  const openIndex =
-    assignments.findIndex(
-      (assignment) =>
-        assignment.workerId ===
-          worker.id &&
-        !assignment.endDate,
-    );
+  const openIndex = assignments.findIndex(
+    (assignment) => assignment.workerId === worker.id && !assignment.endDate,
+  );
 
   const currentAssignment =
-    openIndex !== -1
-      ? assignments[openIndex]
-      : undefined;
+    openIndex !== -1 ? assignments[openIndex] : undefined;
 
   /*
    * تاريخ الانتقال يجب أن يكون بعد بداية
@@ -630,11 +440,7 @@ export function moveWorkerToProject(
    * أو تاريخ غير منطقي في سجل المواقع.
    */
 
-  if (
-    currentAssignment &&
-    input.startDate <=
-      currentAssignment.startDate
-  ) {
+  if (currentAssignment && input.startDate <= currentAssignment.startDate) {
     throw new Error(
       "تاريخ الانتقال يجب أن يكون بعد تاريخ بداية الموقع الحالي.",
     );
@@ -648,35 +454,25 @@ export function moveWorkerToProject(
    * حتى تظل بيانات الأجر التاريخية مستقلة.
    */
 
-  const nextPayType =
-    input.keepSalary
-      ? currentAssignment?.payType ??
-        worker.payType
-      : input.payType;
+  const nextPayType = input.keepSalary
+    ? (currentAssignment?.payType ?? worker.payType)
+    : input.payType;
 
   if (!nextPayType) {
-    throw new Error(
-      "اختر نظام أجر الموقع الجديد.",
-    );
+    throw new Error("اختر نظام أجر الموقع الجديد.");
   }
 
-  let nextDailyRate =
-    input.keepSalary
-      ? currentAssignment?.dailyRate ??
-        worker.dailyRate
-      : input.dailyRate;
+  let nextDailyRate = input.keepSalary
+    ? (currentAssignment?.dailyRate ?? worker.dailyRate)
+    : input.dailyRate;
 
-  let nextMonthlySalary =
-    input.keepSalary
-      ? currentAssignment?.monthlySalary ??
-        worker.monthlySalary
-      : input.monthlySalary;
+  let nextMonthlySalary = input.keepSalary
+    ? (currentAssignment?.monthlySalary ?? worker.monthlySalary)
+    : input.monthlySalary;
 
-  let nextMonthlyDivision =
-    input.keepSalary
-      ? currentAssignment?.monthlyDivision ??
-        worker.monthlyDivision
-      : input.monthlyDivision;
+  let nextMonthlyDivision = input.keepSalary
+    ? (currentAssignment?.monthlyDivision ?? worker.monthlyDivision)
+    : input.monthlyDivision;
 
   /*
    * نقفل التعيين السابق في اليوم السابق
@@ -684,173 +480,103 @@ export function moveWorkerToProject(
    */
 
   if (openIndex !== -1) {
-    const previousDate =
-      new Date(
-        `${input.startDate}T00:00:00`,
-      );
+    const previousDate = new Date(`${input.startDate}T00:00:00`);
 
-    previousDate.setDate(
-      previousDate.getDate() - 1,
-    );
+    previousDate.setDate(previousDate.getDate() - 1);
 
-    assignments[
-      openIndex
-    ] = {
-      ...assignments[
-        openIndex
-      ],
+    assignments[openIndex] = {
+      ...assignments[openIndex],
 
-      endDate:
-        previousDate
-          .toISOString()
-          .slice(0, 10),
+      endDate: previousDate.toISOString().slice(0, 10),
 
       updatedAt: now,
     };
   }
 
-  if (
-    nextPayType ===
-    "daily"
-  ) {
-    if (
-      !Number.isFinite(
-        Number(
-          nextDailyRate,
-        ),
-      ) ||
-      Number(
-        nextDailyRate,
-      ) <= 0
-    ) {
-      throw new Error(
-        "الأجر اليومي الجديد يجب أن يكون أكبر من صفر.",
-      );
+  if (nextPayType === "daily") {
+    if (!Number.isFinite(Number(nextDailyRate)) || Number(nextDailyRate) <= 0) {
+      throw new Error("الأجر اليومي الجديد يجب أن يكون أكبر من صفر.");
     }
 
-    nextMonthlySalary =
-      undefined;
+    nextMonthlySalary = undefined;
 
-    nextMonthlyDivision =
-      undefined;
+    nextMonthlyDivision = undefined;
   }
 
-  if (
-    nextPayType ===
-    "monthly"
-  ) {
+  if (nextPayType === "monthly") {
     if (
-      !Number.isFinite(
-        Number(
-          nextMonthlySalary,
-        ),
-      ) ||
-      Number(
-        nextMonthlySalary,
-      ) <= 0
+      !Number.isFinite(Number(nextMonthlySalary)) ||
+      Number(nextMonthlySalary) <= 0
     ) {
-      throw new Error(
-        "المرتب الشهري الجديد يجب أن يكون أكبر من صفر.",
-      );
+      throw new Error("المرتب الشهري الجديد يجب أن يكون أكبر من صفر.");
     }
 
     if (
-      nextMonthlyDivision !==
-        30 &&
-      nextMonthlyDivision !==
-        26 &&
-      nextMonthlyDivision !==
-        24
+      nextMonthlyDivision !== 30 &&
+      nextMonthlyDivision !== 26 &&
+      nextMonthlyDivision !== 24
     ) {
-      throw new Error(
-        "اختر تقسيم المرتب الشهري.",
-      );
+      throw new Error("اختر تقسيم المرتب الشهري.");
     }
 
-    nextDailyRate =
-      undefined;
+    nextDailyRate = undefined;
   }
 
-  const assignment: WorkerSiteAssignment =
-    {
-      id: crypto.randomUUID(),
+  const assignment: WorkerSiteAssignment = {
+    id: crypto.randomUUID(),
 
-      workerId:
-        worker.id,
+    workerId: worker.id,
 
-      projectId:
-        input.projectId,
+    projectId: input.projectId,
 
-      ...(input.siteId ? { siteId: input.siteId } : {}),
+    ...(input.siteId ? { siteId: input.siteId } : {}),
 
-      startDate:
-        input.startDate,
+    startDate: input.startDate,
 
-      payType:
-        nextPayType,
+    payType: nextPayType,
 
-      ...(nextPayType ===
-      "daily"
-        ? {
-            dailyRate:
-              Number(
-                nextDailyRate,
-              ),
-          }
-        : {
-            monthlySalary:
-              Number(
-                nextMonthlySalary,
-              ),
+    ...(nextPayType === "daily"
+      ? {
+          dailyRate: Number(nextDailyRate),
+        }
+      : {
+          monthlySalary: Number(nextMonthlySalary),
 
-            monthlyDivision:
-              nextMonthlyDivision,
-          }),
+          monthlyDivision: nextMonthlyDivision,
+        }),
 
-      createdAt: now,
+    createdAt: now,
 
-      updatedAt: now,
-    };
+    updatedAt: now,
+  };
 
-  assignments.push(
-    assignment,
-  );
+  assignments.push(assignment);
 
-  saveAssignments(
-    assignments,
-  );
+  saveAssignments(assignments);
 
   /*
    * تحديث البيانات الحالية للعامل.
    */
 
-  const updatedWorker =
-    updateWorker(
-      worker.id,
-      {
-        currentProjectId:
-          input.projectId,
+  const updatedWorker = updateWorker(
+    worker.id,
+    {
+      currentProjectId: input.projectId,
 
-        currentSiteId:
-          input.siteId,
+      currentSiteId: input.siteId,
 
-        startDate:
-          worker.startDate,
+      startDate: worker.startDate,
 
-        payType:
-          nextPayType,
+      payType: nextPayType,
 
-        dailyRate:
-          nextDailyRate,
+      dailyRate: nextDailyRate,
 
-        monthlySalary:
-          nextMonthlySalary,
+      monthlySalary: nextMonthlySalary,
 
-        monthlyDivision:
-          nextMonthlyDivision,
-      },
-      { audit: false },
-    );
+      monthlyDivision: nextMonthlyDivision,
+    },
+    { audit: false },
+  );
 
   addAuditLog({
     action: "transfer",
@@ -873,57 +599,53 @@ export function moveWorkerToProject(
   };
 }
 
-export function deleteWorker(
-  id: string,
-) {
+export function deleteWorker(id: string) {
   assertCurrentUserPermission("delete");
-  const workers =
-    readWorkers();
+  const workers = readWorkers();
 
-  const exists =
-    workers.some(
-      (worker) =>
-        worker.id === id,
-    );
+  const exists = workers.some((worker) => worker.id === id);
 
   if (!exists) {
-    throw new Error(
-      "العامل غير موجود.",
-    );
+    throw new Error("العامل غير موجود.");
   }
 
-  const movementRaw = typeof window !== "undefined"
-    ? window.localStorage.getItem("elsaghir-eldahshan-worker-financial-movements")
-    : null;
+  const movementRaw =
+    typeof window !== "undefined"
+      ? window.localStorage.getItem(
+          "elsaghir-eldahshan-worker-financial-movements",
+        )
+      : null;
   if (movementRaw) {
     try {
       const movements = JSON.parse(movementRaw);
-      if (Array.isArray(movements) && movements.some((item) => item?.workerId === id)) {
-        throw new Error("لا يمكن حذف العامل لأنه مرتبط بحركات مالية. أغلق الحساب أو اترك السجل محفوظًا.");
+      if (
+        Array.isArray(movements) &&
+        movements.some((item) => item?.workerId === id)
+      ) {
+        throw new Error(
+          "لا يمكن حذف العامل لأنه مرتبط بحركات مالية. أغلق الحساب أو اترك السجل محفوظًا.",
+        );
       }
     } catch (error) {
-      if (error instanceof Error && error.message.startsWith("لا يمكن حذف العامل")) throw error;
+      if (
+        error instanceof Error &&
+        error.message.startsWith("لا يمكن حذف العامل")
+      )
+        throw error;
     }
   }
 
   const assignments = readAssignments();
   if (assignments.some((assignment) => assignment.workerId === id)) {
-    throw new Error("لا يمكن حذف العامل لأنه مرتبط بفترات عمل. أغلق آخر فترة بدلًا من حذف السجل.");
+    throw new Error(
+      "لا يمكن حذف العامل لأنه مرتبط بفترات عمل. أغلق آخر فترة بدلًا من حذف السجل.",
+    );
   }
 
-  saveWorkers(
-    workers.filter(
-      (worker) =>
-        worker.id !== id,
-    ),
-  );
+  saveWorkers(workers.filter((worker) => worker.id !== id));
 
   saveAssignments(
-    readAssignments().filter(
-      (assignment) =>
-        assignment.workerId !==
-        id,
-    ),
+    readAssignments().filter((assignment) => assignment.workerId !== id),
   );
 
   addAuditLog({

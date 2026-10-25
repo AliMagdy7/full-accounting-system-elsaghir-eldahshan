@@ -9,7 +9,7 @@ export type AuditAction =
   | "company"
   | "settlement"
   | "company_check"
-  | "asset"
+  | "asset";
 
 export type AuditEntity =
   | "expense"

@@ -1,11 +1,7 @@
 "use client";
 
 import { formatDisplayDate } from "@/lib/formatters";
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   BriefcaseBusiness,
@@ -38,9 +34,7 @@ function formatDate(date?: string): string {
   return formatDisplayDate(date);
 }
 
-function getStatusLabel(
-  status: Project["status"],
-): string {
+function getStatusLabel(status: Project["status"]): string {
   switch (status) {
     case "active":
       return "نشط";
@@ -56,9 +50,7 @@ function getStatusLabel(
   }
 }
 
-function getStatusClasses(
-  status: Project["status"],
-): string {
+function getStatusClasses(status: Project["status"]): string {
   switch (status) {
     case "active":
       return "bg-emerald-50 text-emerald-600";
@@ -77,8 +69,7 @@ function getStatusClasses(
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] =
-    useState<ProjectFilter>("all");
+  const [filter, setFilter] = useState<ProjectFilter>("all");
 
   useEffect(() => {
     setProjects(getProjects());
@@ -108,23 +99,15 @@ export default function ProjectsPage() {
   }, [projects]);
 
   const filteredProjects = useMemo(() => {
-    const normalizedSearch = search
-      .trim()
-      .toLowerCase();
+    const normalizedSearch = search.trim().toLowerCase();
 
     return projects.filter((project) => {
       const matchesSearch =
         !normalizedSearch ||
-        project.name
-          .toLowerCase()
-          .includes(normalizedSearch) ||
-        project.currentResponsible
-          ?.toLowerCase()
-          .includes(normalizedSearch);
+        project.name.toLowerCase().includes(normalizedSearch) ||
+        project.currentResponsible?.toLowerCase().includes(normalizedSearch);
 
-      const matchesFilter =
-        filter === "all" ||
-        project.status === "active";
+      const matchesFilter = filter === "all" || project.status === "active";
 
       return matchesSearch && matchesFilter;
     });
@@ -185,7 +168,6 @@ export default function ProjectsPage() {
               className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:bg-slate-800 active:scale-[0.98]"
             >
               <Plus className="h-4 w-4" />
-
               إضافة مشروع
             </PermissionLink>
           </div>
@@ -217,16 +199,14 @@ export default function ProjectsPage() {
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative w-full lg:max-w-md">
-              <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
               <input
                 type="text"
                 value={search}
-                onChange={(event) =>
-                  setSearch(event.target.value)
-                }
+                onChange={(event) => setSearch(event.target.value)}
                 placeholder="ابحث عن مشروع أو موقع أو مسؤول..."
-                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pr-10 pl-4 text-sm text-slate-900 outline-none transition-all placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-900/5"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pr-10 pl-4 text-sm text-slate-900 transition-all outline-none placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-900/5"
               />
             </div>
 
@@ -273,9 +253,7 @@ export default function ProjectsPage() {
 
             <span className="w-fit rounded-lg bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-500">
               {filteredProjects.length}{" "}
-              {filteredProjects.length === 1
-                ? "مشروع"
-                : "مشاريع"}
+              {filteredProjects.length === 1 ? "مشروع" : "مشاريع"}
             </span>
           </div>
 
@@ -305,7 +283,6 @@ export default function ProjectsPage() {
                     className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-xs font-bold text-white transition-colors hover:bg-slate-800"
                   >
                     <Plus className="h-4 w-4" />
-
                     إضافة أول مشروع
                   </Link>
                 )}
@@ -315,11 +292,9 @@ export default function ProjectsPage() {
             /* Projects List */
             <div className="divide-y divide-slate-100">
               {filteredProjects.map((project) => {
-                const projectCustody =
-                  getProjectCustody(project.id);
+                const projectCustody = getProjectCustody(project.id);
 
-                const balance =
-                  projectCustody?.balance ?? 0;
+                const balance = projectCustody?.balance ?? 0;
 
                 return (
                   <Link
@@ -345,9 +320,7 @@ export default function ProjectsPage() {
                                 project.status,
                               )}`}
                             >
-                              {getStatusLabel(
-                                project.status,
-                              )}
+                              {getStatusLabel(project.status)}
                             </span>
                           </div>
 
@@ -361,11 +334,8 @@ export default function ProjectsPage() {
 
                             <span className="inline-flex items-center gap-1.5">
                               <CalendarDays className="h-3.5 w-3.5" />
-
                               بداية المسؤولية:{" "}
-                              {formatDate(
-                                project.assignmentStartDate,
-                              )}
+                              {formatDate(project.assignmentStartDate)}
                             </span>
                           </div>
                         </div>
@@ -382,9 +352,7 @@ export default function ProjectsPage() {
 
                           <p
                             className={`mt-1 text-sm font-extrabold ${
-                              balance < 0
-                                ? "text-red-600"
-                                : "text-slate-900"
+                              balance < 0 ? "text-red-600" : "text-slate-900"
                             }`}
                           >
                             {formatAmount(balance)}{" "}
@@ -414,9 +382,7 @@ export default function ProjectsPage() {
                           </div>
 
                           <p className="mt-1 text-sm font-extrabold text-slate-900">
-                            {formatDate(
-                              project.createdAt,
-                            )}
+                            {formatDate(project.createdAt)}
                           </p>
                         </div>
                       </div>
@@ -470,8 +436,8 @@ export default function ProjectsPage() {
             </h3>
 
             <p className="mt-2 text-xs leading-5 text-slate-400">
-              رصيد عهدة الموقع مستقل عن إجمالي مصروفاته، ويمكن أن يستمر
-              حتى بعد تغيير المسؤول.
+              رصيد عهدة الموقع مستقل عن إجمالي مصروفاته، ويمكن أن يستمر حتى بعد
+              تغيير المسؤول.
             </p>
           </div>
         </section>

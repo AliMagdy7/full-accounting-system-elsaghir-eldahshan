@@ -1,15 +1,8 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  FileText,
-} from "lucide-react";
+import { FileText } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import AppHeader from "./AppHeader";
@@ -29,9 +22,7 @@ export function useAppShell(): boolean {
   return useContext(AppShellContext);
 }
 
-export default function AppShell({
-  children,
-}: AppShellProps) {
+export default function AppShell({ children }: AppShellProps) {
   const shellAlreadyMounted = useAppShell();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [authReady, setAuthReady] = useState(false);
@@ -130,9 +121,7 @@ export default function AppShell({
 
   const isCentralCustodyPage = pathname === "/custodies/central";
 
-  const personCustodyMatch = pathname.match(
-    /^\/custodies\/person\/([^/]+)$/,
-  );
+  const personCustodyMatch = pathname.match(/^\/custodies\/person\/([^/]+)$/);
 
   const personCustodyId = personCustodyMatch?.[1] ?? "";
 
@@ -168,15 +157,12 @@ export default function AppShell({
         dir="rtl"
         className="min-h-screen overflow-x-hidden bg-slate-50 text-slate-900"
       >
-        <AppSidebar
-          isOpen={sidebarOpen}
-          onClose={closeSidebar}
-        />
+        <AppSidebar isOpen={sidebarOpen} onClose={closeSidebar} />
 
         <AppHeader onMenuClick={openSidebar} />
 
         <div className="min-h-screen xl:mr-72">
-          <main className="px-4 pb-5 pt-25 sm:px-6 sm:pb-6 lg:px-8">
+          <main className="px-4 pt-25 pb-5 sm:px-6 sm:pb-6 lg:px-8">
             <div className="mx-auto w-full max-w-[1600px]">
               {showCustodyReportButton && (
                 <div className="mb-5 flex justify-start">

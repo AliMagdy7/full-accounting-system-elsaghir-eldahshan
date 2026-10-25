@@ -1,11 +1,15 @@
 import { assertCurrentUserPermission } from "@/lib/permission-check";
 import { addAuditLog } from "@/lib/data/audit-logs";
-import type { ContractorNote, ContractorNoteImage } from "@/types/contractor-note";
+import type {
+  ContractorNote,
+  ContractorNoteImage,
+} from "@/types/contractor-note";
 
 const STORAGE_KEY = "elsaghir-eldahshan-contractor-notes";
 
 function notifyDataUpdated() {
-  if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
+  if (typeof window !== "undefined")
+    window.dispatchEvent(new CustomEvent("elsaghir-data-updated"));
 }
 
 function canUseStorage() {
@@ -28,7 +32,6 @@ function save(items: ContractorNote[]) {
   if (!canUseStorage()) return;
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   notifyDataUpdated();
-
 }
 
 export function getContractorNotes(contractorId: string) {

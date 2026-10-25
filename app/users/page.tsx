@@ -1,10 +1,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, KeyRound, ShieldCheck, UserCog, Users, X } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  KeyRound,
+  ShieldCheck,
+  UserCog,
+  Users,
+  X,
+} from "lucide-react";
 import AppShell from "@/components/layout/AppShell";
-import { getCurrentSession, getUsers, setCurrentSession, setUserActive, updateUserCredentials, updateUserRole } from "@/lib/data/users";
-import { getRolePermissions, hasPermission, setRolePermissions, type Permission } from "@/lib/auth-permissions";
+import {
+  getCurrentSession,
+  getUsers,
+  setCurrentSession,
+  setUserActive,
+  updateUserCredentials,
+  updateUserRole,
+} from "@/lib/data/users";
+import {
+  getRolePermissions,
+  hasPermission,
+  setRolePermissions,
+  type Permission,
+} from "@/lib/auth-permissions";
 import type { SystemUser, UserRole } from "@/types/user";
 import { useRouter } from "next/navigation";
 
@@ -31,7 +51,9 @@ const permissionOrder: Permission[] = [
 export default function UsersPage() {
   const [users, setUsers] = useState<SystemUser[]>([]);
   const [allowed, setAllowed] = useState(false);
-  const [credentialsUser, setCredentialsUser] = useState<SystemUser | null>(null);
+  const [credentialsUser, setCredentialsUser] = useState<SystemUser | null>(
+    null,
+  );
   const [newUsername, setNewUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -50,12 +72,16 @@ export default function UsersPage() {
     }
     setAllowed(true);
     loadUsers();
-    const handlePermissionsUpdated = () => setPermissionsVersion((value) => value + 1);
+    const handlePermissionsUpdated = () =>
+      setPermissionsVersion((value) => value + 1);
     window.addEventListener("elsaghir-auth-updated", loadUsers);
     window.addEventListener("elsaghir-data-updated", handlePermissionsUpdated);
     return () => {
       window.removeEventListener("elsaghir-auth-updated", loadUsers);
-      window.removeEventListener("elsaghir-data-updated", handlePermissionsUpdated);
+      window.removeEventListener(
+        "elsaghir-data-updated",
+        handlePermissionsUpdated,
+      );
     };
   }, [router]);
 
@@ -102,7 +128,9 @@ export default function UsersPage() {
       setCredentialsError("");
       loadUsers();
     } catch (error) {
-      setCredentialsError(error instanceof Error ? error.message : "تعذر تحديث بيانات الدخول.");
+      setCredentialsError(
+        error instanceof Error ? error.message : "تعذر تحديث بيانات الدخول.",
+      );
     }
   };
 
@@ -122,7 +150,8 @@ export default function UsersPage() {
                 المستخدمون والصلاحيات
               </h1>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
-                إدارة المستخدمين والأدوار الأساسية التي سيعتمد عليها سجل العمليات والصلاحيات.
+                إدارة المستخدمين والأدوار الأساسية التي سيعتمد عليها سجل
+                العمليات والصلاحيات.
               </p>
             </div>
           </div>
@@ -130,26 +159,39 @@ export default function UsersPage() {
 
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           {users.map((user) => (
-            <div key={user.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div
+              key={user.id}
+              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+            >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white">
                     {user.name.slice(0, 1)}
                   </div>
                   <div className="min-w-0">
-                    <h2 className="truncate text-sm font-extrabold text-slate-900">{user.name}</h2>
-                    <p className="mt-0.5 text-xs text-slate-400">@{user.username}</p>
+                    <h2 className="truncate text-sm font-extrabold text-slate-900">
+                      {user.name}
+                    </h2>
+                    <p className="mt-0.5 text-xs text-slate-400">
+                      @{user.username}
+                    </p>
                   </div>
                 </div>
-                <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${user.active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+                <span
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${user.active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}
+                >
                   {user.active ? "نشط" : "متوقف"}
                 </span>
               </div>
 
-              <label className="mt-5 block text-xs font-bold text-slate-500">الدور</label>
+              <label className="mt-5 block text-xs font-bold text-slate-500">
+                الدور
+              </label>
               <select
                 value={user.role}
-                onChange={(event) => changeRole(user.id, event.target.value as UserRole)}
+                onChange={(event) =>
+                  changeRole(user.id, event.target.value as UserRole)
+                }
                 disabled={user.id === "admin"}
                 className="mt-2 h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 outline-none focus:border-slate-400 disabled:bg-slate-50"
               >
@@ -193,8 +235,13 @@ export default function UsersPage() {
             <div className="flex items-center gap-3">
               <ShieldCheck className="h-5 w-5 text-slate-600" />
               <div>
-                <h2 className="text-base font-extrabold text-slate-900">مصفوفة الصلاحيات</h2>
-                <p className="mt-1 text-xs leading-5 text-slate-400">عدّل الصلاحيات من هنا مباشرة. أي تغيير ينعكس فورًا على المستخدمين وفحوصات الصلاحيات في النظام.</p>
+                <h2 className="text-base font-extrabold text-slate-900">
+                  مصفوفة الصلاحيات
+                </h2>
+                <p className="mt-1 text-xs leading-5 text-slate-400">
+                  عدّل الصلاحيات من هنا مباشرة. أي تغيير ينعكس فورًا على
+                  المستخدمين وفحوصات الصلاحيات في النظام.
+                </p>
               </div>
             </div>
           </div>
@@ -211,31 +258,40 @@ export default function UsersPage() {
               </thead>
               <tbody key={permissionsVersion}>
                 {permissionOrder.map((permission) => (
-                  <tr key={permission} className="border-b border-slate-50 last:border-0">
-                    <td className="px-3 py-3 text-sm font-semibold text-slate-700">{permissionLabels[permission]}</td>
-                    {(["admin", "accountant", "viewer"] as UserRole[]).map((role) => {
-                      const rolePermissions = getRolePermissions(role);
-                      const checked = rolePermissions.includes(permission);
-                      return (
-                        <td key={role} className="px-3 py-3 text-center">
-                          <label className="inline-flex cursor-pointer items-center justify-center">
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={(event) => {
-                                const current = getRolePermissions(role);
-                                const next = event.target.checked
-                                  ? [...current, permission]
-                                  : current.filter((item) => item !== permission);
-                                setRolePermissions(role, next);
-                                setPermissionsVersion((value) => value + 1);
-                              }}
-                              className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500"
-                            />
-                          </label>
-                        </td>
-                      );
-                    })}
+                  <tr
+                    key={permission}
+                    className="border-b border-slate-50 last:border-0"
+                  >
+                    <td className="px-3 py-3 text-sm font-semibold text-slate-700">
+                      {permissionLabels[permission]}
+                    </td>
+                    {(["admin", "accountant", "viewer"] as UserRole[]).map(
+                      (role) => {
+                        const rolePermissions = getRolePermissions(role);
+                        const checked = rolePermissions.includes(permission);
+                        return (
+                          <td key={role} className="px-3 py-3 text-center">
+                            <label className="inline-flex cursor-pointer items-center justify-center">
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={(event) => {
+                                  const current = getRolePermissions(role);
+                                  const next = event.target.checked
+                                    ? [...current, permission]
+                                    : current.filter(
+                                        (item) => item !== permission,
+                                      );
+                                  setRolePermissions(role, next);
+                                  setPermissionsVersion((value) => value + 1);
+                                }}
+                                className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+                              />
+                            </label>
+                          </td>
+                        );
+                      },
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -247,9 +303,14 @@ export default function UsersPage() {
           <div className="flex items-start gap-3">
             <UserCog className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
             <div>
-              <h2 className="text-sm font-extrabold text-blue-900">ملاحظة مهمة</h2>
+              <h2 className="text-sm font-extrabold text-blue-900">
+                ملاحظة مهمة
+              </h2>
               <p className="mt-1 text-xs leading-6 text-blue-700">
-                هذه المرحلة تبني طبقة المستخدمين والأدوار محليًا فوق النظام الحالي. الحماية الحقيقية من تعديل الطلبات مباشرة خارج الواجهة تحتاج Auth وقاعدة بيانات على السيرفر، وهي المرحلة التالية قبل الاعتماد الإنتاجي.
+                هذه المرحلة تبني طبقة المستخدمين والأدوار محليًا فوق النظام
+                الحالي. الحماية الحقيقية من تعديل الطلبات مباشرة خارج الواجهة
+                تحتاج Auth وقاعدة بيانات على السيرفر، وهي المرحلة التالية قبل
+                الاعتماد الإنتاجي.
               </p>
               <p className="mt-2 text-xs font-bold text-blue-800">
                 المستخدمون الأساسيون: المدير، المحاسب، الحاج رمضان، الحاج نبيل.
@@ -266,13 +327,19 @@ export default function UsersPage() {
             if (event.target === event.currentTarget) setCredentialsUser(null);
           }}
         >
-          <div className="ui-modal w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl" role="dialog" aria-modal="true">
+          <div
+            className="ui-modal w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+          >
             <div className="flex items-start gap-4 border-b border-slate-100 px-5 py-5">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
                 <KeyRound className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="text-base font-extrabold text-slate-900">بيانات دخول المستخدم</h2>
+                <h2 className="text-base font-extrabold text-slate-900">
+                  بيانات دخول المستخدم
+                </h2>
                 <p className="mt-1 text-xs leading-5 text-slate-500">
                   تحديد اسم المستخدم وكلمة المرور لـ {credentialsUser.name}.
                 </p>
@@ -289,7 +356,9 @@ export default function UsersPage() {
 
             <div className="space-y-4 p-5">
               <div>
-                <label className="mb-2 block text-xs font-extrabold text-slate-700">اسم المستخدم</label>
+                <label className="mb-2 block text-xs font-extrabold text-slate-700">
+                  اسم المستخدم
+                </label>
                 <input
                   type="text"
                   value={newUsername}
@@ -302,7 +371,9 @@ export default function UsersPage() {
               </div>
 
               <div className="relative">
-                <label className="mb-2 block text-xs font-extrabold text-slate-700">كلمة المرور الجديدة</label>
+                <label className="mb-2 block text-xs font-extrabold text-slate-700">
+                  كلمة المرور الجديدة
+                </label>
                 <input
                   type={showPassword ? "text" : "password"}
                   value={newPassword}
@@ -315,9 +386,15 @@ export default function UsersPage() {
                   type="button"
                   onClick={() => setShowPassword((value) => !value)}
                   className="absolute bottom-1.5 left-1.5 flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100"
-                  aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+                  aria-label={
+                    showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"
+                  }
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
 
@@ -327,8 +404,9 @@ export default function UsersPage() {
                 </p>
               )}
 
-              <div className="rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-semibold leading-5 text-blue-700">
-                بيانات الدخول يحددها المدير فقط، ولا يمكن للمستخدم تعديلها من حسابه الشخصي.
+              <div className="rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs leading-5 font-semibold text-blue-700">
+                بيانات الدخول يحددها المدير فقط، ولا يمكن للمستخدم تعديلها من
+                حسابه الشخصي.
               </div>
 
               <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-start">

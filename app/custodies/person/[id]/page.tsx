@@ -48,70 +48,50 @@ export default function PersonCustodyDetailsPage() {
   const params = useParams();
   const custodyId = params.id as string;
 
-  const [custody, setCustody] = useState<
-    Custody | undefined
-  >();
+  const [custody, setCustody] = useState<Custody | undefined>();
 
-  const [transactions, setTransactions] = useState<
-    CustodyTransaction[]
-  >([]);
+  const [transactions, setTransactions] = useState<CustodyTransaction[]>([]);
 
-  const [expenses, setExpenses] = useState<Expense[]>(
-    [],
-  );
+  const [expenses, setExpenses] = useState<Expense[]>([]);
 
-  const [projects, setProjects] = useState<Project[]>(
-    [],
-  );
+  const [projects, setProjects] = useState<Project[]>([]);
 
-  const [expenseFromDate, setExpenseFromDate] =
-    useState("");
+  const [expenseFromDate, setExpenseFromDate] = useState("");
 
-  const [expenseToDate, setExpenseToDate] =
-    useState("");
+  const [expenseToDate, setExpenseToDate] = useState("");
 
-  const [expenseCategory, setExpenseCategory] =
-    useState("");
+  const [expenseCategory, setExpenseCategory] = useState("");
 
-  const [expenseProjectId, setExpenseProjectId] =
-    useState("");
+  const [expenseProjectId, setExpenseProjectId] = useState("");
 
   const loadData = () => {
-    const currentCustody =
-      getCustodyById(custodyId);
+    const currentCustody = getCustodyById(custodyId);
 
-    const currentTransactions =
-      getCustodyTransactionsByCustodyId(custodyId);
+    const currentTransactions = getCustodyTransactionsByCustodyId(custodyId);
 
-    const currentExpenses =
-      getExpensesByCustodyId(custodyId);
+    const currentExpenses = getExpensesByCustodyId(custodyId);
 
     const currentProjects = getProjects();
 
-    const sortedTransactions =
-      [...currentTransactions].sort((a, b) => {
-        const dateCompare =
-          b.date.localeCompare(a.date);
+    const sortedTransactions = [...currentTransactions].sort((a, b) => {
+      const dateCompare = b.date.localeCompare(a.date);
 
-        if (dateCompare !== 0) {
-          return dateCompare;
-        }
+      if (dateCompare !== 0) {
+        return dateCompare;
+      }
 
-        return b.createdAt.localeCompare(a.createdAt);
-      });
+      return b.createdAt.localeCompare(a.createdAt);
+    });
 
-    const sortedExpenses = [...currentExpenses].sort(
-      (a, b) => {
-        const dateCompare =
-          b.date.localeCompare(a.date);
+    const sortedExpenses = [...currentExpenses].sort((a, b) => {
+      const dateCompare = b.date.localeCompare(a.date);
 
-        if (dateCompare !== 0) {
-          return dateCompare;
-        }
+      if (dateCompare !== 0) {
+        return dateCompare;
+      }
 
-        return b.createdAt.localeCompare(a.createdAt);
-      },
-    );
+      return b.createdAt.localeCompare(a.createdAt);
+    });
 
     setCustody(currentCustody);
     setTransactions(sortedTransactions);
@@ -126,72 +106,42 @@ export default function PersonCustodyDetailsPage() {
   const totalIn = useMemo(
     () =>
       transactions
-        .filter(
-          (transaction) =>
-            transaction.type === "in",
-        )
-        .reduce(
-          (total, transaction) =>
-            total + transaction.amount,
-          0,
-        ),
+        .filter((transaction) => transaction.type === "in")
+        .reduce((total, transaction) => total + transaction.amount, 0),
     [transactions],
   );
 
   const totalOut = useMemo(
     () =>
       transactions
-        .filter(
-          (transaction) =>
-            transaction.type === "out",
-        )
-        .reduce(
-          (total, transaction) =>
-            total + transaction.amount,
-          0,
-        ),
+        .filter((transaction) => transaction.type === "out")
+        .reduce((total, transaction) => total + transaction.amount, 0),
     [transactions],
   );
 
   const availableExpenseCategories = useMemo(() => {
     return Array.from(
       new Set(
-        expenses
-          .map((expense) => expense.category.trim())
-          .filter(Boolean),
+        expenses.map((expense) => expense.category.trim()).filter(Boolean),
       ),
-    ).sort((a, b) =>
-      a.localeCompare(b, "ar"),
-    );
+    ).sort((a, b) => a.localeCompare(b, "ar"));
   }, [expenses]);
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter((expense) => {
-      if (
-        expenseFromDate &&
-        expense.date < expenseFromDate
-      ) {
+      if (expenseFromDate && expense.date < expenseFromDate) {
         return false;
       }
 
-      if (
-        expenseToDate &&
-        expense.date > expenseToDate
-      ) {
+      if (expenseToDate && expense.date > expenseToDate) {
         return false;
       }
 
-      if (
-        expenseCategory &&
-        expense.category !== expenseCategory
-      ) {
+      if (expenseCategory && expense.category !== expenseCategory) {
         return false;
       }
 
-      if (
-        expenseProjectId &&
-        expense.projectId !== expenseProjectId
-      ) {
+      if (expenseProjectId && expense.projectId !== expenseProjectId) {
         return false;
       }
 
@@ -207,21 +157,12 @@ export default function PersonCustodyDetailsPage() {
 
   const filteredExpensesTotal = useMemo(
     () =>
-      filteredExpenses.reduce(
-        (total, expense) =>
-          total + expense.amount,
-        0,
-      ),
+      filteredExpenses.reduce((total, expense) => total + expense.amount, 0),
     [filteredExpenses],
   );
 
   const projectMap = useMemo(() => {
-    return new Map(
-      projects.map((project) => [
-        project.id,
-        project.name,
-      ]),
-    );
+    return new Map(projects.map((project) => [project.id, project.name]));
   }, [projects]);
 
   const resetExpenseFilters = () => {
@@ -302,8 +243,7 @@ export default function PersonCustodyDetailsPage() {
                 </h1>
 
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                  متابعة رصيد العهدة وحركتها المالية
-                  والمصروفات المرتبطة بها.
+                  متابعة رصيد العهدة وحركتها المالية والمصروفات المرتبطة بها.
                 </p>
               </div>
             </div>
@@ -359,9 +299,7 @@ export default function PersonCustodyDetailsPage() {
 
               <p
                 className={`mt-2 text-2xl font-extrabold tracking-tight ${
-                  custody.balance < 0
-                    ? "text-red-600"
-                    : "text-slate-900"
+                  custody.balance < 0 ? "text-red-600" : "text-slate-900"
                 }`}
               >
                 {formatAmount(custody.balance)}{" "}
@@ -452,8 +390,7 @@ export default function PersonCustodyDetailsPage() {
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  جميع عمليات الاستلام والصرف والتحويل
-                  الخاصة بالعهدة.
+                  جميع عمليات الاستلام والصرف والتحويل الخاصة بالعهدة.
                 </p>
               </div>
 
@@ -479,8 +416,7 @@ export default function PersonCustodyDetailsPage() {
                 </h3>
 
                 <p className="mt-2 text-xs leading-5 text-slate-400">
-                  لم يتم تسجيل أي حركة مالية على هذه
-                  العهدة حتى الآن.
+                  لم يتم تسجيل أي حركة مالية على هذه العهدة حتى الآن.
                 </p>
 
                 <Link
@@ -521,15 +457,14 @@ export default function PersonCustodyDetailsPage() {
 
                 <tbody>
                   {transactions.map((transaction) => {
-                    const isIn =
-                      transaction.type === "in";
+                    const isIn = transaction.type === "in";
 
                     return (
                       <tr
                         key={transaction.id}
                         className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/70"
                       >
-                        <td className="whitespace-nowrap px-5 py-4 text-xs font-semibold text-slate-500">
+                        <td className="px-5 py-4 text-xs font-semibold whitespace-nowrap text-slate-500">
                           {formatDate(transaction.date)}
                         </td>
 
@@ -549,10 +484,9 @@ export default function PersonCustodyDetailsPage() {
 
                             {isIn
                               ? "وارد"
-                              : transaction.type ===
-                                "transfer"
-                              ? "تحويل"
-                              : "منصرف"}
+                              : transaction.type === "transfer"
+                                ? "تحويل"
+                                : "منصرف"}
                           </span>
                         </td>
 
@@ -568,19 +502,14 @@ export default function PersonCustodyDetailsPage() {
                           </span>
                         </td>
 
-                        <td className="whitespace-nowrap px-5 py-4">
+                        <td className="px-5 py-4 whitespace-nowrap">
                           <span
                             className={`text-sm font-extrabold ${
-                              isIn
-                                ? "text-emerald-600"
-                                : "text-red-600"
+                              isIn ? "text-emerald-600" : "text-red-600"
                             }`}
                           >
                             {isIn ? "+" : "-"}
-                            {formatAmount(
-                              transaction.amount,
-                            )}{" "}
-                            جنيه
+                            {formatAmount(transaction.amount)} جنيه
                           </span>
                         </td>
                       </tr>
@@ -608,8 +537,8 @@ export default function PersonCustodyDetailsPage() {
                 </div>
 
                 <p className="mt-2 text-sm text-slate-500">
-                  فلترة وتحليل المصروفات المسجلة على هذه
-                  العهدة حسب الفترة والتصنيف والمشروع.
+                  فلترة وتحليل المصروفات المسجلة على هذه العهدة حسب الفترة
+                  والتصنيف والمشروع.
                 </p>
               </div>
 
@@ -646,12 +575,8 @@ export default function PersonCustodyDetailsPage() {
                 <DateInput
                   id="expense-from-date"
                   value={expenseFromDate}
-                  onChange={(value) =>
-                    setExpenseFromDate(
-                      value,
-                    )
-                  }
-                  className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
+                  onChange={(value) => setExpenseFromDate(value)}
+                  className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-700 transition-all outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
                 />
               </div>
 
@@ -667,12 +592,8 @@ export default function PersonCustodyDetailsPage() {
                 <DateInput
                   id="expense-to-date"
                   value={expenseToDate}
-                  onChange={(value) =>
-                    setExpenseToDate(
-                      value,
-                    )
-                  }
-                  className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-700 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
+                  onChange={(value) => setExpenseToDate(value)}
+                  className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-700 transition-all outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
                 />
               </div>
 
@@ -686,32 +607,21 @@ export default function PersonCustodyDetailsPage() {
                 </label>
 
                 <div className="relative">
-                  <Tag className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
+                  <Tag className="pointer-events-none absolute top-3 right-3 h-4 w-4 text-slate-400" />
 
                   <select
                     id="expense-category-filter"
                     value={expenseCategory}
-                    onChange={(event) =>
-                      setExpenseCategory(
-                        event.target.value,
-                      )
-                    }
-                    className="h-10 w-full appearance-none rounded-xl border border-slate-200 bg-white py-2 pr-9 pl-3 text-xs text-slate-700 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
+                    onChange={(event) => setExpenseCategory(event.target.value)}
+                    className="h-10 w-full appearance-none rounded-xl border border-slate-200 bg-white py-2 pr-9 pl-3 text-xs text-slate-700 transition-all outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
                   >
-                    <option value="">
-                      كل التصنيفات
-                    </option>
+                    <option value="">كل التصنيفات</option>
 
-                    {availableExpenseCategories.map(
-                      (category) => (
-                        <option
-                          key={category}
-                          value={category}
-                        >
-                          {category}
-                        </option>
-                      ),
-                    )}
+                    {availableExpenseCategories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -726,27 +636,20 @@ export default function PersonCustodyDetailsPage() {
                 </label>
 
                 <div className="relative">
-                  <FolderKanban className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-400" />
+                  <FolderKanban className="pointer-events-none absolute top-3 right-3 h-4 w-4 text-slate-400" />
 
                   <select
                     id="expense-project-filter"
                     value={expenseProjectId}
                     onChange={(event) =>
-                      setExpenseProjectId(
-                        event.target.value,
-                      )
+                      setExpenseProjectId(event.target.value)
                     }
-                    className="h-10 w-full appearance-none rounded-xl border border-slate-200 bg-white py-2 pr-9 pl-3 text-xs text-slate-700 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
+                    className="h-10 w-full appearance-none rounded-xl border border-slate-200 bg-white py-2 pr-9 pl-3 text-xs text-slate-700 transition-all outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10"
                   >
-                    <option value="">
-                      كل المشاريع
-                    </option>
+                    <option value="">كل المشاريع</option>
 
                     {projects.map((project) => (
-                      <option
-                        key={project.id}
-                        value={project.id}
-                      >
+                      <option key={project.id} value={project.id}>
                         {project.name}
                       </option>
                     ))}
@@ -778,9 +681,7 @@ export default function PersonCustodyDetailsPage() {
                 </p>
 
                 <p className="mt-1 text-lg font-extrabold text-red-600">
-                  {formatAmount(
-                    filteredExpensesTotal,
-                  )}{" "}
+                  {formatAmount(filteredExpensesTotal)}{" "}
                   <span className="text-[10px] font-semibold text-slate-400">
                     جنيه
                   </span>
@@ -805,8 +706,7 @@ export default function PersonCustodyDetailsPage() {
                 <p className="mt-1 text-lg font-extrabold text-slate-900">
                   {filteredExpenses.length > 0
                     ? formatAmount(
-                        filteredExpensesTotal /
-                          filteredExpenses.length,
+                        filteredExpensesTotal / filteredExpenses.length,
                       )
                     : "0"}{" "}
                   <span className="text-[10px] font-semibold text-slate-400">
@@ -880,7 +780,7 @@ export default function PersonCustodyDetailsPage() {
                       key={expense.id}
                       className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/70"
                     >
-                      <td className="whitespace-nowrap px-5 py-4 text-xs font-semibold text-slate-500">
+                      <td className="px-5 py-4 text-xs font-semibold whitespace-nowrap text-slate-500">
                         {formatDate(expense.date)}
                       </td>
 
@@ -901,9 +801,8 @@ export default function PersonCustodyDetailsPage() {
                         {expense.projectId ? (
                           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600">
                             <FolderKanban className="h-3.5 w-3.5 text-slate-400" />
-                            {projectMap.get(
-                              expense.projectId,
-                            ) || "مشروع غير معروف"}
+                            {projectMap.get(expense.projectId) ||
+                              "مشروع غير معروف"}
                           </span>
                         ) : (
                           <span className="text-xs font-semibold text-slate-400">
@@ -912,12 +811,9 @@ export default function PersonCustodyDetailsPage() {
                         )}
                       </td>
 
-                      <td className="whitespace-nowrap px-5 py-4">
+                      <td className="px-5 py-4 whitespace-nowrap">
                         <span className="text-sm font-extrabold text-red-600">
-                          {formatAmount(
-                            expense.amount,
-                          )}{" "}
-                          جنيه
+                          {formatAmount(expense.amount)} جنيه
                         </span>
                       </td>
                     </tr>
@@ -933,11 +829,8 @@ export default function PersonCustodyDetailsPage() {
                       إجمالي المصروفات بعد الفلترة
                     </td>
 
-                    <td className="whitespace-nowrap px-5 py-4 text-base font-extrabold text-red-600">
-                      {formatAmount(
-                        filteredExpensesTotal,
-                      )}{" "}
-                      جنيه
+                    <td className="px-5 py-4 text-base font-extrabold whitespace-nowrap text-red-600">
+                      {formatAmount(filteredExpensesTotal)} جنيه
                     </td>
                   </tr>
                 </tfoot>
@@ -959,11 +852,9 @@ export default function PersonCustodyDetailsPage() {
               </h2>
 
               <p className="mt-1 text-xs leading-6 text-slate-500 sm:text-sm">
-                هذه العهدة مستقلة عن حساب المصروفات وحساب
-                العامل أو المقاول. استلام مبلغ يزيد رصيدها،
-                بينما الصرف أو التحويل يقلل الرصيد. وتعديل
-                بيانات العهدة لا يؤثر على الحركات المالية
-                السابقة.
+                هذه العهدة مستقلة عن حساب المصروفات وحساب العامل أو المقاول.
+                استلام مبلغ يزيد رصيدها، بينما الصرف أو التحويل يقلل الرصيد.
+                وتعديل بيانات العهدة لا يؤثر على الحركات المالية السابقة.
               </p>
             </div>
           </div>

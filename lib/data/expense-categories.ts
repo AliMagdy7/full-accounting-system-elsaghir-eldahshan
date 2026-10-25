@@ -31,21 +31,14 @@ function saveCategories(categories: string[]) {
     return;
   }
 
-  window.localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(categories),
-  );
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(categories));
 }
 
 export function getExpenseCategories(): string[] {
-  return readCategories().sort((a, b) =>
-    a.localeCompare(b, "ar"),
-  );
+  return readCategories().sort((a, b) => a.localeCompare(b, "ar"));
 }
 
-export function addExpenseCategory(
-  category: string,
-): string {
+export function addExpenseCategory(category: string): string {
   assertCurrentUserPermission("create");
   const normalized = category.trim();
 

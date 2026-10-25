@@ -20,14 +20,9 @@ import {
 
 import AppShell from "@/components/layout/AppShell";
 
-import {
-  getCustodyById,
-  getProjectCustody,
-} from "@/lib/data/custodies";
+import { getCustodyById, getProjectCustody } from "@/lib/data/custodies";
 
-import {
-  getCustodyTransactionsByCustodyId,
-} from "@/lib/data/custody-transactions";
+import { getCustodyTransactionsByCustodyId } from "@/lib/data/custody-transactions";
 
 import { getProjectById } from "@/lib/data/projects";
 
@@ -40,14 +35,9 @@ import { getContractorSiteAssignmentsBySiteId } from "@/lib/data/contractor-site
 
 import ProjectExpensesTable from "@/components/projects/ProjectExpensesTable";
 
-import {
-  getWorkerFinancialMovementsByWorkerId,
-} from "@/lib/data/worker-financial-movements";
+import { getWorkerFinancialMovementsByWorkerId } from "@/lib/data/worker-financial-movements";
 
-import type {
-  Project,
-  ProjectResponsibleHistory,
-} from "@/types/project";
+import type { Project, ProjectResponsibleHistory } from "@/types/project";
 
 import type { CustodyTransaction } from "@/types/custody-transaction";
 import type { Expense } from "@/types/expense";
@@ -69,9 +59,7 @@ function formatDate(date?: string): string {
   return formatDisplayDate(date);
 }
 
-function getStatusLabel(
-  status: Project["status"],
-): string {
+function getStatusLabel(status: Project["status"]): string {
   switch (status) {
     case "active":
       return "نشط";
@@ -87,9 +75,7 @@ function getStatusLabel(
   }
 }
 
-function getStatusClasses(
-  status: Project["status"],
-): {
+function getStatusClasses(status: Project["status"]): {
   badge: string;
   text: string;
   icon: string;
@@ -125,10 +111,7 @@ function getStatusClasses(
   }
 }
 
-
-function getWorkerMovementTypeLabel(
-  type: string,
-): string {
+function getWorkerMovementTypeLabel(type: string): string {
   switch (type) {
     case "salary":
       return "راتب";
@@ -153,12 +136,10 @@ function getWorkerMovementTypeLabel(
   }
 }
 
-function getWorkerMovementAmount(
-  movement: {
-    amount: number;
-    effect: string;
-  },
-): number {
+function getWorkerMovementAmount(movement: {
+  amount: number;
+  effect: string;
+}): number {
   if (movement.effect === "decrease") {
     return -Math.abs(movement.amount);
   }
@@ -166,75 +147,51 @@ function getWorkerMovementAmount(
   return Math.abs(movement.amount);
 }
 
-function formatWorkerMovementAmount(
-  movement: {
-    amount: number;
-    effect: string;
-  },
-): string {
-  const amount =
-    getWorkerMovementAmount(movement);
+function formatWorkerMovementAmount(movement: {
+  amount: number;
+  effect: string;
+}): string {
+  const amount = getWorkerMovementAmount(movement);
 
-  const absoluteAmount =
-    Math.abs(amount);
+  const absoluteAmount = Math.abs(amount);
 
-  const prefix =
-    amount > 0
-      ? "+"
-      : amount < 0
-        ? "-"
-        : "";
+  const prefix = amount > 0 ? "+" : amount < 0 ? "-" : "";
 
-  return `${prefix}${formatAmount(
-    absoluteAmount,
-  )}`;
+  return `${prefix}${formatAmount(absoluteAmount)}`;
 }
 
 export default function ProjectDetailsPage() {
   const params = useParams();
 
-  const projectId =
-    String(params.id);
+  const projectId = String(params.id);
 
-  const [project, setProject] =
-    useState<Project | null>(null);
+  const [project, setProject] = useState<Project | null>(null);
 
-  const [custodySummary, setCustodySummary] =
-    useState<ProjectCustodySummary>({
-      balance: 0,
-      totalIn: 0,
-      totalOut: 0,
-    });
+  const [custodySummary, setCustodySummary] = useState<ProjectCustodySummary>({
+    balance: 0,
+    totalIn: 0,
+    totalOut: 0,
+  });
 
-  const [transactions, setTransactions] =
-    useState<CustodyTransaction[]>([]);
+  const [transactions, setTransactions] = useState<CustodyTransaction[]>([]);
 
-  const [workerMovements, setWorkerMovements] =
-    useState<
-      ReturnType<
-        typeof getWorkerFinancialMovementsByWorkerId
-      >
-    >([]);
+  const [workerMovements, setWorkerMovements] = useState<
+    ReturnType<typeof getWorkerFinancialMovementsByWorkerId>
+  >([]);
 
-  const [workerFilter, setWorkerFilter] =
-    useState("");
+  const [workerFilter, setWorkerFilter] = useState("");
 
-  const [contractorMovements, setContractorMovements] =
-    useState<Expense[]>([]);
+  const [contractorMovements, setContractorMovements] = useState<Expense[]>([]);
 
-  const [contractorFilter, setContractorFilter] =
-    useState("");
+  const [contractorFilter, setContractorFilter] = useState("");
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [expenseRevision, setExpenseRevision] =
-    useState(0);
+  const [expenseRevision, setExpenseRevision] = useState(0);
 
   useEffect(() => {
     const loadProject = () => {
-      const currentProject =
-        getProjectById(projectId);
+      const currentProject = getProjectById(projectId);
 
       if (!currentProject) {
         setProject(null);
@@ -247,49 +204,33 @@ export default function ProjectDetailsPage() {
 
       setProject({
         ...currentProject,
-        responsibleHistory: [
-          ...currentProject.responsibleHistory,
-        ],
+        responsibleHistory: [...currentProject.responsibleHistory],
       });
 
-      const projectCustody =
-        getProjectCustody(projectId);
+      const projectCustody = getProjectCustody(projectId);
 
       if (projectCustody) {
         setCustodySummary({
-          balance:
-            projectCustody.balance,
-          totalIn:
-            projectCustody.totalIn,
-          totalOut:
-            projectCustody.totalOut,
+          balance: projectCustody.balance,
+          totalIn: projectCustody.totalIn,
+          totalOut: projectCustody.totalOut,
         });
 
-        const projectTransactions =
-          getCustodyTransactionsByCustodyId(
-            projectCustody.id,
-          )
-            .slice()
-            .sort((a, b) => {
-              const dateComparison =
-                b.date.localeCompare(
-                  a.date,
-                );
+        const projectTransactions = getCustodyTransactionsByCustodyId(
+          projectCustody.id,
+        )
+          .slice()
+          .sort((a, b) => {
+            const dateComparison = b.date.localeCompare(a.date);
 
-              if (
-                dateComparison !== 0
-              ) {
-                return dateComparison;
-              }
+            if (dateComparison !== 0) {
+              return dateComparison;
+            }
 
-              return b.createdAt.localeCompare(
-                a.createdAt,
-              );
-            });
+            return b.createdAt.localeCompare(a.createdAt);
+          });
 
-        setTransactions(
-          projectTransactions,
-        );
+        setTransactions(projectTransactions);
       } else {
         setCustodySummary({
           balance: 0,
@@ -300,43 +241,23 @@ export default function ProjectDetailsPage() {
         setTransactions([]);
       }
 
+      const allWorkers = getWorkers();
 
-      const allWorkers =
-        getWorkers();
+      const projectWorkerMovements = allWorkers
+        .flatMap((worker) => getWorkerFinancialMovementsByWorkerId(worker.id))
+        .filter((movement) => movement.projectId === projectId)
+        .slice()
+        .sort((a, b) => {
+          const dateComparison = b.date.localeCompare(a.date);
 
-      const projectWorkerMovements =
-        allWorkers
-          .flatMap((worker) =>
-            getWorkerFinancialMovementsByWorkerId(
-              worker.id,
-            ),
-          )
-          .filter(
-            (movement) =>
-              movement.projectId ===
-              projectId,
-          )
-          .slice()
-          .sort((a, b) => {
-            const dateComparison =
-              b.date.localeCompare(
-                a.date,
-              );
+          if (dateComparison !== 0) {
+            return dateComparison;
+          }
 
-            if (
-              dateComparison !== 0
-            ) {
-              return dateComparison;
-            }
+          return b.createdAt.localeCompare(a.createdAt);
+        });
 
-            return b.createdAt.localeCompare(
-              a.createdAt,
-            );
-          });
-
-      setWorkerMovements(
-        projectWorkerMovements,
-      );
+      setWorkerMovements(projectWorkerMovements);
 
       const projectSites = getProjectSites(projectId);
       const projectSiteIds = new Set(projectSites.map((site) => site.id));
@@ -350,9 +271,10 @@ export default function ProjectDetailsPage() {
             (expense.projectId === projectId || !expense.projectId),
         )
         .slice()
-        .sort((a, b) =>
-          b.date.localeCompare(a.date) ||
-          b.createdAt.localeCompare(a.createdAt),
+        .sort(
+          (a, b) =>
+            b.date.localeCompare(a.date) ||
+            b.createdAt.localeCompare(a.createdAt),
         );
 
       setContractorMovements(projectContractorMovements);
@@ -378,9 +300,10 @@ export default function ProjectDetailsPage() {
       setTransactions(
         getCustodyTransactionsByCustodyId(projectCustody.id)
           .slice()
-          .sort((a, b) =>
-            b.date.localeCompare(a.date) ||
-            b.createdAt.localeCompare(a.createdAt),
+          .sort(
+            (a, b) =>
+              b.date.localeCompare(a.date) ||
+              b.createdAt.localeCompare(a.createdAt),
           ),
       );
     }
@@ -388,14 +311,13 @@ export default function ProjectDetailsPage() {
     const allWorkers = getWorkers();
     setWorkerMovements(
       allWorkers
-        .flatMap((worker) =>
-          getWorkerFinancialMovementsByWorkerId(worker.id),
-        )
+        .flatMap((worker) => getWorkerFinancialMovementsByWorkerId(worker.id))
         .filter((movement) => movement.projectId === projectId)
         .slice()
-        .sort((a, b) =>
-          b.date.localeCompare(a.date) ||
-          b.createdAt.localeCompare(a.createdAt),
+        .sort(
+          (a, b) =>
+            b.date.localeCompare(a.date) ||
+            b.createdAt.localeCompare(a.createdAt),
         ),
     );
 
@@ -413,9 +335,10 @@ export default function ProjectDetailsPage() {
             (expense.projectId === projectId || !expense.projectId),
         )
         .slice()
-        .sort((a, b) =>
-          b.date.localeCompare(a.date) ||
-          b.createdAt.localeCompare(a.createdAt),
+        .sort(
+          (a, b) =>
+            b.date.localeCompare(a.date) ||
+            b.createdAt.localeCompare(a.createdAt),
         ),
     );
 
@@ -430,52 +353,29 @@ export default function ProjectDetailsPage() {
   }, [projectId, expenseRevision]);
 
   const workerRows = useMemo(() => {
-    const workers =
-      getWorkers();
+    const workers = getWorkers();
 
-    const workersMap =
-      new Map(
-        workers.map((worker) => [
-          worker.id,
-          worker.name,
-        ]),
-      );
-
-    return workerMovements.map(
-      (movement) => ({
-        movement,
-        workerName:
-          workersMap.get(
-            movement.workerId,
-          ) ??
-          "عامل غير معروف",
-      }),
+    const workersMap = new Map(
+      workers.map((worker) => [worker.id, worker.name]),
     );
+
+    return workerMovements.map((movement) => ({
+      movement,
+      workerName: workersMap.get(movement.workerId) ?? "عامل غير معروف",
+    }));
   }, [workerMovements]);
 
-  const filteredWorkerRows =
-    useMemo(() => {
-      const normalizedFilter =
-        workerFilter
-          .trim()
-          .toLocaleLowerCase("ar");
+  const filteredWorkerRows = useMemo(() => {
+    const normalizedFilter = workerFilter.trim().toLocaleLowerCase("ar");
 
-      if (!normalizedFilter) {
-        return workerRows;
-      }
+    if (!normalizedFilter) {
+      return workerRows;
+    }
 
-      return workerRows.filter(
-        ({ workerName }) =>
-          workerName
-            .toLocaleLowerCase("ar")
-            .includes(
-              normalizedFilter,
-            ),
-      );
-    }, [
-      workerRows,
-      workerFilter,
-    ]);
+    return workerRows.filter(({ workerName }) =>
+      workerName.toLocaleLowerCase("ar").includes(normalizedFilter),
+    );
+  }, [workerRows, workerFilter]);
 
   const projectSites = useMemo(
     () => getProjectSites(projectId),
@@ -488,7 +388,10 @@ export default function ProjectDetailsPage() {
   );
 
   const contractorsMap = useMemo(
-    () => new Map(getContractors().map((contractor) => [contractor.id, contractor])),
+    () =>
+      new Map(
+        getContractors().map((contractor) => [contractor.id, contractor]),
+      ),
     [contractorMovements],
   );
 
@@ -533,10 +436,10 @@ export default function ProjectDetailsPage() {
 
     return contractorMovements.filter((expense) => {
       const contractorName = expense.contractorId
-        ? contractorsMap.get(expense.contractorId)?.name ?? ""
+        ? (contractorsMap.get(expense.contractorId)?.name ?? "")
         : "";
       const siteName = expense.siteId
-        ? projectSiteMap.get(expense.siteId)?.name ?? ""
+        ? (projectSiteMap.get(expense.siteId)?.name ?? "")
         : "";
 
       return (
@@ -588,28 +491,18 @@ export default function ProjectDetailsPage() {
     );
   }
 
-  const statusClasses =
-    getStatusClasses(
-      project.status,
-    );
+  const statusClasses = getStatusClasses(project.status);
 
   const responsibleHistory: ProjectResponsibleHistory[] =
-    project.responsibleHistory ??
-    [];
+    project.responsibleHistory ?? [];
 
-  const currentResponsible =
-    project.currentResponsible?.trim() ||
-    "";
+  const currentResponsible = project.currentResponsible?.trim() || "";
 
-  const hasResponsibleHistory =
-    responsibleHistory.length > 0;
+  const hasResponsibleHistory = responsibleHistory.length > 0;
 
   return (
     <AppShell>
-      <div
-        dir="rtl"
-        className="app-page space-y-6"
-      >
+      <div dir="rtl" className="app-page space-y-6">
         {/* Header */}
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
@@ -636,9 +529,7 @@ export default function ProjectDetailsPage() {
                   <span
                     className={`rounded-lg px-2.5 py-1 text-[11px] font-bold ${statusClasses.badge}`}
                   >
-                    {getStatusLabel(
-                      project.status,
-                    )}
+                    {getStatusLabel(project.status)}
                   </span>
                 </div>
 
@@ -647,8 +538,7 @@ export default function ProjectDetailsPage() {
                 </h1>
 
                 <p className="mt-2 text-sm text-slate-500">
-                  عرض تفاصيل وحركة المشروع والعهدة
-                  المرتبطة به.
+                  عرض تفاصيل وحركة المشروع والعهدة المرتبطة به.
                 </p>
               </div>
             </div>
@@ -688,8 +578,7 @@ export default function ProjectDetailsPage() {
                 </p>
 
                 <p className="mt-1 truncate text-sm font-extrabold text-slate-900">
-                  {currentResponsible ||
-                    "لا يوجد مسؤول حالي"}
+                  {currentResponsible || "لا يوجد مسؤول حالي"}
                 </p>
               </div>
             </div>
@@ -707,9 +596,7 @@ export default function ProjectDetailsPage() {
                 </p>
 
                 <p className="mt-1 text-sm font-extrabold text-slate-900">
-                  {formatDate(
-                    project.assignmentStartDate,
-                  )}
+                  {formatDate(project.assignmentStartDate)}
                 </p>
               </div>
             </div>
@@ -731,9 +618,7 @@ export default function ProjectDetailsPage() {
                 <p
                   className={`mt-1 text-sm font-extrabold ${statusClasses.text}`}
                 >
-                  {getStatusLabel(
-                    project.status,
-                  )}
+                  {getStatusLabel(project.status)}
                 </p>
               </div>
             </div>
@@ -771,14 +656,10 @@ export default function ProjectDetailsPage() {
 
               <p
                 className={`mt-2 text-2xl font-extrabold ${
-                  custodySummary.balance < 0
-                    ? "text-red-600"
-                    : "text-slate-900"
+                  custodySummary.balance < 0 ? "text-red-600" : "text-slate-900"
                 }`}
               >
-                {formatAmount(
-                  custodySummary.balance,
-                )}
+                {formatAmount(custodySummary.balance)}
 
                 <span className="mr-2 text-xs font-medium text-slate-400">
                   جنيه
@@ -802,9 +683,7 @@ export default function ProjectDetailsPage() {
               </p>
 
               <p className="mt-2 text-2xl font-extrabold text-slate-900">
-                {formatAmount(
-                  totalProjectExpenses,
-                )}
+                {formatAmount(totalProjectExpenses)}
 
                 <span className="mr-2 text-xs font-medium text-slate-400">
                   جنيه
@@ -828,9 +707,7 @@ export default function ProjectDetailsPage() {
               </p>
 
               <p className="mt-2 text-2xl font-extrabold text-slate-900">
-                {formatAmount(
-                  custodySummary.totalIn,
-                )}
+                {formatAmount(custodySummary.totalIn)}
 
                 <span className="mr-2 text-xs font-medium text-slate-400">
                   جنيه
@@ -882,8 +759,8 @@ export default function ProjectDetailsPage() {
                 </h2>
 
                 <p className="mt-1 text-xs leading-5 text-slate-400">
-                  كل الحركات المالية للعامل المرتبطة بهذا الموقع،
-                  حتى لو تم الدفع من عهدة أخرى.
+                  كل الحركات المالية للعامل المرتبطة بهذا الموقع، حتى لو تم
+                  الدفع من عهدة أخرى.
                 </p>
               </div>
 
@@ -891,13 +768,9 @@ export default function ProjectDetailsPage() {
                 <input
                   type="text"
                   value={workerFilter}
-                  onChange={(event) =>
-                    setWorkerFilter(
-                      event.target.value,
-                    )
-                  }
+                  onChange={(event) => setWorkerFilter(event.target.value)}
                   placeholder="فلترة باسم العامل..."
-                  className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                  className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm font-semibold text-slate-700 transition outline-none placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
                 />
               </div>
             </div>
@@ -915,8 +788,8 @@ export default function ProjectDetailsPage() {
                 </h3>
 
                 <p className="mt-1 max-w-md text-xs leading-5 text-slate-400">
-                  عند تسجيل سلفة أو راتب أو أي حركة مالية
-                  مرتبطة بعامل على هذا الموقع، ستظهر هنا.
+                  عند تسجيل سلفة أو راتب أو أي حركة مالية مرتبطة بعامل على هذا
+                  الموقع، ستظهر هنا.
                 </p>
               </div>
             </div>
@@ -968,98 +841,78 @@ export default function ProjectDetailsPage() {
                 </thead>
 
                 <tbody className="divide-y divide-slate-100">
-                  {filteredWorkerRows.map(
-                    ({
-                      movement,
-                      workerName,
-                    }) => {
-                      const custody =
-                        movement.custodyId
-                          ? getCustodyById(
-                              movement.custodyId,
-                            )
-                          : undefined;
+                  {filteredWorkerRows.map(({ movement, workerName }) => {
+                    const custody = movement.custodyId
+                      ? getCustodyById(movement.custodyId)
+                      : undefined;
 
-                      const amount =
-                        getWorkerMovementAmount(
-                          movement,
-                        );
+                    const amount = getWorkerMovementAmount(movement);
 
-                      return (
-                        <tr
-                          key={movement.id}
-                          className="transition-colors hover:bg-slate-50/70"
-                        >
-                          <td className="whitespace-nowrap px-5 py-4 text-xs font-semibold text-slate-500">
-                            {formatDate(
-                              movement.date,
-                            )}
-                          </td>
+                    return (
+                      <tr
+                        key={movement.id}
+                        className="transition-colors hover:bg-slate-50/70"
+                      >
+                        <td className="px-5 py-4 text-xs font-semibold whitespace-nowrap text-slate-500">
+                          {formatDate(movement.date)}
+                        </td>
 
-                          <td className="px-5 py-4">
-                            <div className="flex items-center gap-2">
-                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                                <UserRound className="h-4 w-4" />
-                              </div>
-
-                              <span className="text-sm font-extrabold text-slate-800">
-                                {workerName}
-                              </span>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                              <UserRound className="h-4 w-4" />
                             </div>
-                          </td>
 
-                          <td className="px-5 py-4">
-                            <p className="max-w-[320px] text-sm font-bold leading-6 text-slate-800">
-                              {movement.description ||
-                                "—"}
-                            </p>
-                          </td>
-
-                          <td className="px-5 py-4">
-                            <span
-                              className={`inline-flex rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${
-                                movement.effect ===
-                                "increase"
-                                  ? "bg-emerald-50 text-emerald-600"
-                                  : "bg-red-50 text-red-600"
-                              }`}
-                            >
-                              {getWorkerMovementTypeLabel(
-                                movement.type,
-                              )}
+                            <span className="text-sm font-extrabold text-slate-800">
+                              {workerName}
                             </span>
-                          </td>
+                          </div>
+                        </td>
 
-                          <td className="px-5 py-4">
-                            <span className="text-sm font-semibold text-slate-600">
-                              {custody?.name ??
-                                "عهدة غير محددة"}
-                            </span>
-                          </td>
+                        <td className="px-5 py-4">
+                          <p className="max-w-[320px] text-sm leading-6 font-bold text-slate-800">
+                            {movement.description || "—"}
+                          </p>
+                        </td>
 
-                          <td className="whitespace-nowrap px-5 py-4 text-left">
-                            <span
-                              className={`text-sm font-extrabold ${
-                                amount > 0
-                                  ? "text-emerald-600"
-                                  : amount < 0
-                                    ? "text-red-600"
-                                    : "text-slate-700"
-                              }`}
-                            >
-                              {formatWorkerMovementAmount(
-                                movement,
-                              )}
-                            </span>
+                        <td className="px-5 py-4">
+                          <span
+                            className={`inline-flex rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${
+                              movement.effect === "increase"
+                                ? "bg-emerald-50 text-emerald-600"
+                                : "bg-red-50 text-red-600"
+                            }`}
+                          >
+                            {getWorkerMovementTypeLabel(movement.type)}
+                          </span>
+                        </td>
 
-                            <span className="mr-1 text-[10px] font-medium text-slate-400">
-                              جنيه
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    },
-                  )}
+                        <td className="px-5 py-4">
+                          <span className="text-sm font-semibold text-slate-600">
+                            {custody?.name ?? "عهدة غير محددة"}
+                          </span>
+                        </td>
+
+                        <td className="px-5 py-4 text-left whitespace-nowrap">
+                          <span
+                            className={`text-sm font-extrabold ${
+                              amount > 0
+                                ? "text-emerald-600"
+                                : amount < 0
+                                  ? "text-red-600"
+                                  : "text-slate-700"
+                            }`}
+                          >
+                            {formatWorkerMovementAmount(movement)}
+                          </span>
+
+                          <span className="mr-1 text-[10px] font-medium text-slate-400">
+                            جنيه
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -1077,7 +930,8 @@ export default function ProjectDetailsPage() {
                 </h2>
 
                 <p className="mt-1 text-xs leading-5 text-slate-400">
-                  المقاولون المرتبطون بمواقع هذا المشروع، وكل السلف الخاصة بهم حتى لو تم الدفع من عهدة أخرى.
+                  المقاولون المرتبطون بمواقع هذا المشروع، وكل السلف الخاصة بهم
+                  حتى لو تم الدفع من عهدة أخرى.
                 </p>
               </div>
 
@@ -1087,7 +941,7 @@ export default function ProjectDetailsPage() {
                   value={contractorFilter}
                   onChange={(event) => setContractorFilter(event.target.value)}
                   placeholder="فلترة باسم المقاول أو الموقع..."
-                  className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm font-semibold text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                  className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-right text-sm font-semibold text-slate-700 transition outline-none placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
                 />
               </div>
             </div>
@@ -1134,7 +988,8 @@ export default function ProjectDetailsPage() {
                 </h3>
 
                 <p className="mt-1 max-w-md text-xs leading-5 text-slate-400">
-                  عند تسجيل سلفة لمقاول واختيار أحد مواقع هذا المشروع، ستظهر الحركة هنا تلقائيًا.
+                  عند تسجيل سلفة لمقاول واختيار أحد مواقع هذا المشروع، ستظهر
+                  الحركة هنا تلقائيًا.
                 </p>
               </div>
             </div>
@@ -1197,7 +1052,7 @@ export default function ProjectDetailsPage() {
                         key={expense.id}
                         className="transition-colors hover:bg-slate-50/70"
                       >
-                        <td className="whitespace-nowrap px-5 py-4 text-xs font-semibold text-slate-500">
+                        <td className="px-5 py-4 text-xs font-semibold whitespace-nowrap text-slate-500">
                           {formatDate(expense.date)}
                         </td>
 
@@ -1221,7 +1076,7 @@ export default function ProjectDetailsPage() {
                         </td>
 
                         <td className="px-5 py-4">
-                          <p className="max-w-[320px] text-sm font-bold leading-6 text-slate-800">
+                          <p className="max-w-[320px] text-sm leading-6 font-bold text-slate-800">
                             {expense.description || "سلفة مقاول"}
                           </p>
                         </td>
@@ -1232,9 +1087,12 @@ export default function ProjectDetailsPage() {
                           </span>
                         </td>
 
-                        <td className="whitespace-nowrap px-5 py-4 text-left">
+                        <td className="px-5 py-4 text-left whitespace-nowrap">
                           <span className="text-sm font-extrabold text-violet-600">
-                            -{formatAmount(Math.abs(Number(expense.amount || 0)))}
+                            -
+                            {formatAmount(
+                              Math.abs(Number(expense.amount || 0)),
+                            )}
                           </span>
                           <span className="mr-1 text-[10px] font-medium text-slate-400">
                             جنيه
@@ -1285,95 +1143,73 @@ export default function ProjectDetailsPage() {
               </div>
             ) : (
               <div className="relative">
-                <div className="absolute bottom-4 right-5 top-4 w-px bg-slate-200" />
+                <div className="absolute top-4 right-5 bottom-4 w-px bg-slate-200" />
 
                 <div className="space-y-4">
                   {responsibleHistory
                     .slice()
                     .reverse()
-                    .map(
-                      (
-                        history,
-                        index,
-                      ) => {
-                        const isCurrent =
-                          !history.endDate &&
-                          history.personName ===
-                            currentResponsible;
+                    .map((history, index) => {
+                      const isCurrent =
+                        !history.endDate &&
+                        history.personName === currentResponsible;
 
-                        return (
+                      return (
+                        <div
+                          key={
+                            history.id ||
+                            `${history.personName}-${history.startDate}-${index}`
+                          }
+                          className="relative flex items-start gap-4"
+                        >
                           <div
-                            key={
-                              history.id ||
-                              `${history.personName}-${history.startDate}-${index}`
-                            }
-                            className="relative flex items-start gap-4"
+                            className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-4 border-white text-white shadow-sm ${
+                              isCurrent ? "bg-emerald-500" : "bg-slate-400"
+                            }`}
                           >
-                            <div
-                              className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-4 border-white text-white shadow-sm ${
-                                isCurrent
-                                  ? "bg-emerald-500"
-                                  : "bg-slate-400"
-                              }`}
-                            >
-                              <UserRound className="h-4 w-4" />
-                            </div>
+                            <UserRound className="h-4 w-4" />
+                          </div>
 
-                            <div className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                <div>
-                                  <p className="text-sm font-extrabold text-slate-900">
-                                    {
-                                      history.personName
-                                    }
-                                  </p>
+                          <div className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                              <div>
+                                <p className="text-sm font-extrabold text-slate-900">
+                                  {history.personName}
+                                </p>
 
-                                  <p className="mt-1 text-xs text-slate-400">
-                                    {isCurrent
-                                      ? "المسؤول الحالي"
-                                      : "مسؤول سابق"}
-                                  </p>
-                                </div>
-
-                                <span
-                                  className={`w-fit rounded-lg px-2.5 py-1 text-[11px] font-bold ${
-                                    isCurrent
-                                      ? "bg-emerald-50 text-emerald-600"
-                                      : "bg-slate-100 text-slate-500"
-                                  }`}
-                                >
-                                  {isCurrent
-                                    ? "حتى الآن"
-                                    : "انتهت المسؤولية"}
-                                </span>
+                                <p className="mt-1 text-xs text-slate-400">
+                                  {isCurrent ? "المسؤول الحالي" : "مسؤول سابق"}
+                                </p>
                               </div>
 
-                              <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500">
+                              <span
+                                className={`w-fit rounded-lg px-2.5 py-1 text-[11px] font-bold ${
+                                  isCurrent
+                                    ? "bg-emerald-50 text-emerald-600"
+                                    : "bg-slate-100 text-slate-500"
+                                }`}
+                              >
+                                {isCurrent ? "حتى الآن" : "انتهت المسؤولية"}
+                              </span>
+                            </div>
+
+                            <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-500">
+                              <span className="flex items-center gap-2">
+                                <CalendarDays className="h-4 w-4 text-slate-400" />
+                                بداية المسؤولية: {formatDate(history.startDate)}
+                              </span>
+
+                              {history.endDate && (
                                 <span className="flex items-center gap-2">
                                   <CalendarDays className="h-4 w-4 text-slate-400" />
-
-                                  بداية المسؤولية:{" "}
-                                  {formatDate(
-                                    history.startDate,
-                                  )}
+                                  نهاية المسؤولية: {formatDate(history.endDate)}
                                 </span>
-
-                                {history.endDate && (
-                                  <span className="flex items-center gap-2">
-                                    <CalendarDays className="h-4 w-4 text-slate-400" />
-
-                                    نهاية المسؤولية:{" "}
-                                    {formatDate(
-                                      history.endDate,
-                                    )}
-                                  </span>
-                                )}
-                              </div>
+                              )}
                             </div>
                           </div>
-                        );
-                      },
-                    )}
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             )}
@@ -1391,7 +1227,7 @@ export default function ProjectDetailsPage() {
 
           <div className="p-5 sm:p-6">
             {project.notes ? (
-              <p className="whitespace-pre-wrap text-sm leading-7 text-slate-500">
+              <p className="text-sm leading-7 whitespace-pre-wrap text-slate-500">
                 {project.notes}
               </p>
             ) : (
@@ -1402,8 +1238,13 @@ export default function ProjectDetailsPage() {
           </div>
         </section>
       </div>
-    <Link href={`/projects/${projectId}/sites`} className="fixed bottom-5 left-5 z-20 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white shadow-lg">
-    <MapPin className="h-4 w-4"/>إدارة المواقع</Link>
-</AppShell>
+      <Link
+        href={`/projects/${projectId}/sites`}
+        className="fixed bottom-5 left-5 z-20 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white shadow-lg"
+      >
+        <MapPin className="h-4 w-4" />
+        إدارة المواقع
+      </Link>
+    </AppShell>
   );
 }

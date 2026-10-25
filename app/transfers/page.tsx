@@ -71,9 +71,7 @@ export default function TransfersPage() {
   }, []);
 
   const custodyMap = useMemo(() => {
-    return new Map(
-      custodies.map((custody) => [custody.id, custody]),
-    );
+    return new Map(custodies.map((custody) => [custody.id, custody]));
   }, [custodies]);
 
   const totalTransfers = transactions.length;
@@ -86,9 +84,8 @@ export default function TransfersPage() {
   }, [transactions]);
 
   const uniqueFromCustodies = useMemo(() => {
-    return new Set(
-      transactions.map((transaction) => transaction.custodyId),
-    ).size;
+    return new Set(transactions.map((transaction) => transaction.custodyId))
+      .size;
   }, [transactions]);
 
   const uniqueToCustodies = useMemo(() => {
@@ -139,8 +136,8 @@ export default function TransfersPage() {
               </h1>
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                متابعة التحويلات المالية بين العهد المختلفة مع
-                معرفة الجهة المرسلة والجهة المستلمة وقيمة كل تحويل.
+                متابعة التحويلات المالية بين العهد المختلفة مع معرفة الجهة
+                المرسلة والجهة المستلمة وقيمة كل تحويل.
               </p>
             </div>
 
@@ -280,8 +277,7 @@ export default function TransfersPage() {
                 </h3>
 
                 <p className="mt-2 text-sm leading-6 text-slate-400">
-                  عند تسجيل أول تحويل بين عهدتين، ستظهر تفاصيل
-                  التحويل هنا.
+                  عند تسجيل أول تحويل بين عهدتين، ستظهر تفاصيل التحويل هنا.
                 </p>
 
                 <Link
@@ -326,9 +322,7 @@ export default function TransfersPage() {
 
                 <tbody>
                   {transactions.map((transaction) => {
-                    const fromCustody = custodyMap.get(
-                      transaction.custodyId,
-                    );
+                    const fromCustody = custodyMap.get(transaction.custodyId);
 
                     const toCustody = transaction.relatedCustodyId
                       ? custodyMap.get(transaction.relatedCustodyId)
@@ -339,7 +333,7 @@ export default function TransfersPage() {
                         key={transaction.id}
                         className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/70"
                       >
-                        <td className="whitespace-nowrap px-5 py-4">
+                        <td className="px-5 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
                             <CalendarDays className="h-4 w-4 text-slate-400" />
                             {formatDate(transaction.date)}
@@ -354,8 +348,7 @@ export default function TransfersPage() {
 
                             <div>
                               <p className="text-sm font-bold text-slate-800">
-                                {fromCustody?.name ||
-                                  transaction.custodyId}
+                                {fromCustody?.name || transaction.custodyId}
                               </p>
 
                               <p className="mt-0.5 text-[11px] text-slate-400">
@@ -391,7 +384,7 @@ export default function TransfersPage() {
                           </p>
                         </td>
 
-                        <td className="whitespace-nowrap px-5 py-4">
+                        <td className="px-5 py-4 whitespace-nowrap">
                           <span className="text-sm font-extrabold text-blue-600">
                             {formatAmount(transaction.amount)} جنيه
                           </span>
@@ -413,9 +406,7 @@ export default function TransfersPage() {
                               <ArrowLeft className="h-3.5 w-3.5" />
                             </Link>
                           ) : (
-                            <span className="text-xs text-slate-400">
-                              —
-                            </span>
+                            <span className="text-xs text-slate-400">—</span>
                           )}
                         </td>
                       </tr>
@@ -440,9 +431,9 @@ export default function TransfersPage() {
               </h2>
 
               <p className="mt-1 text-xs leading-6 text-slate-500 sm:text-sm">
-                التحويل بين العهد ليس مصروفًا. المبلغ يخرج من
-                العهدة المرسلة ويضاف إلى العهدة المستلمة، مع
-                الاحتفاظ بتفاصيل العملية في سجل التحويلات.
+                التحويل بين العهد ليس مصروفًا. المبلغ يخرج من العهدة المرسلة
+                ويضاف إلى العهدة المستلمة، مع الاحتفاظ بتفاصيل العملية في سجل
+                التحويلات.
               </p>
             </div>
           </div>

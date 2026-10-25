@@ -54,7 +54,6 @@ export function isContractorAssignedToSiteOnDate(
   );
 }
 
-
 export function getContractorSiteAssignments(contractorId: string) {
   return read()
     .filter((item) => item.contractorId === contractorId)
@@ -66,7 +65,9 @@ export function getContractorSiteAssignmentById(id: string) {
 }
 
 export function getActiveContractorSiteAssignments(contractorId: string) {
-  return getContractorSiteAssignments(contractorId).filter((item) => !item.endDate);
+  return getContractorSiteAssignments(contractorId).filter(
+    (item) => !item.endDate,
+  );
 }
 
 export function getContractorSiteAssignmentsBySiteId(siteId: string) {
@@ -75,9 +76,14 @@ export function getContractorSiteAssignmentsBySiteId(siteId: string) {
     .sort((a, b) => b.startDate.localeCompare(a.startDate));
 }
 
-export function getActiveContractorsForSite(siteId: string, date = new Date().toISOString().slice(0, 10)) {
-  return getContractorSiteAssignmentsBySiteId(siteId).filter((assignment) =>
-    assignment.startDate <= date && (!assignment.endDate || assignment.endDate >= date),
+export function getActiveContractorsForSite(
+  siteId: string,
+  date = new Date().toISOString().slice(0, 10),
+) {
+  return getContractorSiteAssignmentsBySiteId(siteId).filter(
+    (assignment) =>
+      assignment.startDate <= date &&
+      (!assignment.endDate || assignment.endDate >= date),
   );
 }
 
@@ -107,7 +113,12 @@ export function addContractorSiteAssignment(input: {
     (item) =>
       item.contractorId === input.contractorId &&
       item.siteId === input.siteId &&
-      datesOverlap(item.startDate, item.endDate, input.startDate, input.endDate),
+      datesOverlap(
+        item.startDate,
+        item.endDate,
+        input.startDate,
+        input.endDate,
+      ),
   );
 
   if (overlappingAssignment) {
@@ -144,7 +155,9 @@ export function addContractorSiteAssignment(input: {
 
 export function updateContractorSiteAssignment(
   id: string,
-  updates: Partial<Pick<ContractorSiteAssignment, "siteId" | "startDate" | "endDate" | "notes">>,
+  updates: Partial<
+    Pick<ContractorSiteAssignment, "siteId" | "startDate" | "endDate" | "notes">
+  >,
 ) {
   assertCurrentUserPermission("update");
 
@@ -189,8 +202,13 @@ export function updateContractorSiteAssignment(
       expense.contractorId === previous.contractorId &&
       (expense.siteId === previous.siteId || expense.siteId === next.siteId),
   );
-  if (previous.siteId !== next.siteId && linkedAdvances.some((expense) => expense.siteId === previous.siteId)) {
-    throw new Error("لا يمكن تغيير موقع الفترة لأنها مرتبطة بسلف مالية على الموقع الحالي.");
+  if (
+    previous.siteId !== next.siteId &&
+    linkedAdvances.some((expense) => expense.siteId === previous.siteId)
+  ) {
+    throw new Error(
+      "لا يمكن تغيير موقع الفترة لأنها مرتبطة بسلف مالية على الموقع الحالي.",
+    );
   }
   const outsideAdvance = linkedAdvances.find(
     (expense) =>
@@ -198,7 +216,9 @@ export function updateContractorSiteAssignment(
       Boolean(next.endDate && expense.date > next.endDate),
   );
   if (outsideAdvance) {
-    throw new Error("لا يمكن تعديل فترة المقاول لأن هناك سلفة مسجلة بتاريخ خارج الفترة الجديدة.");
+    throw new Error(
+      "لا يمكن تعديل فترة المقاول لأن هناك سلفة مسجلة بتاريخ خارج الفترة الجديدة.",
+    );
   }
 
   items[index] = next;
@@ -234,7 +254,9 @@ export function deleteContractorSiteAssignment(id: string) {
       expense.siteId === assignment.siteId,
   );
   if (hasAdvances) {
-    throw new Error("لا يمكن حذف فترة المقاول لأنها مرتبطة بسلف مالية. عدّل تاريخ النهاية بدلًا من حذف السجل.");
+    throw new Error(
+      "لا يمكن حذف فترة المقاول لأنها مرتبطة بسلف مالية. عدّل تاريخ النهاية بدلًا من حذف السجل.",
+    );
   }
 
   save(read().filter((item) => item.id !== id));

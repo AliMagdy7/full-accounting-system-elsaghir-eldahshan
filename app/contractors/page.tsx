@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { SubmitEvent  } from "react";
+import type { SubmitEvent } from "react";
 import {
   HardHat,
   Plus,
@@ -62,10 +62,11 @@ export default function ContractorsPage() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
 
-    return items.filter((item) =>
-      !q ||
-      item.name.toLowerCase().includes(q) ||
-      item.phone?.toLowerCase().includes(q),
+    return items.filter(
+      (item) =>
+        !q ||
+        item.name.toLowerCase().includes(q) ||
+        item.phone?.toLowerCase().includes(q),
     );
   }, [items, search]);
 
@@ -115,7 +116,7 @@ export default function ContractorsPage() {
     resetForm();
   };
 
-  const submit = (event: SubmitEvent <HTMLFormElement>) => {
+  const submit = (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
 
@@ -194,7 +195,7 @@ export default function ContractorsPage() {
   return (
     <AppShell>
       <div dir="rtl" className="app-page space-y-6">
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 ui-fade-up">
+        <section className="ui-fade-up rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="mb-2 flex items-center gap-2">
@@ -239,29 +240,37 @@ export default function ContractorsPage() {
           <div className="accounting-card ui-fade-up p-5">
             <p className="text-sm text-slate-500">إجمالي الأعمال</p>
             <p className="accounting-number mt-2 text-2xl font-extrabold text-slate-900">
-              {money(filtered.reduce((sum, item) => sum + Number(item.totalWork || 0), 0))} <span className="text-sm font-bold">جنيه</span>
+              {money(
+                filtered.reduce(
+                  (sum, item) => sum + Number(item.totalWork || 0),
+                  0,
+                ),
+              )}{" "}
+              <span className="text-sm font-bold">جنيه</span>
             </p>
           </div>
 
           <div className="accounting-card ui-fade-up p-5">
             <p className="text-sm text-slate-500">إجمالي السلف</p>
             <p className="accounting-number mt-2 text-2xl font-extrabold text-slate-900">
-              {money(totals.paid)} <span className="text-sm font-bold">جنيه</span>
+              {money(totals.paid)}{" "}
+              <span className="text-sm font-bold">جنيه</span>
             </p>
           </div>
 
           <div className="accounting-card ui-fade-up p-5">
             <p className="text-sm text-slate-500">إجمالي المتبقي</p>
             <p className="accounting-number mt-2 text-2xl font-extrabold text-slate-900">
-              {money(totals.remaining)} <span className="text-sm font-bold">جنيه</span>
+              {money(totals.remaining)}{" "}
+              <span className="text-sm font-bold">جنيه</span>
             </p>
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ui-fade-up">
+        <section className="ui-fade-up overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-100 p-4 sm:p-5">
             <div className="relative max-w-md">
-              <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Search className="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
@@ -312,15 +321,26 @@ export default function ContractorsPage() {
                         {item.nationalId ? ` • ${item.nationalId}` : ""}
                       </p>
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                        <span className="text-[11px] font-black text-slate-400">المواقع الحالية:</span>
-                        {getActiveContractorSiteAssignments(item.id).length === 0 ? (
-                          <span className="text-[11px] font-semibold text-slate-400">لا يوجد</span>
+                        <span className="text-[11px] font-black text-slate-400">
+                          المواقع الحالية:
+                        </span>
+                        {getActiveContractorSiteAssignments(item.id).length ===
+                        0 ? (
+                          <span className="text-[11px] font-semibold text-slate-400">
+                            لا يوجد
+                          </span>
                         ) : (
-                          getActiveContractorSiteAssignments(item.id).map((assignment) => (
-                            <span key={assignment.id} className="rounded-lg bg-blue-50 px-2 py-1 text-[10px] font-black text-blue-700">
-                              {siteNames.get(assignment.siteId) ?? "موقع غير معروف"}
-                            </span>
-                          ))
+                          getActiveContractorSiteAssignments(item.id).map(
+                            (assignment) => (
+                              <span
+                                key={assignment.id}
+                                className="rounded-lg bg-blue-50 px-2 py-1 text-[10px] font-black text-blue-700"
+                              >
+                                {siteNames.get(assignment.siteId) ??
+                                  "موقع غير معروف"}
+                              </span>
+                            ),
+                          )
                         )}
                       </div>
                     </div>
@@ -342,7 +362,9 @@ export default function ContractorsPage() {
                         <p className="text-[11px] text-slate-400">المتبقي</p>
                         <p
                           className={`accounting-number mt-1 font-extrabold ${
-                            summary.remaining < 0 ? "text-red-600" : "text-slate-900"
+                            summary.remaining < 0
+                              ? "text-red-600"
+                              : "text-slate-900"
                           }`}
                         >
                           {money(summary.remaining)}
@@ -393,7 +415,7 @@ export default function ContractorsPage() {
 
       {isModalOpen && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm ui-modal-backdrop"
+          className="ui-modal-backdrop fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) closeModal();
           }}
@@ -434,7 +456,7 @@ export default function ContractorsPage() {
                 <div
                   role="alert"
                   aria-live="polite"
-                  className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700 ui-shake"
+                  className="ui-shake rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700"
                 >
                   {error}
                 </div>

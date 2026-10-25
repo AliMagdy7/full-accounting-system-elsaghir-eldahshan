@@ -3,10 +3,23 @@ import { addAuditLog } from "@/lib/data/audit-logs";
 import { getCompanyById } from "@/lib/data/companies";
 import { getSettlementById } from "@/lib/data/settlements";
 import type { CompanyCheck, CheckStatus } from "@/types/check";
-import { updateCustodyBalance, reverseCustodyBalance } from "@/lib/data/custodies";
-import { updateCustodyFinancialAccountBalance, reverseCustodyFinancialAccountBalance } from "@/lib/data/custody-financial-accounts";
-import { addCustodyTransaction, deleteCustodyTransaction } from "@/lib/data/custody-transactions";
-import { getPartnerFinancialAccountById, updatePartnerFinancialAccountBalance, reversePartnerFinancialAccountBalance } from "@/lib/data/partner-financial-accounts";
+import {
+  updateCustodyBalance,
+  reverseCustodyBalance,
+} from "@/lib/data/custodies";
+import {
+  updateCustodyFinancialAccountBalance,
+  reverseCustodyFinancialAccountBalance,
+} from "@/lib/data/custody-financial-accounts";
+import {
+  addCustodyTransaction,
+  deleteCustodyTransaction,
+} from "@/lib/data/custody-transactions";
+import {
+  getPartnerFinancialAccountById,
+  updatePartnerFinancialAccountBalance,
+  reversePartnerFinancialAccountBalance,
+} from "@/lib/data/partner-financial-accounts";
 import { assertTransactionEditable } from "@/lib/data/system-controls";
 
 const STORAGE_KEY = "elsaghir-eldahshan-company-checks";
@@ -38,7 +51,11 @@ export function normalizeCheckNumber(value: string) {
 }
 
 export function getCompanyChecks() {
-  return read().sort((a, b) => b.dueDate.localeCompare(a.dueDate) || b.createdAt.localeCompare(a.createdAt));
+  return read().sort(
+    (a, b) =>
+      b.dueDate.localeCompare(a.dueDate) ||
+      b.createdAt.localeCompare(a.createdAt),
+  );
 }
 
 export function getCompanyCheckById(id: string) {
@@ -46,10 +63,17 @@ export function getCompanyCheckById(id: string) {
 }
 
 export function getCompanyChecksBySettlement(settlementId: string) {
-  return getCompanyChecks().filter((item) => item.settlementId === settlementId);
+  return getCompanyChecks().filter(
+    (item) => item.settlementId === settlementId,
+  );
 }
 
-function validateDestination(input: Pick<CompanyCheck, "status" | "financialAccountId" | "partnerAccountId">) {
+function validateDestination(
+  input: Pick<
+    CompanyCheck,
+    "status" | "financialAccountId" | "partnerAccountId"
+  >,
+) {
   if (input.status !== "collected") return;
   const hasCentral = Boolean(input.financialAccountId);
   const hasPartner = Boolean(input.partnerAccountId);
@@ -65,18 +89,27 @@ function collectToDestination(row: CompanyCheck) {
   validateDestination(row);
 
   if (row.partnerAccountId) {
-    updatePartnerFinancialAccountBalance(row.partnerAccountId, row.amount, "in");
+    updatePartnerFinancialAccountBalance(
+      row.partnerAccountId,
+      row.amount,
+      "in",
+    );
     return;
   }
 
-  if (!row.financialAccountId) throw new Error("الحساب المالي الخاص بي غير محدد.");
+  if (!row.financialAccountId)
+    throw new Error("الحساب المالي الخاص بي غير محدد.");
   let custodyChanged = false;
   let accountChanged = false;
   let transactionId: string | undefined;
   try {
     updateCustodyBalance("central", row.amount, "in");
     custodyChanged = true;
-    updateCustodyFinancialAccountBalance(row.financialAccountId, row.amount, "in");
+    updateCustodyFinancialAccountBalance(
+      row.financialAccountId,
+      row.amount,
+      "in",
+    );
     accountChanged = true;
     const tx = addCustodyTransaction({
       id: crypto.randomUUID(),
@@ -94,13 +127,29 @@ function collectToDestination(row: CompanyCheck) {
     row.custodyTransactionId = tx.id;
   } catch (error) {
     if (transactionId) {
-      try { deleteCustodyTransaction(transactionId); } catch { /* preserve original */ }
+      try {
+        deleteCustodyTransaction(transactionId);
+      } catch {
+        /* preserve original */
+      }
     }
     if (accountChanged) {
-      try { reverseCustodyFinancialAccountBalance(row.financialAccountId, row.amount, "in"); } catch { /* preserve original */ }
+      try {
+        reverseCustodyFinancialAccountBalance(
+          row.financialAccountId,
+          row.amount,
+          "in",
+        );
+      } catch {
+        /* preserve original */
+      }
     }
     if (custodyChanged) {
-      try { reverseCustodyBalance("central", row.amount, "in"); } catch { /* preserve original */ }
+      try {
+        reverseCustodyBalance("central", row.amount, "in");
+      } catch {
+        /* preserve original */
+      }
     }
     throw error;
   }
@@ -108,33 +157,60 @@ function collectToDestination(row: CompanyCheck) {
 
 function reverseCollectedDestination(row: CompanyCheck) {
   if (row.partnerAccountId) {
-    reversePartnerFinancialAccountBalance(row.partnerAccountId, row.amount, "in");
+    reversePartnerFinancialAccountBalance(
+      row.partnerAccountId,
+      row.amount,
+      "in",
+    );
     return;
   }
   if (!row.financialAccountId || !row.custodyTransactionId) {
     throw new Error("بيانات تحصيل الشيك المرتبطة بالحركة المالية غير مكتملة.");
   }
   reverseCustodyBalance("central", row.amount, "in");
-  reverseCustodyFinancialAccountBalance(row.financialAccountId, row.amount, "in");
+  reverseCustodyFinancialAccountBalance(
+    row.financialAccountId,
+    row.amount,
+    "in",
+  );
   deleteCustodyTransaction(row.custodyTransactionId);
 }
 
-function validateCheckInput(input: Omit<CompanyCheck, "id" | "createdAt" | "updatedAt">, existingId?: string) {
-  if (!getCompanyById(input.companyId)) throw new Error("الشركة المحددة غير موجودة.");
+function validateCheckInput(
+  input: Omit<CompanyCheck, "id" | "createdAt" | "updatedAt">,
+  existingId?: string,
+) {
+  if (!getCompanyById(input.companyId))
+    throw new Error("الشركة المحددة غير موجودة.");
   const settlement = getSettlementById(input.settlementId);
-  if (!settlement || settlement.companyId !== input.companyId) throw new Error("المستخلص المحدد غير موجود أو لا يتبع الشركة.");
+  if (!settlement || settlement.companyId !== input.companyId)
+    throw new Error("المستخلص المحدد غير موجود أو لا يتبع الشركة.");
 
   const number = normalizeCheckNumber(input.number);
   if (!number) throw new Error("رقم الشيك مطلوب.");
-  if (read().some((item) => item.id !== existingId && normalizeCheckNumber(item.number) === number)) {
-    throw new Error(`رقم الشيك ${input.number} مسجل بالفعل ولا يمكن تسجيل شيك آخر بنفس الرقم.`);
+  if (
+    read().some(
+      (item) =>
+        item.id !== existingId && normalizeCheckNumber(item.number) === number,
+    )
+  ) {
+    throw new Error(
+      `رقم الشيك ${input.number} مسجل بالفعل ولا يمكن تسجيل شيك آخر بنفس الرقم.`,
+    );
   }
 
   const amount = Number(input.amount);
-  if (!Number.isFinite(amount) || amount <= 0) throw new Error("قيمة الشيك يجب أن تكون أكبر من صفر.");
+  if (!Number.isFinite(amount) || amount <= 0)
+    throw new Error("قيمة الشيك يجب أن تكون أكبر من صفر.");
 
   const others = read()
-    .filter((item) => item.id !== existingId && item.settlementId === input.settlementId && item.status !== "cancelled" && item.status !== "returned")
+    .filter(
+      (item) =>
+        item.id !== existingId &&
+        item.settlementId === input.settlementId &&
+        item.status !== "cancelled" &&
+        item.status !== "returned",
+    )
     .reduce((sum, item) => sum + Number(item.amount || 0), 0);
   if (others + amount > settlement.netValue + 0.01) {
     throw new Error("إجمالي الشيكات يتجاوز صافي قيمة المستخلص.");
@@ -144,7 +220,9 @@ function validateCheckInput(input: Omit<CompanyCheck, "id" | "createdAt" | "upda
   return { number, amount };
 }
 
-export function addCompanyCheck(input: Omit<CompanyCheck, "id" | "createdAt" | "updatedAt">) {
+export function addCompanyCheck(
+  input: Omit<CompanyCheck, "id" | "createdAt" | "updatedAt">,
+) {
   assertCurrentUserPermission("create");
   assertTransactionEditable(input.issueDate);
   const { number, amount } = validateCheckInput(input);
@@ -153,8 +231,10 @@ export function addCompanyCheck(input: Omit<CompanyCheck, "id" | "createdAt" | "
     ...input,
     number,
     amount,
-    financialAccountId: input.status === "collected" ? input.financialAccountId : undefined,
-    partnerAccountId: input.status === "collected" ? input.partnerAccountId : undefined,
+    financialAccountId:
+      input.status === "collected" ? input.financialAccountId : undefined,
+    partnerAccountId:
+      input.status === "collected" ? input.partnerAccountId : undefined,
     id: crypto.randomUUID(),
     createdAt: now,
     updatedAt: now,
@@ -165,7 +245,11 @@ export function addCompanyCheck(input: Omit<CompanyCheck, "id" | "createdAt" | "
     save([...read(), row]);
   } catch (error) {
     if (row.status === "collected") {
-      try { reverseCollectedDestination(row); } catch { /* preserve original */ }
+      try {
+        reverseCollectedDestination(row);
+      } catch {
+        /* preserve original */
+      }
     }
     throw error;
   }
@@ -182,9 +266,16 @@ export function addCompanyCheck(input: Omit<CompanyCheck, "id" | "createdAt" | "
   return row;
 }
 
-export function updateCompanyCheck(id: string, updates: Partial<Omit<CompanyCheck, "id" | "createdAt" | "updatedAt">>) {
+export function updateCompanyCheck(
+  id: string,
+  updates: Partial<Omit<CompanyCheck, "id" | "createdAt" | "updatedAt">>,
+) {
   assertCurrentUserPermission("update");
-  assertTransactionEditable(updates.issueDate ?? read().find((item) => item.id === id)?.issueDate ?? new Date().toISOString());
+  assertTransactionEditable(
+    updates.issueDate ??
+      read().find((item) => item.id === id)?.issueDate ??
+      new Date().toISOString(),
+  );
   const items = read();
   const index = items.findIndex((item) => item.id === id);
   if (index < 0) throw new Error("الشيك غير موجود.");
@@ -197,14 +288,21 @@ export function updateCompanyCheck(id: string, updates: Partial<Omit<CompanyChec
     ...updates,
     number,
     amount,
-    financialAccountId: nextInput.status === "collected" ? nextInput.financialAccountId : undefined,
-    partnerAccountId: nextInput.status === "collected" ? nextInput.partnerAccountId : undefined,
+    financialAccountId:
+      nextInput.status === "collected"
+        ? nextInput.financialAccountId
+        : undefined,
+    partnerAccountId:
+      nextInput.status === "collected" ? nextInput.partnerAccountId : undefined,
     updatedAt: new Date().toISOString(),
   };
 
   const wasCollected = previous.status === "collected";
   const willBeCollected = next.status === "collected";
-  const destinationChanged = previous.financialAccountId !== next.financialAccountId || previous.partnerAccountId !== next.partnerAccountId || previous.amount !== next.amount;
+  const destinationChanged =
+    previous.financialAccountId !== next.financialAccountId ||
+    previous.partnerAccountId !== next.partnerAccountId ||
+    previous.amount !== next.amount;
 
   if (wasCollected && (!willBeCollected || destinationChanged)) {
     reverseCollectedDestination(previous);
@@ -219,10 +317,18 @@ export function updateCompanyCheck(id: string, updates: Partial<Omit<CompanyChec
     save(items);
   } catch (error) {
     if (willBeCollected && (!wasCollected || destinationChanged)) {
-      try { reverseCollectedDestination(next); } catch { /* preserve original */ }
+      try {
+        reverseCollectedDestination(next);
+      } catch {
+        /* preserve original */
+      }
     }
     if (wasCollected && (!willBeCollected || destinationChanged)) {
-      try { collectToDestination(previous); } catch { /* preserve original */ }
+      try {
+        collectToDestination(previous);
+      } catch {
+        /* preserve original */
+      }
     }
     throw error;
   }
@@ -240,14 +346,20 @@ export function updateCompanyCheck(id: string, updates: Partial<Omit<CompanyChec
   return next;
 }
 
-export function updateCompanyCheckStatus(id: string, status: CheckStatus, destination?: { financialAccountId?: string; partnerAccountId?: string }) {
+export function updateCompanyCheckStatus(
+  id: string,
+  status: CheckStatus,
+  destination?: { financialAccountId?: string; partnerAccountId?: string },
+) {
   assertCurrentUserPermission("update");
   const row = getCompanyCheckById(id);
   if (!row) throw new Error("الشيك غير موجود.");
   return updateCompanyCheck(id, {
     status,
-    financialAccountId: status === "collected" ? destination?.financialAccountId : undefined,
-    partnerAccountId: status === "collected" ? destination?.partnerAccountId : undefined,
+    financialAccountId:
+      status === "collected" ? destination?.financialAccountId : undefined,
+    partnerAccountId:
+      status === "collected" ? destination?.partnerAccountId : undefined,
   });
 }
 
@@ -255,9 +367,20 @@ export function deleteCompanyCheck(id: string) {
   assertCurrentUserPermission("delete");
   const row = getCompanyCheckById(id);
   if (!row) throw new Error("الشيك غير موجود.");
-  if (row.status === "collected") throw new Error("لا يمكن حذف شيك تم تحصيله. غيّر حالته حسب الإجراء المالي الصحيح.");
+  if (row.status === "collected")
+    throw new Error(
+      "لا يمكن حذف شيك تم تحصيله. غيّر حالته حسب الإجراء المالي الصحيح.",
+    );
   save(read().filter((item) => item.id !== id));
-  addAuditLog({ action: "delete", entity: "company_check", entityId: id, description: `تم حذف الشيك رقم ${row.number}.`, notificationTitle: "حذف شيك", notificationType: "warning", notificationHref: "/checks" });
+  addAuditLog({
+    action: "delete",
+    entity: "company_check",
+    entityId: id,
+    description: `تم حذف الشيك رقم ${row.number}.`,
+    notificationTitle: "حذف شيك",
+    notificationType: "warning",
+    notificationHref: "/checks",
+  });
 }
 
 export const CHECK_STATUSES: { value: CheckStatus; label: string }[] = [
